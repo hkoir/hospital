@@ -1,0 +1,56 @@
+{% extends 'base.html' %}  
+
+{% block content %}
+
+ 
+
+
+<div class="container-fluid main-content my-5">
+    <div class="row">
+
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'purchase:qc_dashboard' %}" class="text-decoration-none">
+                <div class="menu-card">                                                          
+                                                         
+                    <i class=" fas fa-solid fa-check-square menu-icon"></i>
+                    <div class="menu-title">Purchase QC</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'sales:qc_dashboard' %}"class="text-decoration-none">
+                <div class="menu-card">
+                    {% for notification in unread_notifications %}
+                    {% if notification.notification_type == 'SALES-NOTIFICATION' %}
+                    <i class="fas fa-bell {% if unread_notifications|length > 0 %}new-notification{% endif %}"></i>
+                      {% endif %}
+                    {% endfor %}    
+                    <i class=" fas fa-solid fa-check-square menu-icon"></i>
+                    <div class="menu-title">Sales QC</div>
+                </div>
+            </a>
+        </div>
+
+
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'manufacture:qc_dashboard' %}" class="text-decoration-none">
+                <div class="menu-card">
+                    {% for notification in unread_notifications %}
+                    {% if notification.notification_type == 'PRODUCTION-NOTIFICATION' %}
+                    <i class="fas fa-bell {% if unread_notifications|length > 0 %}new-notification{% endif %}"></i>
+                      {% endif %}
+                    {% endfor %}    
+                    <i class=" fas fa-solid fa-check-square menu-icon"></i>
+                    <div class="menu-title">Production QC</div>
+                </div>
+            </a>
+        </div>
+        
+    </div>
+    <h4 style="height:20px"></h4>
+</div>
+   
+
+
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow rounded-3">
+    <div class="card-header bg-primary text-white">
+      <h4 class="mb-0">Payment Summary – {{ doctor.name }}</h4>
+    </div>
+    <div class="card-body">
+      <div class="row text-center mb-4">
+        <div class="col-md-4">
+          <div class="p-3 border rounded bg-light">
+            <h6 class="text-muted">Total Due</h6>
+            <h4 class="text-danger fw-bold">৳{{ total_due|floatformat:2 }}</h4>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 border rounded bg-light">
+            <h6 class="text-muted">Total Paid</h6>
+            <h4 class="text-success fw-bold">৳{{ total_paid|floatformat:2 }}</h4>
+          </div>
+        </div>
+        <div class="col-md-4">
+          <div class="p-3 border rounded bg-light">
+            <h6 class="text-muted">Remaining Balance</h6>
+            <h4 class="fw-bold {% if remaining > 0 %}text-warning{% else %}text-success{% endif %}">
+              ৳{{ remaining|floatformat:2 }}
+            </h4>
+          </div>
+        </div>
+      </div>
+
+      <hr>
+
+      <h5 class="mb-3">Recent Payments</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Amount Paid</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for payment in recent_payments %}
+              <tr>
+                <td>{{ payment.payment_date }}</td>
+                <td>৳{{ payment.amount_paid|floatformat:2 }}</td>
+                <td>{{ payment.notes|default:"—" }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="3" class="text-center">No payments found.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <h5 class="mt-5 mb-3">Unpaid Services</h5>
+      <div class="table-responsive">
+        <table class="table table-bordered table-sm align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>Date</th>
+              <th>Patient</th>
+              <th>Service</th>
+              <th>Amount</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for log in unpaid_logs %}
+              <tr>
+                <td>{{ log.service_date }}</td>
+                <td>{{ log.patient.name }}</td>
+                <td>{{ log.service_type }}</td>
+                <td>৳{{ log.service_fee|floatformat:2 }}</td>
+              </tr>
+            {% empty %}
+              <tr><td colspan="4" class="text-center">No unpaid services.</td></tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+	  <a href="{% url 'billing:add_doctor_payment' doctor.id %}" class='text-center,btn btn-sm btn-success'>Pay to Doctor</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,67 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container-fluid main-content">
+    <h4 class="text-center">{% if user.is_authenticated %}
+        <a href="{% url 'leavemanagement:carry_forward_leave' %}" class="btn btn-primary">
+            Run in January every year for carry forward
+        </a>
+    {% endif %}
+
+        {% if user.is_authenticated %}
+            <a href="{% url 'leavemanagement:update_leave_balances_for_all' %}" class="btn btn-primary">
+            Run once at every month to update all accrued leaves
+            </a>
+        {% endif %}
+
+        {% if user.is_authenticated %}
+        <a href="{% url 'leavemanagement:check_and_deduct_late_leaves' %}" class="btn btn-primary">
+        Run every day
+        </a>
+    {% endif %}</h4>
+
+      
+
+    <h3>Pending Leave Applications:</h3>
+
+
+    {% if pending_with_balance %}
+        <table class="table table-hover table-striped mt-3">
+            <thead class="table-dark">
+                <tr>
+                    <th>Employee</th>
+                    <th>Leave Type</th>
+                    <th>Start Date</th>
+                    <th>End Date</th>
+
+                    <th>Days Requested</th>
+                    <th>Days Available</th>
+                    <th>Status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+               
+                {% for data in pending_with_balance %}
+                    <tr>
+                        <td>{{ data.application.employee.name }}</td>
+                        <td>{{ data.application.leave_type.name }}</td>
+                        <td>{{ data.application.applied_start_date }}</td>
+                        <td>{{ data.application.applied_end_date }}</td>
+
+                        <td>{{ data.application.applied_no_of_days }}</td>
+                        <td>{{ data.allowed_balance }}</td>
+                        <td><span class="badge bg-warning">{{ data.application.status }}</span></td>
+                        <td>
+                           <a href="{% url 'leavemanagement:approve_leave'  data.application.id %}">Approve</a>
+                        </td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <div class="alert alert-info">No pending leave applications.</div>
+    {% endif %}
+</div>
+{% endblock %}

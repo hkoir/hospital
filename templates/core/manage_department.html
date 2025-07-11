@@ -1,0 +1,208 @@
+{% extends 'base.html' %}  
+
+{% block content %}
+
+
+
+
+
+
+<div class="container-fluid main-content">
+    <div class="row">  
+             <!-- Form for adding a new category -->
+            <div class="col-12 col-md-4">
+                <div class="card shadow-lg" style="background-color: aliceblue;">
+                    <!-- Card Header -->
+                    <div class="card-header bg-primary text-white text-center">
+                        <h3 class="mb-0">Add Department</h3>
+                    </div> 
+                    <div class="card-body">                       
+                        <form method="post" enctype="multipart/form-data" action="{% url 'core:manage_department' %}" id="add_department">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <div class="d-grid">
+                                <button type="submit" name="entity_submit"value="department_submit" class="btn btn-primary btn-lg"> Submit</button>
+                            </div>
+                        </form>
+                     </div>
+                </div>           
+            </div>
+        <div class="col">        
+            <!-- Table for displaying existing categories -->
+            <h4>Available Departments</h4>
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="text-center p-2">Name</th>     
+                        <th class="text-center p-2">Description</th>                                          
+                    
+                        <th class="text-center p-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entity in page_obj %}
+                        <tr>
+                            <td class="text-center p-1">{{ entity.name }}</td>
+                            <td class="text-center p-1">{{ entity.description }}</td>
+                
+                            <td class="text-center">
+                                <!-- Update Button -->
+                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#updateEntityModal"
+                                    data-id="{{ entity.id }}"
+                                    data-name="{{ entity.name }}"
+                                    data-description="{{ entity.description }}">
+                                    Update
+                                </button>
+                
+                                <!-- Delete Button -->
+                                <button type="button" class="btn btn-danger btn-sm delete-button text-center" data-bs-toggle="modal" data-bs-target="#deleteEntityModal"
+                                    data-id="{{ entity.id }}"
+                                    data-name="{{ entity.name }}">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+    </div>
+</div>      
+
+
+
+
+
+<!-- Generalized Update Modal -->
+<div class="modal fade" id="updateEntityModal" tabindex="-1" aria-labelledby="updateEntityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="updateEntityForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="entity_id" name="entity_id">
+                <input type="hidden" name="action" value="update">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateEntityModalLabel">Update</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="entity_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="entity_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="entity_description" class="form-label">Description</label>
+                        <input type="text" class="form-control" id="entity_description" name="description" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Generalized Delete Confirmation Modal -->
+<div class="modal fade" id="deleteEntityModal" tabindex="-1" aria-labelledby="deleteEntityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="deleteEntityForm">
+                {% csrf_token %}
+                <input type="hidden" name="entity_id" id="delete_entity_id" value="">
+                <input type="hidden" name="action" value="delete">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteEntityModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete <strong id="entityToDeleteName"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No Cancel</button>
+                    <button type="submit" class="btn btn-primary">Yes Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+  document.addEventListener('DOMContentLoaded', function () {
+    // Update Modal Logic
+    var updateModal = document.getElementById('updateEntityModal');
+    if (updateModal) {
+        updateModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var entityId = button.getAttribute('data-id');
+            var entityName = button.getAttribute('data-name');
+            var entityDescription = button.getAttribute('data-description');
+
+            var modal = updateModal;
+            modal.querySelector('#entity_id').value = entityId;
+            modal.querySelector('#entity_name').value = entityName;
+            modal.querySelector('#entity_description').value = entityDescription;
+        });
+    }
+
+    // Delete Modal Logic
+    var deleteModal = document.getElementById('deleteEntityModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var entityId = button.getAttribute('data-id');
+            var entityName = button.getAttribute('data-name');
+
+            var modal = deleteModal;
+            modal.querySelector('#delete_entity_id').value = entityId;
+            modal.querySelector('#entityToDeleteName').textContent = entityName;
+        });
+    }
+
+    // Delete Form Submission Logic
+    $('#deleteEntityForm').on('submit', function (event) {
+        event.preventDefault();
+        var form = $(this);
+
+        $.ajax({
+            type: "POST",
+            url: window.location.href, 
+            data: form.serialize(),
+            success: function () {
+                window.location.reload();
+            },
+            error: function (xhr, status, error) {
+                console.error("An error occurred: " + error);
+            }
+        });
+    });
+});
+
+
+
+</script>
+
+
+
+
+{% endblock %}

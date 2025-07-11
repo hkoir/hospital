@@ -1,0 +1,51 @@
+
+{% load static %}
+
+<footer class="bg-dark text-white pt-4 pb-2 site-footer no-print">
+    <div class="container">
+        <div class="row">
+            <!-- About / Contact -->
+            <div class="col-md-4 mb-3">
+                {% if school_logo_url %}
+                <img src="{{ school_logo_url }}" 
+                class="rounded-circle border"                                    
+                style="width: 40px; height: 40px; object-fit: cover; border: 2px solid #007bff;">
+               {% else %}
+               <img src="{% static 'images/Logo.png' %}" 
+                 class="rounded-circle border"                                    
+                 style="width: 80px; height: 80px; object-fit: cover; border: 2px solid #007bff;"><br>
+                {% endif %}
+                <h5>mymeplus Technology</h5>
+                <p><i class="fas fa-home"></i>&nbsp;123 Business Street, Cityville, Country<br>
+                <i class="fas fa-envelope"></i>&nbsp;Email: info@mymeplus.com<br>
+                <i class="fas fa-phone"></i>&nbsp;Phone: +88-01743-800705</p>
+            </div>
+
+            <!-- Quick Links -->
+            <div class="col-md-4 mb-3">
+                <h5>Quick Links</h5>
+                
+                   <a href="#" class="text-white text-decoration-none">Home</a>&nbsp;&nbsp;
+                   <a href="#" class="text-white text-decoration-none">About Us</a>&nbsp;&nbsp;
+                   <a href="#" class="text-white text-decoration-none">Services</a>&nbsp;&nbsp;
+                    <a href="#" class="text-white text-decoration-none">Contact</a>
+            
+            </div>
+
+            <!-- Social / Legal -->
+            <div class="col-md-4 mb-3">
+                <h5>Follow Us</h5>
+                <a href="#" class="text-white me-2"><i class="fab fa-facebook-f"></i></a>&nbsp;&nbsp;
+                <a href="#" class="text-white me-2"><i class="fab fa-twitter"></i></a>&nbsp;&nbsp;
+                <a href="#" class="text-white me-2"><i class="fab fa-linkedin-in"></i></a>&nbsp;&nbsp;
+                <a href="#" class="text-white"><i class="fab fa-instagram"></i></a>&nbsp;&nbsp;
+                <a href="#" class="text-white text-decoration-none">Privacy Policy</a> &nbsp;&nbsp;|| <a href="#" class="text-white text-decoration-none">Terms & Conditions</a>
+            </div>
+        </div>
+
+        <hr class="bg-light">
+        <div class="text-center">
+            <p class="mb-0">&copy; 2025 Company Name. All Rights Reserved.</p>
+        </div>
+    </div>
+</footer>

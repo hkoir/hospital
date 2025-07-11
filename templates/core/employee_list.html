@@ -1,0 +1,149 @@
+{% extends 'base.html' %}  
+{% load custom_filters %}
+
+
+{% block content %}
+
+
+<div class="container-fluid main-content mb-2">
+    <div class="row">           
+                             
+            <form method="GET" action="{% url 'core:employee_list' %}">  
+                <label for="id_employee_name">Employee name</label>           
+                {{ form.employee_name }}                                                
+                <button type="submit" class="btn btn-primary">Search</button>                            
+             </form>
+            <h6 class="text-center mt-2">             
+                {% if name %}                 
+                 Search result for <b>{{ name }}</b>
+                {% endif %} 
+            </h6>             
+        <hr>
+        <div class="col-12 table-responsive">
+
+            <h4>Employee list:  
+                <a href="{% url 'tasks:preview_increment_promotion_general' %}"class="btn btn-success">Preview Appraisal letter</a>
+                <a href="{% url 'tasks:generate_and_send_appraisal_letter_to_all_eligible' %}"class="btn btn-success">Send appraisal_letter to all eligibles</a>
+            </h4>
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr class="bg-primary text-white">
+                        <th>Name</th>
+                        <th>Employee ID</th>
+                        <th>Designation</th>
+                        <th>Level</th>
+                        <th>Department</th>
+                        <th>Date of joining</th>
+
+                        <th>Update record</th>                      
+
+                        <th>Preview appraisal letter</th>            
+                        <th>Create, preview, send, pay Slip</th>                       
+                        <th>Create, preview, send, Salary certicate</th>
+                        <th>Create, preview, send, experience certicate</th>
+
+                       
+                        <th>Change history</th>
+                     
+                       
+                    </tr>
+                </thead>
+                <tbody>
+
+                    {% for employee in page_obj %}
+                    <tr>
+                        <td>{{ employee.name }}</td>    
+                        <td>{{ employee.employee_code}}</td>         
+                        <td>{{ employee.position }}</td>
+                        <td>{{ employee.employee_level }}</td>
+                        <td>{{ employee.department }}</td>
+                        <td>{{ employee.joining_date }}</td>
+                        <td>
+                            <a href="{% url 'core:update_employee' employee.id %}">Update</a>
+                        </td>                
+                                          
+                        <td>
+                            <a href="{% url 'tasks:preview_increment_promotion' employee.id %}">Preview increment promotion</a>
+                        </td> 
+            
+                        <td>
+                            <a href="{% url 'core:preview_pay_slip' employee.id %}">Click to view</a>
+                        </td>           
+                        
+                        <td>
+                            <a href="{% url 'core:preview_salary_certificate' employee.id %}">Click to view</a>
+                        </td> 
+                        <td>
+                            <a href="{% url 'core:preview_experience_certificate' employee.id %}">Click to view</a>
+                        </td> 
+                                     
+                        <td>
+                            <a href="{% url 'core:view_employee_changes_single' employee.id %}">Change History</a>
+                        </td> 
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+</div>
+
+      <!-- Pagination Controls -->
+      <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+
+
+</div>
+
+
+
+<script>
+    $(document).ready(function() {
+        $('#id_employee_name').select2({
+            width: '100%',
+            placeholder: 'Search employee...',
+            allowClear: true,
+            ajax: {
+                url: "{% url 'accounts:common_search' %}",  // Ensure this URL is correct
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data.results, function(item) {
+                            return {
+                                id: item.id,
+                                text: item.text
+                            };
+                        })
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 1,
+            placeholder: 'Search for employee',
+            allowClear: true
+        });
+    });
+    </script>
+    
+
+{% endblock %}

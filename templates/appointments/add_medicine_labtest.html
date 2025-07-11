@@ -1,0 +1,130 @@
+
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container-fluid">
+     <form method="POST">
+        {% csrf_token %}           
+        <h3 class="my-5">Invoice for Patinet:{{ appointment.patient.name }}</h3>
+        
+        <div class="row">       
+            <div class="col-12 col-md-6 table-responsive">
+                <h4>Prescribed Medicines</h4>
+                <table class="table table-bordered" id="medicine-table">
+                <thead class="table-info">
+                    <tr>
+                    <th>Name</th><th>Dosage</th>
+                    <th>Schedule</th><th>Duration</th>
+                    <th>Qty</th><th>Unit Price</th><th>Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for med in prescriptions %}
+                    <tr data-med-id="{{ med.id }}">
+                    <td>{{ med.medicine_name }}</td>        
+                    <td>{{ med.dosage }}</td>
+                    <td>{{ med.schedule }}</td>
+                    <td>{{ med.duration }}</td>         
+                    <td>
+                        <input type="number" name="quantity_{{ med.id }}" class="form-control qty-input" data-price="{{ med.price }}" value="{{ med.quantity }}" min="0" style="width: 80px;">
+                    </td>
+                    <td class="text-end">৳ {{ med.price }}</td>
+                    <td class="text-end med-subtotal">৳ {{ med.price|floatformat:2 }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                </table>
+
+                <h5>Total Medicine Cost: <span id="total-medicine">৳ 0.00</span></h5>
+         </div>
+
+
+         <div class="col-12 col-md-6 table-responsive">
+            <h4>Lab Tests</h4>
+            <table class="table table-bordered" id="labtest-table">
+            <thead class="table-info">
+                <tr>
+                <th>Select</th><th>Name</th><th>Type</th><th>Description</th><th>Price</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for test in lab_tests %}
+                <tr data-test-id="{{ test.id }}">
+                <td>
+                    <input type="checkbox" name="selected_labtests" value="{{ test.id }}" class="lab-checkbox" data-price="{{ test.price }}" checked>
+                </td>
+                <td>{{ test.test_name }}</td>
+                <td>{{ test.test_type }}</td>
+                <td>{{ test.description }}</td>
+                
+                <td class="text-end">৳ {{ test.price }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+            <h5>Total Lab Test Cost: <span id="total-lab">৳ 0.00</span></h5>
+        </div>
+
+ 
+    <h4 class="mt-4">Grand Total: <span id="grand-total">৳ 0.00</span></h4>
+        <div class="mt-4">
+      <button type="submit" class="btn btn-primary">Confirm & Generate Invoice</button>
+      <a href="{% url 'appointments:appointment_list' %}" class="btn btn-secondary">Cancel</a>
+    </div>
+ 
+
+ </div>
+ </form>
+</div>
+
+
+
+
+   
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const formatBDT = (n) => "৳ " + parseFloat(n).toFixed(2);
+
+  function recalculateTotals() {
+    let totalMedicine = 0;
+    document.querySelectorAll("#medicine-table tbody tr").forEach(row => {
+      const qtyInput = row.querySelector(".qty-input");
+      const price = parseFloat(qtyInput.dataset.price);
+      const quantity = parseInt(qtyInput.value) || 0;
+      const subtotal = price * quantity;
+      row.querySelector(".med-subtotal").textContent = formatBDT(subtotal);
+      totalMedicine += subtotal;
+    });
+
+    let totalLab = 0;
+    document.querySelectorAll(".lab-checkbox").forEach(cb => {
+      if (cb.checked) {
+        totalLab += parseFloat(cb.dataset.price);
+      }
+    });
+
+    document.getElementById("total-medicine").textContent = formatBDT(totalMedicine);
+    document.getElementById("total-lab").textContent = formatBDT(totalLab);
+    document.getElementById("grand-total").textContent = formatBDT(totalMedicine + totalLab);
+  }
+
+  // Recalculate on load and on input changes
+  recalculateTotals();
+
+  document.querySelectorAll(".qty-input").forEach(input => {
+    input.addEventListener("input", recalculateTotals);
+  });
+
+  document.querySelectorAll(".lab-checkbox").forEach(cb => {
+    cb.addEventListener("change", recalculateTotals);
+  });
+});
+</script>
+
+
+
+
+{% endblock %}

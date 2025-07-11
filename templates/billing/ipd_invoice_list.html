@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block content %}
+
+
+<div class="container">
+    <div class="col-12">
+      <form method="get" class="my-2" novalidate,>
+                {% csrf_token %}
+                <div class="row">
+                    {% for field in form %}
+                        <div class="col-6 col-md-2">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field|add_class:"form-control" }}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">                    
+                    <button type="submit" class="btn btn-primary">Apply filter</button>
+                    
+                </div>
+      </form>
+	</div>
+
+	<div class="col-12 table-responsive">
+        <h2>IPD Invoice List</h2>
+        <table class="table table-bordered table-striped">
+            <thead class="table-info">
+                <tr>
+                    <th>#Invoice ID</th>
+		   <th> Medical record code </th>
+		   <th> admission code </th>
+                    <th>Patient</th>
+
+                    <th>Service Type</th>
+                    <th>Total Amount</th>
+                    <th>Total Paid</th>
+                    <th>Remaining</th>
+
+                    <th>Status</th>               
+                    <th>Created</th>
+                    <th>Invoice Action</th>
+                    <th>Finalize Bill</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in page_obj %}
+                <tr>
+		     <td>{{ invoice.invoice_id }}</td>
+		     <td>{{ invoice.medical_record.medical_record_code }}</td>
+		     <td>{{ invoice.admission.admission_code }}</td>
+                    <td>{{ invoice.patient.name }}/{{ invoice.patient.patient_id }}</td>
+
+                    <td>{{ invoice.invoice_type}}</td>
+                    <td>{{ invoice.total_amount }}</td>
+                    <td>{{ invoice.total_paid }}</td>
+                    <td>{{ invoice.remaining_amount }}</td>
+
+                    <td>
+
+                        {% if invoice.status == 'Paid' %}
+                            <span class="badge bg-success">Paid</span>
+                        {% elif invoice.status == 'Partially Paid' %}
+                            <span class="badge bg-warning text-dark">Partial</span>
+                        {% else %}
+                            <span class="badge bg-warning">Unpaid</span>
+                        {% endif %}
+                    </td>
+                
+                    <td>{{ invoice.created_at|date:"Y-m-d H:i" }}</td>
+                    <td>
+                        <a href="{% url 'billing:invoice_detail' invoice.id %}" class="btn btn-sm btn-primary">View</a>
+                        <a href="{% url 'billing:edit_invoice' invoice.id %}" class="btn btn-sm btn-warning">Edit</a>
+                        <a href="{% url 'billing:delete_invoice' invoice.id %}" class="btn btn-sm btn-danger">Delete</a>
+                    
+                    </td>
+
+                    <td> <a href="{% url 'billing:finalize_invoice' invoice.id %}" class="btn btn-sm btn-success">Finalize bill</a></td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center">No invoices found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <!-- Pagination Controls -->
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+{% endblock %}

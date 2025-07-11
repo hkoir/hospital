@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block content %}
+  <h1>Assign Bed to Patient</h1>
+
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit">Assign Bed</button>
+  </form>
+
+  <br>
+  <a href="{% url 'patients:patient_admission_detail' admission_id=admission.id %}">Back to Admission Details</a>
+{% endblock %}

@@ -1,0 +1,151 @@
+{% extends 'base.html' %}  
+
+{% block content %}
+
+
+
+<div class="container-fluid main-content">
+    <div class="row">
+        <div class="col-12">
+            <form method="GET" action="{% url 'inventory:product_list' %}">
+                <div class="d-flex align-items-center gap-2"> 
+                    <label for="id_product_name" class="me-2">Product:</label>
+                    <div class="flex-grow-1">
+                        {{ form.product_name }}
+                    </div>
+                    <button type="submit" class="btn btn-primary">Find item</button>
+                </div>
+            </form>
+        </div>
+        
+       
+        <hr>
+        </div>
+        <div class="col-12 table-responsive">
+            <h4>Product List:
+                &nbsp;<a href="{% url 'inventory:create_category' %}">Add new category</a>
+                &nbsp;<a href="{% url 'inventory:create_product' %}">Add new product</a></h4>
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>#</th>
+                        <th>Catelogue</th>
+                        <th>Product Name</th>
+                        <th>Category</th>
+                        <th>Unit price</th>
+                        <th>Available qty</th>
+                        <th>Reorder qty</th>
+                        <th>Low stock status</th>
+                        <th>Action</th>
+                        <th>Action</th>
+                        <th>Action</th>
+                        
+                     
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for product in page_obj %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><a href="{% url 'inventory:product_data' product.id %}">Catelogue</a></td>
+                        <td>{{ product.name }}</td>
+                        <td>{{ product.product_category.name }}</td>
+                        <td>{{ product.base_unit_price }}</td>
+                        <td>
+                            {% if product.product_inventories.first %}
+                            {{ product.product_inventories.first.quantity }}
+                            {% else %}
+                            <span class="text-warning fw-bold">No product added yet</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ product.reorder_level}}</td>
+                        <td>
+                            {% if product.product_inventories.first %}
+                                {% if product.product_inventories.first.quantity <= product.reorder_level %}
+                                    <span style="color:red;font-weight:bold">Low stock</span>
+                                {% else %}
+                                    <i class="fas fa-check" style="color:green;font-weight:bold">Stock ok</i>
+                                {% endif %}
+                            {% else %}
+                                <span style="color:orange;font-weight:bold">No Stock</span>
+                            {% endif %}
+                        </td>
+                        
+                        </td>
+                        <td>
+                            <a href="{% url 'inventory:update_product' product.id %}" >Update product</a>
+                        </td>
+                      
+                        <td>
+                            <a href="{% url 'inventory:delete_product' product.id %}">Delete product</a>
+                        </td>
+
+                     
+                    </tr>
+                   
+                    {% endfor %}
+                </tbody>
+            </table>
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">previous</a>
+                    {% endif %}
+            
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+            
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+
+
+<script>
+
+$('#id_product_name').select2({
+    width: '100%',
+    placeholder: 'Search product...',
+    allowClear: true,
+    ajax: {
+        url: "{% url 'accounts:common_search' %}",
+        dataType: 'json',
+        delay: 250,
+        data: function(params) {
+            return {
+                q: params.term
+            };
+        },
+        processResults: function(data) {
+            return {
+                results: $.map(data.results, function(item) {
+                    return {
+                        id: item.id,
+                        text: item.text
+                    };
+                })
+            };
+        },
+        cache: true
+    },
+    minimumInputLength: 1,
+    language: {
+        inputTooShort: function () {
+            return "";  
+        }
+    }
+});
+
+</script>
+
+
+{% endblock %}

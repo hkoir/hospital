@@ -1,0 +1,142 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+
+<div class="container-fluid">
+    <div class="row">       
+
+        <div class="col-12 col-md-4">
+            <div class="card shadow-lg" style="background-color: aliceblue;">
+                <!-- Card Header -->
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>Assign Permissions to Group</h4>
+                </div> 
+                <div class="card-body">                       
+                    <form method="post" enctype="multipart/form-data" action="{% url 'accounts:assign_permissions_to_group' %}" id="add_customer">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="d-grid">
+                            <button type="submit" name="customer_submit"value="customer_submit" class="btn btn-primary btn-lg">Submit</button>
+                        </div>
+                    </form>
+                 </div>
+            </div>           
+        </div>
+        <div class="col-12 col-md-8">
+             <!-- Permissions Data Section -->
+             <section id="groups-info-section">
+                <h3>Group Data</h3>
+                <table class="table table-hover">
+                  <thead class="table-dark">
+                    <tr>
+                      <th>Group Name</th>
+                      <th>Users in Group</th>
+                      <th>Permissions (Model, Permission Name, Codename)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {% for group_info in groups_info %}
+                      <tr>
+                        <td>{{ group_info.group.name }}</td>
+                        <td>
+                          {% for user in group_info.users %}
+                            {{ user.username }}<br>
+                          {% empty %}
+                            No users
+                          {% endfor %}
+                        </td>
+                        <td>
+                          {% for permission in group_info.permissions %}
+                            <strong>{{ permission.content_type.model|capfirst }}</strong>: 
+                            {{ permission.name }} ({{ permission.codename }})<br>
+                          {% empty %}
+                            No permissions
+                          {% endfor %}
+                        </td>
+                      </tr>
+                    {% endfor %}
+                  </tbody>
+                </table>
+              </section>
+              
+             <!-- Pagination Controls -->
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+
+        </div>
+        
+       
+    </div>
+</div>
+
+
+<div style="height:1000px"></div>
+
+
+
+<script type="text/javascript">
+    document.addEventListener("DOMContentLoaded", function() {
+        const modelSelect = document.getElementById('model-select');
+        const permissionsContainer = document.getElementById('permissions-select');
+        
+        modelSelect.addEventListener('change', function() {
+            // Clear previous permissions
+            permissionsContainer.innerHTML = '';
+            
+            const modelName = modelSelect.value;
+
+            if (modelName) {
+                // Send an AJAX request to fetch permissions for the selected model
+                fetch('/accounts/get_permissions_for_model/?model_name=app_label.model_name')
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.permissions) {
+                            // Populate permissions with checkboxes
+                            data.permissions.forEach(permission => {
+                                const checkboxWrapper = document.createElement('div');
+                                const checkbox = document.createElement('input');
+                                checkbox.type = 'checkbox';
+                                checkbox.name = 'permissions';  // Matching the name used in the form
+                                checkbox.value = permission.id;
+                                checkbox.id = `permission-${permission.id}`;
+
+                                const label = document.createElement('label');
+                                label.setAttribute('for', checkbox.id);
+                                label.textContent = permission.name;
+
+                                checkboxWrapper.appendChild(checkbox);
+                                checkboxWrapper.appendChild(label);
+                                permissionsContainer.appendChild(checkboxWrapper);
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error fetching permissions:', error);
+                    });
+            }
+        });
+    });
+</script>
+
+
+
+
+{% endblock %}

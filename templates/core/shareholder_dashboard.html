@@ -1,0 +1,93 @@
+
+{% extends "base.html" %}
+{% load custom_filters %}
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow rounded">
+    <div class="card-header bg-success text-white">
+      <h4 class="mb-0">Shareholder Dashboard</h4>
+    </div>
+    <div class="card-body">
+      <div class="row text-center mb-4">
+        <div class="col-md-2">
+          <div class="border p-3 bg-light">
+            <h6>Total Income</h6>
+            <strong>৳ {{ total_income|add_commas }}</strong>
+          </div> 
+        </div>
+        <div class="col-md-2">
+          <div class="border p-3 bg-light">
+            <h6>Doctor Payouts</h6>
+            <strong>৳ {{ total_doctor_payment|add_commas }}</strong>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="border p-3 bg-light">
+            <h6>Employee Salary </h6>
+            <strong>৳ {{ estimated_salary_paid |add_commas }}</strong>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="border p-3 bg-light">
+            <h6>Other Expenses</h6>
+            <strong>৳ {{ total_other_expenses|add_commas }}</strong>
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="border p-3 bg-light">
+            <h6>Net Profit/Loss</h6>
+            {% if net_profit < 0 %}
+            <span style="color: red; font-weight: bold;">
+            ৳ {{ net_profit|add_commas }}
+            </span>
+            {% else %}
+            <strong>৳ {{ net_profit|add_commas }}</strong>
+            {% endif %}
+          </div>
+        </div>
+        <div class="col-md-2">
+          <div class="border p-3 bg-light">
+            <h6>Asset Current Value</h6>
+            <strong>৳ {{ asset_current_value|add_commas }}</strong>
+          </div>
+        </div>
+      </div>
+      <div class='table-responsive'>
+      <h5 class='text-center'>Shareholder Profit/Loss Distribution</h5>
+      <table class="table table-bordered mt-3">
+        <thead class="table-light">
+          <tr>
+            <th>#</th>
+            <th>Shareholder</th>
+            <th>Percentage</th>
+            <th>Profit/Loss Share</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for shareholder in shareholders %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ shareholder.name }}</td>
+            <td>{{ shareholder.percentage_share }}%</td>
+            <td>
+              {% if shareholder.profit_share < 0 %}
+                <span style="color: red; font-weight: bold;">
+                  ৳ {{ shareholder.profit_share }}
+                </span>
+              {% else %}
+                ৳ {{ shareholder.profit_share }}
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="4" class="text-center">No shareholders found.</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

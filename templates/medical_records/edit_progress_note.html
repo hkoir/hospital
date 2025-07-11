@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% block content %}
+<div class="container mt-5">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Edit Progress Note</h4>
+            <a href="{% url 'medical_records:medical_record_progress_detail' progress_note.medical_record.id %}" class="btn btn-light btn-sm">
+                <i class="bi bi-arrow-left"></i> Back to Progress Notes
+            </a>
+        </div>
+        <div class="card-body">
+            <form method="post" novalidate>
+                {% csrf_token %}
+                
+                <div class="mb-3">
+                    <label for="id_diagnosis" class="form-label"><strong>Diagnosis</strong></label>
+                    {{ form.diagnosis|add_class:'form-control' }}
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_treatment_plan" class="form-label"><strong>Treatment Plan</strong></label>
+                    {{ form.treatment_plan|add_class:'form-control'}}
+                </div>
+
+                <div class="mb-3">
+                    <label for="id_remarks" class="form-label"><strong>Remarks (optional)</strong></label>
+                    {{ form.remarks|add_class:'form-control' }}
+                </div>
+
+                <div class="d-flex justify-content-between">
+                    <button type="submit" class="btn btn-success">
+                        <i class="bi bi-save"></i> Update Note
+                    </button>
+                    <a href="{% url 'medical_records:medical_record_progress_detail' progress_note.medical_record.id %}" class="btn btn-outline-secondary">
+                        Cancel
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

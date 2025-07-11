@@ -1,0 +1,503 @@
+{% extends 'visitor_portal_base.html' %}
+{% load static %}
+
+
+{% block extra_head %}
+
+
+<style>
+    .hero-section {
+     position: relative;
+     width: 100vw;
+     margin-left: calc(-50vw + 50%);
+     height: 70vh;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     text-align: center;
+     overflow: hidden;
+     color: white;
+     padding: 0 15px;
+     border-bottom: 1px solid #eee;
+     animation: fadeInUp 1.5s ease-in-out;
+     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 1)),
+     url("/static/images/doctor-1.jpg") center/cover no-repeat;
+ }
+ 
+ 
+ .hero-section::before {
+     content: "";
+     position: absolute;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 1)),
+                 url("/static/images/doctor-1.jpg") center/cover no-repeat;
+     z-index: -1;
+ }
+ 
+ 
+ .hero-overlay {
+     position: absolute;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: rgba(0, 0, 0, 0.6);
+     z-index: 1;
+ }
+ 
+ .hero-content {
+     position: relative;
+     z-index: 2;
+     max-width: 800px;
+     margin: 0 auto;
+     text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.6);
+     animation: fadeInUp 5s ease-in-out infinite;
+ }
+ 
+ /* 🔹 Smooth fade-in animation */
+ @keyframes fadeInUp {
+     from {
+         opacity: 0;
+         transform: translateY(40px);
+     }
+     to {
+         opacity: 1;
+         transform: translateY(0);
+     }
+ }
+ 
+  
+     </style>
+ 
+
+{% endblock %}
+
+
+
+
+
+{% block content %}
+
+
+
+<div class="container-fluid">    
+            
+    <section class="hero-section mb-4">
+        <div class="hero-overlay"></div>
+        <div class="hero-content">
+            <h1>Excellence | Compassion | Innovation | Care</h1>
+            <p>Advancing Healthcare, Transforming Lives</p>
+
+        </div>
+      
+        
+        <div class="custom-shape-divider-bottom-hero">
+            <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                <path d="M0,0V46.29c47.6,15.4,98.5,27.4,150,24.67,49.6-2.6,97.1-20.73,146.6-27.27,64.5-8.53,129.6,1.84,194,9.39,65.1,7.6,130.8,10.9,196.5,2.53,65.8-8.27,128.9-27.47,192.2-31.1,51.5-3,103.7,4.72,155.2,13.11,51.5,8.4,103.2,17.6,155.5,20.44,45.5,2.51,91.3-.53,136.8-5.39V0Z" fill="#ffffff"></path>
+            </svg>
+        </div>
+    </section>
+    
+
+
+    
+    <h2 class="text-center ">Find a Doctor & Book a Slot</h2>
+    
+     <!-- Specialization Filters -->
+     <div class="text-center mb-3">     
+        {% for category in categorized_doctors.keys %}
+            <a href="{% url 'visitors:specialization_detail' category.id %}" class="btn btn-outline-primary m-1">
+                {{ category }}
+            </a>
+        {% endfor %}
+    </div>
+
+    <form id="search-form" method="GET" class="mb-4">
+        <div class="row">
+            <!-- Search by Name -->
+            <div class="col-md-4">
+                <input type="text" name="query" class="form-control" placeholder="Search by doctor name" value="{{ query }}">
+            </div>
+    
+            <!-- Search by Specialization -->
+            <div class="col-md-4">
+                <select name="specialization" class="form-control">
+                    <option value="">All Specializations</option>
+                    {% for specialization in categorized_doctors.keys %}
+                        <option value="{{ specialization }}" {% if specialization == specialization_filter %}selected{% endif %}>
+                            {{ specialization }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+    
+            <!-- Submit Button -->
+            <div class="col-md-3 d-grid">
+                <button type="submit" class="btn btn-outline-success">Search</button>
+            </div>
+        </div>
+    </form>
+    
+
+    <!-- Doctor List -->
+    <div class="row">
+        {% for specialization, doctors in categorized_doctors.items %}
+            {% for doctor in doctors %}
+            <div class="col-md-4 doctor-card" data-category="{{ specialization }}">
+                <div class="mb-3">
+                    <div class="text-center p-3">
+                        <img src="{{ doctor.employee_photo_ID.url }}" class="rounded-circle"
+                                style="width:100px; height:100px;" alt="{{ doctor.name }}">
+                    </div>
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-primary fw-bold">{{ doctor.name }}</h5>
+                        <p class="text-muted fw-bold">{{ doctor.specialization }}</p>
+
+                        <p class="card-text text-secondary" style="font-size: 14px;">
+                            {{ doctor.description|truncatewords:25 }}...
+                     
+                        <button class="btn btn-sm read-more" data-bs-toggle="modal" data-bs-target="#doctorModal{{ doctor.id }}">
+                            Read More
+                        </button>
+                    </p>
+
+			 <a href="{% url 'visitors:view_available_slots' doctor.id %}" class="btn btn-primary">View Available Slots</a>
+
+                    </div>
+                </div>
+            </div>               
+            
+       <!-- Doctor Details Modal -->
+            <div class="modal fade" id="doctorModal{{ doctor.id }}" tabindex="-1" aria-labelledby="doctorModalLabel{{ doctor.id }}" aria-hidden="true">
+                <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                    <div class="modal-content">
+                        <div class="modal-header bg-primary text-white">
+                            <h5 class="modal-title" id="doctorModalLabel{{ doctor.id }}">{{ doctor.name }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center mb-3">
+                                <img src="{{ doctor.employee_photo_ID.url }}" alt="{{ doctor.name }}" class="rounded-circle border shadow" style="width: 120px; height: 120px;">
+                            </div>
+                            <h4 class="text-center text-primary">{{ doctor.specialization }}</h4>
+                            <p class="text-center"><strong>License No:</strong> {{ doctor.medical_license_number }}</p>
+                            <hr>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <p><strong>Experience:</strong> {{ doctor.experience_years }} years</p>
+                                    <p><strong>Education:</strong> {{ doctor.education }}</p>
+                                    <p><strong>Languages:</strong> {{ doctor.language }}</p>
+                                    <p><strong>Location:</strong> {{ doctor.doctor_location }}</p>
+                                </div>
+                                <div class="col-md-6">
+                                    <p><strong>Available Time:</strong> {{ doctor.start_time|default:"Not available" }} - {{ doctor.end_time|default:"Not available" }}</p>
+                                    <p><strong>Hospital Affiliations:</strong> {{ doctor.hospital_affiliations }}</p>
+                                    <p><strong>Memberships:</strong> {{ doctor.memberships }}</p>
+                                    <p><strong>Awards:</strong> {{ doctor.awards }}</p>
+                                </div>
+                            </div>
+                            <hr>
+                            <p><strong>About:</strong></p>
+                            <div class="text-muted justify-content" style="text-align: justify;" id="doctorDescription{{ doctor.id }}">
+                                {{ doctor.description|truncatewords:30 }} 
+                                <span id="moreText{{ doctor.id }}" style="display: none; white-space: pre-line;">{{ doctor.description }}</span>
+                            </div>
+                            <a href="javascript:void(0);" onclick="toggleDescription('{{ doctor.id }}')" id="readMoreBtn{{ doctor.id }}"> Read More</a>
+
+                        </div>
+                        <div class="modal-footer d-flex justify-content-between">
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- end of modal -->
+            {% endfor %}            
+        {% endfor %}
+        </div>
+        <!-- end of doctors list row -->
+
+
+
+    <!-- Appointment Booking Section -->
+    <div id="booking-section" class="mt-5" style="display: none;">
+        <h3 class="text-center">Select a Date <span id="selected-doctor-name"></span></h3>
+        <form id="appointment-form">
+            <input type="hidden" id="selected-doctor-id">
+            <label for="date">Choose Date:</label>
+            <input type="date" id="date" class="form-control mb-3" required>
+            <button type="button" class="btn btn-success" id="check-availability">Check Availability</button>
+        </form>
+
+        <div id="timeslot-container" class="mt-4 d-flex flex-wrap justify-content-center gap-2"></div>
+
+    </div>
+
+
+
+<!-- Patient Details Modal -->
+<div class="modal fade" id="patientModal" tabindex="-1" aria-labelledby="patientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable"> 
+        <div class="modal-content">
+            <div class="modal-header" style="background-color:chocolate;">
+                <h5 class="modal-title" id="patientModalLabel">Enter Your Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+            </div>
+            <div class="modal-body" style="max-height: 300px;overflow-y: auto;background-color: aquamarine;">
+                <form id="patient-form">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone">Phone</label>
+                        <input type="text" id="phone" name="phone" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_of_birth">Gender</label>
+                        <input type="text" id="gender" name="gender" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_of_birth">Date of birth</label>
+                        <input type="date" id="date_of_birth" name="date_of_birth" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_of_birth">Address</label>
+                        <input type="text" id="address" name="address" class="form-control">
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="date_of_birth">Medical History</label>
+                        <input type="text" id="medical_history" name="medical_history" class="form-control">
+                    </div>
+                    
+                    <!-- Hidden fields for slot_id and doctor_id -->
+                    <input type="hidden" id="selected-slot-id" name="slot_id">
+                    <input type="hidden" id="selected-doctor-id" name="doctor_id">
+                
+                    <button type="submit" class="btn btn-success">Confirm Booking</button>
+                </form>
+                <div id="patient-message" class="mt-3 text-success"></div>                
+              
+            </div>
+        </div>
+    </div>
+</div>
+
+</div>
+
+<!-- end of main container -->
+
+
+
+
+
+
+
+<script>
+    function toggleDescription(doctorId) {
+        var moreText = document.getElementById("moreText" + doctorId);
+        var btnText = document.getElementById("readMoreBtn" + doctorId);
+        var description = document.getElementById("doctorDescription" + doctorId);
+
+        if (moreText.style.display === "none") {
+            moreText.style.display = "block";  // Show full content
+            btnText.innerHTML = " Read Less";
+        } else {
+            moreText.style.display = "none";  // Collapse back
+            description.innerHTML = "{{ doctor.description|truncatewords:30 }} <a href='javascript:void(0);' onclick='toggleDescription(\"" + doctorId + "\")' id='readMoreBtn" + doctorId + "'> Read More</a>";
+        }
+    }
+</script>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        let searchForm = document.getElementById("search-form");
+
+        searchForm.addEventListener("submit", function () {
+            setTimeout(() => {
+                document.querySelector('input[name="query"]').value = ""; // Clear name search field
+                document.querySelector('select[name="specialization"]').selectedIndex = 0; // Reset specialization dropdown
+            }, 100); // Small delay to allow form submission
+        });
+    });
+</script>
+
+
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    // Doctor selection event
+    let bookButtons = document.querySelectorAll(".select-doctor");
+    bookButtons.forEach(button => {
+        button.addEventListener("click", function () {
+            let doctorId = this.getAttribute("data-doctor-id");
+            if (doctorId) {
+                document.getElementById("booking-section").style.display = "block";
+                document.getElementById("selected-doctor-id").value = doctorId;
+                let doctorName = this.closest(".card").querySelector(".card-title").innerText;
+                document.getElementById("selected-doctor-name").innerText = `Booking for Dr. ${doctorName}`;
+            } else {
+                console.error("Doctor ID is missing.");
+            }
+        });
+    });
+
+    // Event delegation for Check Availability button
+    document.body.addEventListener("click", function (event) {
+        if (event.target && event.target.id === "check-availability") {
+            let doctorId = document.getElementById("selected-doctor-id").value;
+            let date = document.getElementById("date").value;
+
+            if (!doctorId || !date) {
+                alert("Please select a doctor and date.");
+                return;
+            }
+
+            fetch(`/visitors/get-timeslots/?doctor_id=${doctorId}&date=${date}`)
+    .then(response => response.json())
+    .then(data => {
+        let timeslotContainer = document.getElementById("timeslot-container");
+        timeslotContainer.innerHTML = "<h4>Available Time Slots</h4>";
+
+        if (data.slots.length === 0) {
+            timeslotContainer.innerHTML += "<p class='text-danger'>No available slots for this date.</p>";
+        } else {
+            data.slots.forEach(slot => {
+                let buttonClass = slot.is_booked ? "btn-danger" : "btn-outline-primary";
+                
+                // 🔥 Convert 24-hour format to 12-hour AM/PM format
+                let startTime12hr = convertTo12HourFormat(slot.start_time);
+                let endTime12hr = convertTo12HourFormat(slot.end_time);
+
+                let buttonText = `${startTime12hr} - ${endTime12hr} ${slot.is_booked ? "(Booked)" : ""}`;
+
+                let slotButton = document.createElement("button");
+                slotButton.className = `btn ${buttonClass} m-2 book-slot`;
+                slotButton.setAttribute("data-slot-id", slot.id);
+                slotButton.innerHTML = buttonText;
+
+                if (!slot.is_booked) {
+                    slotButton.addEventListener("click", function () {
+                        let selectedSlotId = this.getAttribute("data-slot-id");
+                        document.getElementById("selected-slot-id").value = selectedSlotId; // Store slot ID
+                        let patientModal = new bootstrap.Modal(document.getElementById("patientModal"));
+                        patientModal.show(); // Open Patient Details Modal
+                    });
+                } else {
+                    slotButton.disabled = true;
+                }
+
+                timeslotContainer.appendChild(slotButton);
+            });
+        }
+    })
+    .catch(error => console.error("Error fetching slots:", error));
+
+// 🔹 Function to Convert 24-Hour Time to 12-Hour Format
+function convertTo12HourFormat(timeString) {
+    let [hours, minutes] = timeString.split(":");
+    hours = parseInt(hours);
+    let ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12 || 12; // Convert 0 to 12 for midnight
+    return `${hours}:${minutes} ${ampm}`;
+}
+
+        }
+    });
+
+    document.getElementById("patient-form").addEventListener("submit", function (event) {
+    event.preventDefault();    
+    const slotId = document.getElementById("selected-slot-id").value;
+    const doctorId = document.getElementById("selected-doctor-id").value;  
+    const name = document.getElementById("name").value;
+    const email = document.getElementById("email").value;
+    const phone = document.getElementById("phone").value;
+    const date_of_birth = document.getElementById("date_of_birth").value;
+    const address = document.getElementById("address").value;
+    const medical_history = document.getElementById("medical_history").value;
+    const gender = document.getElementById("gender").value;
+
+    if (!slotId || !doctorId || !name || !email || !phone) {
+        alert("All fields are required!");
+        return;
+    }
+
+
+
+    fetch("/visitors/book-slot/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": getCookie("csrftoken")
+        },
+        body: JSON.stringify({
+            slot_id: slotId,
+            doctor_id: doctorId,
+            name: name,
+            email: email,
+            phone: phone,
+            date_of_birth: date_of_birth,
+            address: address,
+            medical_history: medical_history,
+            gender: gender
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+    if (data.success) {
+        alert("Appointment booked successfully!");
+        document.getElementById("patient-message").textContent = "Appointment confirmed!";        
+        let patientModal = bootstrap.Modal.getInstance(document.getElementById("patientModal"));
+        patientModal.hide();         
+
+        setTimeout(() => {
+            let bookedButton = document.querySelector(`button[data-slot-id="${slotId}"]`);
+            if (bookedButton) {
+                bookedButton.classList.remove("btn-outline-primary");
+                bookedButton.classList.add("btn-danger");
+                bookedButton.innerHTML = bookedButton.innerHTML + " (Booked)";
+                bookedButton.disabled = true;
+            }
+        }, 500);  
+    } else {
+        alert("Error: " + data.error);
+    }
+})
+
+    .catch(error => console.error("Error booking appointment:", error));
+});
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== "") {
+            const cookies = document.cookie.split(";");
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.startsWith(name + "=")) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+
+</script>
+
+
+    
+
+{% endblock %}

@@ -1,0 +1,304 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+
+<div class="container-fluid main-content mb-4">
+    <div class="row" style="justify-content: center;justify-items: center;">
+        <div class="col-12 col-md-auto">        
+
+            <div class="container">
+                <div class="card shadow">
+                    <div class="card-header bg-primary text-white">
+                        <h4>Attendance Late Policy Form</h4>
+                    </div>
+                    <div class="card-body p-4" style="justify-content: center;justify-items: center;">
+                        <form method="POST">
+                            {% csrf_token %}
+
+                            <div class="row">
+                                {# User and Company Fields #}
+                                <div class="col-md-auto">
+                                    <h5>Basic settings</h5>
+                                    <div class="mb-1">
+                                        <label for="{{ form.company.id_for_label }}" class="form-label">Company</label>
+                                        {{ form.company }}
+                                    </div>
+                                    
+                                    <div class="mb-1">
+                                        <label for="{{ form.late_policy_type.id_for_label }}" class="form-label">Late Policy Type</label>
+                                        {{ form.late_policy_type }}
+                                    </div>
+                                    <div class="mb-1">
+                                        <label for="{{ form.max_check_in_time.id_for_label }}" class="form-label">
+                                            Max Check-in Time
+                                        </label>
+                                        {{ form.max_check_in_time }}
+                                    </div>
+
+                                    <div class="mb-1">
+                                        <label>Select Weekend Days:</label>
+                                        {{ form.weekened }}
+                                    </div>
+                                </div>
+
+                                {# Leave Deduction policy Settings #}
+                                <div class="col-md-auto">
+                                    <h5>Leave Deduction Policy Settings</h5>
+                                    <div class="mb-1">
+                                        <label class="form-label">Max Consecutive Late Before Leave Deduction</label>
+                                        {{ form.max_consecutive_late_in_before_leave_deduction }}
+                                    </div>
+                                    <div class="mb-1">
+                                        <label class="form-label">Max Monthly Late Before Leave Deduction</label>
+                                        {{ form.max_monthly_late_in_before_leave_deduction }}
+                                    </div>
+                                    <div class="mb-1">
+                                        <label class="form-label">Max Consecutive Early Out Before leave Deduction</label>
+                                        {{ form.max_consecutive_early_out_before_leave_deduction }}
+                                    </div>
+                                    <div class="mb-1">
+                                        <label class="form-label">Max Monthly Early Out Before Leave Deduction</label>
+                                        {{ form.max_monthly_early_out_before_leave_deduction }}
+                                    </div>      
+                                    <div class="mb-1">
+                                        <label class="form-label">leave day deduction for attendance policy break</label>
+                                        {{ form.leave_day_deduction_for_late_policy_violation }}
+                                    </div>               
+                                   
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                {# Salary Deduction Fields #}
+                                <div class="col-md-auto">
+                                    <h5>Salary Deduction Policy Settings</h5>
+                                    <div class="mb-1">
+                                        <label class="form-label">Max Consecutive Lates Before Salary Deduction</label>
+                                        {{ form.max_consecutive_lates_in_before_salary_deduction }}
+                                    </div>
+                                    <div class="mb-1">
+                                        <label class="form-label">Max Monthly Lates Before Salary Deduction</label>
+                                        {{ form.max_monthly_lates_in_before_salary_deduction }}
+                                    </div>
+                                   
+
+                                    <div class="mb-1">
+                                        <label class="form-label">max consecutive early out before salary deduction</label>
+                                        {{ form.max_consecutive_early_out_before_salary_deduction }}
+                                    </div>
+                                    <div class="mb-1">
+                                        <label class="form-label">max monthly early out before salary deduction</label>
+                                        {{ form.max_monthly_early_out_before_salary_deduction }}
+                                    </div>
+
+
+                                    <div class="mb-1">
+                                        <label class="form-label">Salary Deduction % of basic salary for policy break</label>
+                                        {{ form.salary_deduction_percentage_for_late_policy_violation }}
+                                    </div>
+                                    
+
+                                </div>
+
+                                {# Policy Options #}
+                                <div class="col-md-auto">
+                                    <h5>Other Policy Settings</h5>
+                                    <div class="form-check">
+                                        {{ form.flexible_hours }}
+                                        <label class="form-check-label">Allow Flexible Hours</label>
+                                    </div>
+                                    <div class="form-check">
+                                        {{ form.senior_staff_exempt }}
+                                        <label class="form-check-label">Senior Staff Exempt</label>
+                                    </div>
+                                    <div class="form-check">
+                                        {{ form.biometric_tracking }}
+                                        <label class="form-check-label">Enable Biometric Tracking</label>
+                                    </div>
+                                    <div class="form-check">
+                                        {{ form.auto_deduction_enabled }}
+                                        <label class="form-check-label">Enable Auto Deduction</label>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="text-center mt-4">
+                                <button type="submit" class="btn btn-success">Save Policy</button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+        </div>
+        <div class="col-12 table-responsive my-5">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Policy ID</th>
+                        <th>Company</th>
+                        <th>Policy Type</th>
+                        <th>Max Check in Time</th>
+                        <th>Weekened</th>
+                        <th>max consecutive late in before leave deduction</th> 
+                        <th>max consecutive early out before leave deduction</th> 
+                        <th>max monthly early out before leave deduction </th> 
+                        <th>max monthly late in before leave deduction</th> 
+
+                        <th>max consecutive early out before salary deduction</th>   
+                        <th>max consecutive lates in_before salary deduction</th>   
+                        <th>max_monthly early out before salary deduction</th>   
+                        <th>max_monthly lates in before salary deduction</th>   
+
+                        <th>is flexible hours ??</th>  
+                        <th>is senior staff_exempt ??</th> 
+                        <th>salary deduction percentage for late policy violation</th>    
+                        <th>leave day deduction for late policy violation</th> 
+                        <th>is biometric tracking ??</th> 
+                        <th>auto deduction enabled ??</th> 
+
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in page_obj %}
+                        <tr>
+
+                            
+                            <td>{{ data.policy_id }}</td>                                                                               
+                            <td>{{ data.company }}</td>
+                            <td>{{ data.get_late_policy_type_display }}</td>
+                            <td>
+                              {{ data.max_check_in_time }}
+                            </td>   
+                            <td>{{ data.get_weekends_list|join:", " }}</td>
+                                                                          
+                            <td>{{data.max_consecutive_late_in_before_leave_deduction }}</td>
+                            <td>{{ data.max_consecutive_early_out_before_leave_deduction }}</td>
+                            <td>{{ data.max_monthly_early_out_before_leave_deduction }}</td>
+                            <td>{{ data.max_monthly_late_in_before_leave_deduction }}</td>
+
+                            <td>{{ data.max_consecutive_early_out_before_salary_deduction }}</td>
+                            <td>{{ data.max_consecutive_lates_in_before_salary_deduction }}</td>
+                            <td>{{ data.max_monthly_early_out_before_salary_deduction }}</td>
+                            <td>{{ data.max_monthly_lates_in_before_salary_deduction }}</td>
+                            <td>{{ data.flexible_hours }}</td>
+                            <td>{{ data.senior_staff_exempt }}</td>
+                            <td>{{ data.salary_deduction_percentage_for_late_policy_violation }}</td>
+                            <td>{{ data.leave_day_deduction_for_late_policy_violation }}</td>
+                            <td>{{ data.biometric_tracking }}</td>
+                            <td>{{ data.auto_deduction_enabled }}</td>
+                                                       
+                                                      
+                            <td class="text-center">
+                                <a href="{% url 'leavemanagement:create_attendance_policy' %}" class="btn btn-sm btn-info">Create</a>
+                                <a href="{% url 'leavemanagement:update_attendance_policy' data.id %}" class="btn btn-sm btn-info">Edit</a>
+                               
+                                <a href="#" 
+                                    class="btn btn-danger btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteModal" 
+                                    data-id="{{ data.id }}" 
+                                    data-name="{{ data.name }}">
+                                        Delete
+                                    </a>
+                               
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center">No records available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                
+            </table>
+                    
+            <!-- Pagination Controls -->
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+
+
+             <!-- Delete Confirmation Modal -->
+             <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete the transport record: <strong id="modal-entity-name"></strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <form method="post" id="delete-form">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h4 style="height:10px"></h4>
+    
+</div>
+
+<div style="height:1400px"></div>
+
+
+<script>
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget; 
+        const entityId = button.getAttribute('data-id');
+        const entityName = button.getAttribute('data-name');
+
+          const modalEntityName = deleteModal.querySelector('#modal-entity-name');
+        modalEntityName.textContent = entityName;
+  
+        const deleteForm = deleteModal.querySelector('#delete-form');
+        deleteForm.action = `/leavemanagement/delete_attendance_policy/${entityId}/`;
+    });
+</script>
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const datePicker = document.getElementById("date-picker");
+    
+        datePicker.addEventListener("change", function() {
+            const selectedDate = new Date(this.value);
+            const day = selectedDate.getDay(); // 5 = Friday, 6 = Saturday
+    
+            if (day === 5 || day === 6) {
+                alert("Weekends (Friday & Saturday) are not allowed!");
+                this.value = "";
+            }
+        });
+    });
+    </script>
+    
+
+{% endblock %}

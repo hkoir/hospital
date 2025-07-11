@@ -1,0 +1,87 @@
+
+
+<style>
+    .hero-section {
+     position: relative;
+       width: 100vw;
+     margin-left: calc(-50vw + 50%);
+     height: 70vh;
+     display: flex;
+     justify-content: center;
+     align-items: center;
+     text-align: center;
+     overflow: hidden;
+     color: white;
+     padding: 0 15px;
+     border-bottom: 1px solid #eee;
+     animation: fadeInUp 1.5s ease-in-out;
+     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 1)),
+     url("/static/images/doctor-1.jpg") center/cover no-repeat;
+ }
+ 
+ 
+ .hero-section::before {
+     content: "";
+     position: absolute;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 1)),
+                 url("/static/images/doctor-1.jpg") center/cover no-repeat;
+     z-index: -1;
+ }
+ 
+ 
+ .hero-overlay {
+     position: absolute;
+     top: 0;
+     left: 0;
+     width: 100%;
+     height: 100%;
+     background: rgba(0, 0, 0, 0.6);
+     z-index: 1;
+ }
+ 
+ .hero-content {
+     position: relative;
+     z-index: 2;
+     max-width: 800px;
+     margin: 0 auto;
+     text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.6);
+     animation: fadeInUp 5s ease-in-out infinite;
+ }
+ 
+ /* 🔹 Smooth fade-in animation */
+ @keyframes fadeInUp {
+     from {
+         opacity: 0;
+         transform: translateY(40px);
+     }
+     to {
+         opacity: 1;
+         transform: translateY(0);
+     }
+ }
+ 
+ 
+     
+     </style>
+
+
+
+<section class="hero-section mb-4">
+    <div class="hero-overlay"></div>
+    <div class="hero-content">
+        <h1>Excellence | Compassion | Innovation | Care</h1>
+        <p>Advancing Healthcare, Transforming Lives</p>
+
+    </div>
+  
+    
+    <div class="custom-shape-divider-bottom-hero">
+        <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+            <path d="M0,0V46.29c47.6,15.4,98.5,27.4,150,24.67,49.6-2.6,97.1-20.73,146.6-27.27,64.5-8.53,129.6,1.84,194,9.39,65.1,7.6,130.8,10.9,196.5,2.53,65.8-8.27,128.9-27.47,192.2-31.1,51.5-3,103.7,4.72,155.2,13.11,51.5,8.4,103.2,17.6,155.5,20.44,45.5,2.51,91.3-.53,136.8-5.39V0Z" fill="#ffffff"></path>
+        </svg>
+    </div>
+</section>

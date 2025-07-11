@@ -1,0 +1,10 @@
+<div id="patient-form-section">
+    <h3>Enter Your Details</h3>
+    <form id="patient-form">
+        {% csrf_token %}
+        {{ form.as_p }}
+
+        <button type="button" class="btn btn-primary mt-2" id="submit-patient">Continue</button>
+    </form>
+</div>
+

@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+
+
+    <div class="container-fluid main-content">
+        <div class="row justify-content-center">
+            <div class="col-12 col-md-8">
+                <div class="notice-board">
+                    <div class="notice-board-header">
+                        <h5><i class="fas fa-bell"></i> Notice Board</h5>
+                        <button type="button" class="btn-close text-white custom_buttom" aria-label="Close" onclick="closeNoticeBoard()"></button>
+                    </div>
+                    
+                    <div class="notice-board-body">
+                        <ul class="list-group">
+                            {% for notice in notices %}
+                                <li class="list-group-item">
+                                    <span class="notice-date">Date: {{ notice.created_at }}</span><br>
+                                    <span class="notice-title">{{ notice.title }}</span><br>
+                                    <p>{{ notice.content }}</p>
+                                    <p class="text-center">
+                                        {% if notice.notice_attachment %}
+                                            <a href="{{ notice.notice_attachment.url }}" target="_blank">
+                                                <img src="{{ notice.notice_attachment.url }}" alt="Notice Image" class="notice-image" width="60%">
+                                            </a>
+                                        {% else %}
+                                            <span class="no-attachment">No attachment available</span>
+                                        {% endif %}
+                                    </p>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+ 
+
+   
+    <script>
+        function closeNoticeBoard() {
+            document.querySelector('.notice-board').style.display = 'none';
+            window.location.href = '/';
+        }
+    </script>
+
+
+
+{% endblock %}

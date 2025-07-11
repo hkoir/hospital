@@ -1,0 +1,159 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% load static %}
+
+{% block content %}
+
+
+
+<style>
+  .inv_chart {
+    width: 100%;
+    height: 200px;  /* increased height for small screens */
+}
+
+@media (min-width: 768px) {
+    .inv_chart {
+        height: 300px;  /* larger height for bigger screens */
+    }
+}
+
+</style>
+
+
+
+<div class="container">  
+    <h2 class="text-center my-4" >Inventory Dashboard</h2>
+    <p><strong>Filtered data by:</strong>{{ product }} | &nbsp;<strong>Warehouse:</strong>{{ warehouse }}&nbsp;| <strong>Location:</strong>{{ location}} | &nbsp;<strong>Batch:</strong>{{ batch }} </p>
+    <div class="inv_chart"> 
+   <canvas id="inventoryChart"></canvas>
+   </div>
+    <!-- Table -->
+    <h4 class="text-center mt-4">Filter</h4>
+    <div class="table-responsive">
+        <form method="get" class="my-2" novalidate, style="border:1px solid green">
+            {% csrf_token %}
+            <div class="row">
+                {% for field in form %}
+                    <div class=" col-6 col-md-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field|add_class:"form-control" }}
+                        {% if field.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ field.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endfor %}
+                
+            </div>
+
+            <div class="d-flex justify-content-between mt-4">                    
+                <button type="submit" class="btn btn-primary">Apply filter</button>
+                <a href="{% url 'inventory:inventory_transaction_view' %}" class="btn btn-success">
+                     Add stock
+                 </a>
+                 
+            </div>
+  </form>
+
+
+  <div id="inventoryTable" class="mt-4 table-responsive">
+		<h2 class="text-center">Inventory Details </h2>
+    <p><strong>Filtered data by:</strong>{{ product }} | &nbsp;<strong>Warehouse:</strong>{{ warehouse }}&nbsp;| <strong>Location:</strong>{{ location}} | &nbsp;<strong>Batch:</strong>{{ batch }} </p>
+    {% include 'inventory/partials/inventory_table.html' %}
+
+         <!-- Pagination Controls -->
+         <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+    </div>
+
+   
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('searchForm');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();  // ✅ Prevent default page refresh
+
+            const formData = new FormData(form);
+            const params = new URLSearchParams(formData);
+
+            fetch("{% url 'inventory:inventory_dashboard' %}?" + params.toString(), {
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('inventoryTable').innerHTML = data.html;
+            })
+            .catch(error => {
+                console.error("Error:", error);
+            });
+        });
+    });
+</script>
+
+
+<script>
+    const labels = JSON.parse("{{ labels|escapejs }}");
+    const quantities = JSON.parse("{{ quantities|escapejs }}");
+    const reorderLevels = JSON.parse("{{ reorder_levels|escapejs }}");
+
+    const ctx = document.getElementById('inventoryChart');
+    const inventoryChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [
+                {
+                    label: 'Quantity in Stock',
+                    data: quantities,
+                    backgroundColor: 'rgba(54, 162, 235, 0.6)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
+                },
+                {
+                    label: 'Reorder Level',
+                    data: reorderLevels,
+                    backgroundColor: 'rgba(255, 99, 132, 0.6)',
+                    borderColor: 'rgba(255, 99, 132, 1)',
+                    borderWidth: 1
+                }
+            ]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+</script>
+
+
+
+
+{% endblock %}

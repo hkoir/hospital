@@ -1,0 +1,114 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block content %}
+   
+
+<div class="container-fluid main-content mb-4">
+    <div class="row">
+        <div class="col-12 col-md-4">
+
+            <h3>Leave Summary:</h3>
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Leave Type</th>
+                        <th>Total Leave</th>
+                        <th>Availed Leave</th>                    
+                        <th>Available Leave</th>
+                        <th>Carry Forward</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for summary in leave_summary %}
+                        <tr>
+                            <td>{{ summary.leave_type }}</td>
+                            <td>{{ summary.total_leave }}</td>
+                            <td>{{ summary.approved_leave }}</td>                        
+                            <td>{{ summary.available_leave }}</td>
+                            <td>{{ summary.carry_forward }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5">No leave applications found.</td>
+                        </tr>
+                        {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        <div class="col-12 col-md-8">
+
+            <h3>Leave Application History:<a href="{% url 'leavemanagement:apply_leave' %}">Apply for leave</a></h3>
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Leave Type</th>
+                        <th>Start Date</th>
+                        <th>End Date</th>
+                        <th>No.of Days</th>                        
+                        <th>Reasons</th>
+                        <th>Attachment</th>
+                        <th>Status</th>
+                        <th>Rejection reason if any</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for application in leave_applications %}
+                        <tr>
+                            <td>{{ application.leave_type.name }}</td>
+                            <td>{{ application.applied_start_date }}</td>
+                            <td>{{ application.applied_end_date }}</td>
+                            <td>{{ application.applied_no_of_days }}</td>
+        
+                            <td>{{ application.applied_reason }}</td>
+                            <td>                               
+                                {% if application.attachment %}
+                                    {% if application.attachment.url|is_pdf %}
+                                        <a href="{{ application.attachment.url }}" target="_blank">View PDF</a>
+                                    {% elif application.attachment.url|is_image %}
+                                        <a href="{{ application.attachment.url }}" target="_blank">
+                                            <img src="{{ application.attachment.url }}" style="width:40px;height:40px;border-radius: 50%;">
+                                        </a>
+                                    {% else %}
+                                        <a href="{{ application.attachment.url }}" target="_blank">Download File</a>
+                                    {% endif %}
+                                {% else %}
+                                    <strong>No attachment</strong>
+                                {% endif %}
+                            </td>
+                                    
+                            <td>
+                                {% if application.status == 'APPROVED' %}
+                                <i class="fas fa-check fw-bold text-success">Approved</i>
+                                {% elif application.status == 'REJECTED' %}
+                                <i class="fas fa-times fw-bold text-danger">Rejected</i>                           
+                                {% else %}
+                                <strong style="color:blue">{{application.get_status_display}}</strong>
+                                {% endif %}
+                            </td>
+                                               
+                       
+                            <td>
+                                {% if application.rejection_reason %}
+                                {{ application.rejection_reason }}
+                                {% else %}
+                                No rejection
+        
+                            </td>
+                            {% endif %}
+                           
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="4">No leave applications found.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            
+        </div>
+    </div>
+</div>
+
+    
+
+{% endblock %}

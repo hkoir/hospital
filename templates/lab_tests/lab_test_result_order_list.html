@@ -1,0 +1,98 @@
+
+
+{% extends "base.html" %}  <!-- Update to your layout base if needed -->
+{% block content %}
+
+
+<div class="containe-fluid">    
+    <div class="row">   
+        <div class="d-flex">
+            <form method="GET" class="p-2 m-3 w-100">
+                {% csrf_token %}
+        
+                {% for field in form %}
+                    <div class="d-flex align-items-center mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label me-2" style="width: 150px;">
+                            {{ field.label }}
+                        </label>
+                        {{ field }}
+                  
+                {% endfor %}
+        
+                    <button type="submit" name="entity_submit" class="btn btn-success btn-lg">
+                       Filter
+                    </button>
+		</div>
+            </form>
+        </div>
+        
+   
+    <div class="col-12 table-responsive">
+            <h2>Lab Test orders</h2>
+            
+            <table class="table table-bordered table-striped mt-3">
+                <thead class="thead-dark">
+                    <tr>
+			<th>Order Test Code </th>
+                        <th>Add result items</th>
+                        <th>Download Report</th>
+                        <th>Medical Reord</th>
+                        <th>Patient</th>
+			<th>Patient ID </th>
+			<th>Doctor</th>
+                        <th>Assistance</th>
+                        <th>Status</th>
+                        <th>Digital Report</th>
+                    
+                    
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for record in  page_obj %}
+                    <tr>
+			<td>{{ record.lab_test_result_oder_code }}</td>
+                        <td>
+                            <a href="{% url 'lab_tests:add_lab_test_result' record.id %}">Add test result</a>
+                        </td>
+                        <td><a href="{% url 'lab_tests:download_test_report' record.id %}">Download report</a></td>
+                        <td>{{ record.medical_record.medical_record_code }}</td>
+			<td> {{ record.medical_record.patient.name }} </td>
+			<td>{{ record.medical_record.patient.patient_id }}</td>
+                        <td>Dr. {{ record.test_doctor }}</td>
+                        <td>{{ record.test_assistance}}</td>
+                        <td>{{ record.status}}</td>
+                        <td style="white-space: wrap;">Processing</td>
+                    
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5">No medical records found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+     <!-- Pagination Controls -->
+     <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+
+    
+</div>
+</div>
+
+{% endblock %}

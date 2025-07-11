@@ -1,0 +1,43 @@
+
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+
+<div class="container mb-4" style="height:800px">  
+
+    <h2 class="mb-4">Leave Summary Report - {{ current_year }}</h2>
+    <h4 class="mb-4">Employee name- {{ employee.first_name }}&nbsp;{{ employee.last_name }}</h4>
+    <h4><a href="{% url 'leavemanagement:apply_leave' %}">Apply for leave</a></h4>
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Leave Type</th>
+                <th>Total Leave</th>
+                <th>Availed Leave</th>
+                <th>Available Leave</th>
+                <th>Carry forward</th>           
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in leave_summary %}
+                <tr>
+                    <td>{{ item.leave_type }}</td>
+                    <td>{{ item.total_leave }}</td>
+                    <td>{{ item.availed_leave }}</td>
+                    <td>{{ item.available_leave }}</td>
+                    <td>{{ item.carry_forward }}</td>
+                   
+                </tr>
+            {% empty %}
+                <tr>
+                    <td colspan="5">No leave balance records found.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    
+</div>
+{% endblock %}

@@ -1,0 +1,38 @@
+
+
+{% extends 'base.html' %}
+
+{% block content %}
+  
+    <div class="container-fluid main-content mb-5">
+        <div class="row">
+            <div class="col-12 col-md-2"></div>
+            <div class="col-12 col-md-6">
+                <div class="card shadow-lg border-0 rounded-lg">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h3 class="mb-0"> Apply Leave</h3>
+                    </div>
+                      <div class="card-body">                      
+                          <form method="POST" enctype="multipart/form-data" class="ms-4">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <div class="d-grid">
+                                <button type="submit" class="btn btn-success my-2">Submit Application</button>
+                                <a href="{% url 'leavemanagement:pending_leave_list' %}" class="btn btn-secondary">Cancel</a>
+                            </div> 
+                        </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-2"></div>
+
+    </div>
+    <h4 style="height:50px"></h4>
+</div>
+
+<div style="height:20px"></div>
+
+
+
+{% endblock %}

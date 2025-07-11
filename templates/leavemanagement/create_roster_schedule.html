@@ -1,0 +1,22 @@
+
+
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Generate Roster</h2>
+<!-- templates/generate_roster.html -->
+<form method="get" action="{% url 'leavemanagement:generate_roster' %}">
+    <label for="start_date">Select Start Date:</label>
+    <input type="date" name="start_date" id="start_date" required>
+    <button type="submit">Generate Roster</button>
+</form>
+
+
+{% if messages %}
+    <ul>
+        {% for message in messages %}
+            <li>{{ message }}</li>
+        {% endfor %}
+    </ul>
+{% endif %}
+{% endblock %}

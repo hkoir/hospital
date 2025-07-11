@@ -1,0 +1,158 @@
+{% extends "sub_base.html" %}
+
+{% load static %}
+
+{% load custom_filters %}
+
+{% block title %}Register Account{% endblock %}
+
+{% block content %}
+
+<style>
+
+
+
+  .account-form input {
+      border: 2px solid #ccc;
+      height: calc(2em + .75rem + 2px);
+  }
+
+  .account-form input:focus {
+      border-color: #1497ff;
+      box-shadow: none;
+  }
+
+  #togglePassword {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  #togglePassword i {
+    font-size: 1em;
+  }
+
+
+  .form-control {
+    padding: 0.4rem;   
+    font-size: 0.9rem; 
+  
+  }
+  .form-group {
+    margin-bottom: 3px; 
+  }
+ 
+  .custom-card {
+        max-width: 500px;
+        margin: auto;
+        border-radius: 15px;
+    }
+    .card-body {
+        background-color: #f8f9fa;
+        border-radius: 15px;
+    }
+    .card-title {
+        font-weight: bold;
+        color: #343a40;
+    }
+    .btn-primary {
+        background-color: #007bff;
+        border-color: #007bff;
+        transition: background-color 0.3s ease;
+    }
+    .btn-primary:hover {
+        background-color: #0056b3;
+        border-color: #0056b3;
+    }
+    .form-label {
+        font-weight: bold;
+    }
+    .alert-danger {
+        font-size: 14px;
+    }
+    .text-muted {
+        font-size: 14px;
+    }
+
+
+</style>
+
+<div class="container-fluid main-content">
+  <div class="row">
+    <div class="col-12 col-md-3"></div>
+    <div class="col-12 col-md-6">
+   
+      <div class="card custom-card shadow-lg p-4">
+        <div class="card-body text-center">
+            <img class="rounded-circle mb-3" src="{% static 'images/Logo.png' %}" style="width: 80px; height: 80px;" alt="Logo" id="logo">
+    
+            <h2 class="text-primary font-weight-bold">DOPS</h2>
+            <h3 class="text-success font-weight-bold">Digital Operations</h3>
+            <h6 class="text-warning font-weight-bold mb-4">Online Process Automation</h6>
+    
+            <h4 class="card-title mb-4">Create an Account</h4>
+    
+            <form class="account-form" action="." method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+    
+                {% if form.errors %}
+                    <div class="alert alert-danger" role="alert">
+                        <strong>There were some errors with your submission:</strong>
+                        <ul>
+                            {% for field in form %}
+                                {% for error in field.errors %}
+                                    <li>{{ field.label }}: {{ error|striptags }}</li>
+                                {% endfor %}
+                            {% endfor %}
+                        </ul>
+                    </div>
+                {% endif %}
+    
+                {% for field in form %}
+                    <div class="mb-3">
+                        <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                        {{ field|add_class:"form-control" }}
+                    </div>
+                {% endfor %}
+    
+                <div class="d-grid gap-2 mt-4">
+                    <input type="hidden" name="next" value="{{ next }}">
+                    <button class="btn btn-primary fw-bold py-2" type="submit">Register</button>
+                </div>
+    
+                <p class="text-center mt-3">
+                    <a href="{% url 'accounts:login' %}" class="text-decoration-none text-muted">Already have an account? Login here</a>
+                </p>
+            </form>
+        </div>
+    </div>
+   
+    
+      
+      
+
+  </div>
+  <div class="col-12 col-md-3"></div>
+</div>
+</div>
+
+<div style="height:600px"></div>
+
+  <script>
+    var passwordField = document.getElementById("id_password");
+  var togglePassword = document.getElementById("togglePassword");
+
+  togglePassword.addEventListener("click", function() {
+    if (passwordField.type === "password") {
+      passwordField.type = "text";
+      togglePassword.classList.remove("fa-eye");
+      togglePassword.classList.add("fa-eye-slash");
+    } else {
+      passwordField.type = "password";
+      togglePassword.classList.remove("fa-eye-slash");
+      togglePassword.classList.add("fa-eye");
+    }
+  });
+  </script>
+
+
+{% endblock %}

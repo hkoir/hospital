@@ -1,0 +1,64 @@
+
+{% extends "sub_base.html" %}
+{% block title %}Save Payment Information{% endblock %}
+{% block content %}
+
+
+
+
+
+<div class="container-fluid main-content">
+    {% if plan.duration == 1 %}
+    <h4 class="text-center text-success fw-bold">Eneter your payment details.Don't worry, we would not charge for free trial</h4>
+    {% endif %}
+    <div class="row">
+        <div class="col-12 col-md-3"></div>
+        <div class="col-12 col-md-6">
+            <div class="card shadow-lg" style="background-color: aliceblue;">
+                <!-- Card Header -->
+            <div class="card-header bg-primary text-white text-center">
+               <h3 class="mb-0">Payment Information</h3>
+           </div>      
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <label for="card_number">Card Number:</label>
+                        <input type="text" id="card_number" name="card_number" placeholder="Enter your card number" required>
+                        <br><br>
+                        
+                        <label for="expiry_date">Expiry Date:</label>
+                        <input type="text" id="expiry_date" name="expiry_date" placeholder="MM/YY" required>
+                        <br><br>
+                        
+                        <label for="cvv">CVV:</label>
+                        <input type="text" id="cvv" name="cvv" placeholder="Enter CVV" required>
+                        <br><br>
+                        
+                        <label for="card_brand">Card Brand:</label>
+                        <select id="card_brand" name="card_brand" class="form-control" required>
+                            <option value="Visa">Visa</option>
+                            <option value="MasterCard">MasterCard</option>
+                            <option value="Amex">American Express</option>
+                            <option value="Discover">Discover</option>
+                        </select>
+                        <br><br>
+                    
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary text-white btn-lg">Submit</button>
+                        </div>
+                    </form>
+                    
+                    
+
+                 </div>
+            </div>           
+        </div>
+        <div class="col-12 col-md-3"></div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+

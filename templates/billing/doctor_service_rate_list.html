@@ -1,0 +1,31 @@
+
+
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container mt-4 table-responsive">
+    <h4>Doctor Service Rates</h4>
+    <a href="{% url 'billing:doctor_service_rate_create' %}" class="btn btn-primary mb-3">Add New Rate</a>
+    <table class="table table-bordered">
+      <thead class="table-info">
+        <tr>
+          <th>Doctor</th>
+          <th>Service Type</th>
+          <th>Rate</th>
+          <th>Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for rate in rates %}
+          <tr>
+            <td>{{ rate.doctor.name }}</td>
+            <td>{{ rate.service_type }}</td>
+            <td>{{ rate.rate }}</td>
+            <td>{{ rate.updated_at }}</td>
+          </tr>
+        {% empty %}
+          <tr><td colspan="4">No service rates found.</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endblock %}

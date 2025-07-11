@@ -1,0 +1,91 @@
+
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<div class="container my-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-lg-10">
+            <div class="card shadow-lg border-0">
+                <div class="card-header bg-primary text-white">
+                    <h2 class="mb-0">External Lab Visit Details</h2>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <!-- Left Column -->
+                        <div class="col-md-4 mb-4 px-5">
+                            <h5 class="text-secondary">Patient Information</h5>
+                            <p><strong>Patient:</strong> {{ patient.name }}</p>
+                            <p><strong>Doctor Reference:</strong> {{ lab_visit.doctor_ref }}</p>
+                            <p><strong>Doctor:</strong> {{ doctor.name }}</p>
+
+                            {% if lab_visit.prescription_file %}
+                            <h5 class="text-secondary mt-4">Prescription</h5>
+                            <p>
+                                <strong>File:</strong>
+                                <a href="{{ lab_visit.prescription_file.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                    View File
+                                </a>
+                            </p>
+                            {% endif %}
+
+                            <h5 class="text-secondary">Notes</h5>
+                            <p class="border p-3 bg-light rounded">{{ lab_visit.notes|default:"No notes provided." }}</p>
+                        </div>
+
+                        <!-- Right Column -->
+                        <div class="col-md-4 mb-4">
+                            <h5 class="text-secondary">Medical Record</h5>
+                            <p><strong>Diagnosis:</strong> {{ medical_record.diagnosis }}</p>
+                            <p><strong>Treatment Plan:</strong> {{ medical_record.treatment_plan }}</p>
+                            <p><strong>Date:</strong> {{ medical_record.date|date:"F d, Y" }}</p>
+                        </div>
+                         <!-- Full Width Bottom Section -->
+                    <div class="col-md-4 mb-4">
+                        <h5 class="text-secondary">Lab Test Requests</h5>
+                        {% if lab_test_requests %}
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Test Name</th>
+                                        <th>Rate</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for request in lab_test_requests %}
+                                    <tr>
+                                        <td>{{ request.lab_test.test.test_name }}</td>
+                                        <td>{{ request.lab_test.test.price|floatformat:2 }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            <h4> Total amount:BDT&nbsp;{{ total_amount }}</h4>
+                        {% else %}
+                            <p class="text-muted">No lab test requests recorded.</p>
+                        {% endif %}
+                    </div>
+                    </div>
+
+                   
+
+                    <div class="text-center">
+                        <a href="{% url 'patients:patient_list' %}" class="btn btn-secondary">
+                            ← Back to List
+                        </a>
+                        <button onclick="window.print()" class="btn btn-outline-primary ms-2">
+                            🖨 Print
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+
+{% endblock %}

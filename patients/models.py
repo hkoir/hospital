@@ -1,0 +1,147 @@
+from django.db import models
+from accounts.models import CustomUser
+from datetime import date
+from facilities.models import Ward,Bed,Room
+from core.models import Doctor
+from django.utils import timezone
+from billing.models import BillingInvoice
+from django.utils.crypto import get_random_string
+
+
+
+
+class Guardian(models.Model):
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)   
+    name = models.CharField(max_length=255)
+    relationship = models.CharField(max_length=50)
+    phone_number = models.CharField(max_length=15)
+    email = models.EmailField()
+    address=models.TextField(null=True,blank=True)
+    profile_picture = models.ImageField(upload_to='guardian_pictures/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.name} ({self.relationship})"
+
+
+
+class Patient(models.Model):    
+    patient_id = models.CharField(max_length=30,null=True,blank=True,unique=True)    
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
+    guardian =models.ForeignKey(Guardian, on_delete=models.CASCADE, null=True, blank=True)
+    name=models.CharField(max_length=255,null=True,blank=True)
+    email=models.EmailField(null=True,blank=True)
+    phone=models.CharField(max_length=255,null=True,blank=True)
+    date_of_birth = models.DateField(null=True,blank=True)
+    gender = models.CharField(max_length=10, choices=[('Male', 'Male'), ('Female', 'Female')])
+    address = models.TextField(null=True,blank=True)
+    emergency_contact = models.CharField(max_length=15,null=True,blank=True)   
+    medical_history = models.TextField(blank=True, null=True)
+    patient_photo = models.ImageField(upload_to='patient_photos/', null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(fields=['name', 'phone', 'date_of_birth'], name='unique_patient_record')
+        ]
+
+    def save(self, *args, **kwargs):
+        if not self.patient_id:
+            now = timezone.now()
+            prefix = now.strftime("PT-%y%m")
+            for i in range(1, 10000): 
+                potential_id = f"{prefix}-{i:04d}"
+                if not Patient.objects.filter(patient_id=potential_id).exists():
+                    self.patient_id = potential_id
+                    break
+        super().save(*args, **kwargs)
+
+        
+    def calculate_age(self):
+        today = date.today()
+        return today.year - self.date_of_birth.year - ((today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day))
+
+    def __str__(self):
+        return self.name if self.name else 'Unnamed Patient'
+
+
+
+
+
+class PatientAdmission(models.Model):
+    admission_code = models.CharField(max_length=20, unique=True, blank=True, null=True)
+    ADMISSION_TYPE_CHOICES = [
+        ('Emergency', 'Emergency'),
+        ('Planned', 'Planned'),
+        ('Referral', 'Referral'),
+    ]
+
+    STATUS_CHOICES = [
+        ('Admitted', 'Admitted'),
+        ('Discharged', 'Discharged'),
+        ('Transferred', 'Transferred'),
+    ]
+    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name="admissions")
+    admission_date = models.DateTimeField(default=timezone.now)   
+    
+    admitting_doctor = models.ForeignKey(Doctor, on_delete=models.SET_NULL, null=True, blank=True,related_name='admitting_doctor')
+    assigned_ward = models.ForeignKey(Ward, on_delete=models.SET_NULL, null=True, blank=True,related_name='admitting_ward')
+    assigned_bed = models.ForeignKey(Bed, on_delete=models.SET_NULL, null=True, blank=True,related_name='admitting_bed')
+    assigned_room = models.ForeignKey(Room, on_delete=models.SET_NULL, null=True, blank=True,related_name='admitting_room')
+
+    reason_for_admission = models.TextField(blank=True)
+    admission_type = models.CharField(max_length=20, choices=ADMISSION_TYPE_CHOICES, default='Planned')
+    patient_photo = models.ImageField(upload_to='Patient_photo',null=True,blank=True)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='Admitted')
+    bed_assignment_date = models.DateField(null=True, blank=True)     
+    discharge_date = models.DateTimeField(null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+
+    def save(self, *args, **kwargs):
+        if not self.admission_code:
+            self.admission_code = self.generate_admission_code()
+        super().save(*args, **kwargs)
+
+    def generate_admission_code(self):
+        if self.admission_date:
+            date_str = self.admission_date.strftime("%y%m")  # Example: "2504" for April 2025
+        else:
+            date_str = timezone.now().strftime("%y%m")
+        return f"ADM-{date_str}-{self.patient.id}-{get_random_string(length=3).upper()}"
+
+    def days_stayed(self):
+        end_date = self.discharge_date or timezone.now()
+        return (end_date - self.admission_date).days + 1
+
+    def is_discharged(self):
+        return self.status in ['Discharged','Transferred']
+
+    def __str__(self):
+        return f"PID:{self.admission_code} | {self.patient.name}--Doctor:{self.admitting_doctor})"
+
+
+
+
+
+class DischargeReport(models.Model):
+    patient_admission = models.OneToOneField(PatientAdmission, related_name='discharge_report', on_delete=models.CASCADE)
+   # patient_admission = models.ForeignKey(PatientAdmission, on_delete=models.CASCADE, related_name='discharge_report')
+    doctor = models.ForeignKey(Doctor, on_delete=models.SET_NULL, null=True,related_name='discharge_doctor')    
+    reason_for_admission = models.TextField(blank=True, null=True)
+    diagnosis = models.TextField()
+    treatment_given = models.TextField()
+    investigations = models.TextField(blank=True, null=True)
+    summary = models.TextField(blank=True, null=True)
+    condition_at_discharge = models.TextField(blank=True, null=True)
+    follow_up_instructions = models.TextField(blank=True, null=True)
+    follow_up_date = models.DateField(blank=True, null=True)
+    additional_notes = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(default=timezone.now)
+ 
+
+    def __str__(self):
+        return f"Discharge Report for {self.patient_admission.patient.name}"

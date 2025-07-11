@@ -1,0 +1,195 @@
+
+
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load static %}
+
+
+{% block content %}
+
+
+<div class="container">       
+
+ <form id="external-lab-visit-form" method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            {{ formset.management_form }}
+        <div class="row">            
+
+            <!-- Lab Test Selection -->
+        <div class="col-12 col-md-6">
+            <div class="card shadow-lg border-0 mb-4">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>Lab Tests</h4>
+                </div>
+                    <div class="card-body">
+                        <table class="table" id="formset_table">
+                            <thead>
+                                <tr>
+                                    <th>Lab Test Catelogue</th>
+                                    <th>Test Fee</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for form in formset %}
+                                    <tr class="formset_row">
+                                        {{ form.id }}
+                                       <div style="display: none;">{{ form.DELETE }}</div>
+                                        <td>{{ form.lab_test_catelogue }}</td>
+                                        <td>{{ form.test_fee }}</td>
+                                        <td>
+                                            <button type="button" class="remove-form-btn btn btn-danger btn-sm">Remove</button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                           <!-- Submit Button -->
+                       <div class="d-flex justify-content-between align-items-center mt-3">
+                            <button type="button" id="add-form-btn" class="btn btn-primary">Add Another Lab Test</button>
+                            <button type="submit" class="btn btn-success px-5">Submit</button>
+                        </div>
+                   
+
+                        <div class="mt-3">
+                            <p>Total Estimated Cost: <strong id="total_cost">0.00</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+         
+        </div>
+
+        </form>
+
+        <!-- Hidden empty form template -->
+        <div id="empty-form" style="display: none;">
+            <table>
+                <tr class="formset_row">
+                    {{ formset.empty_form.id }}
+                    <div style="display: none;">{{ formset.empty_form.DELETE }}</div>
+                    <td>{{ formset.empty_form.lab_test_catelogue}}</td>
+                    <td>{{ formset.empty_form.test_fee }}</td>
+                    <td>
+                        <button type="button" class="remove-form-btn btn btn-danger btn-sm">Remove</button>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
+
+
+  
+</div>
+
+
+
+<div id="form-messages"></div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const testPrices = JSON.parse('{{ test_prices|escapejs }}');
+    const addBtn = document.getElementById('add-form-btn');
+    const formsetTable = document.getElementById('formset_table');
+    const totalForms = document.querySelector('#id_form-TOTAL_FORMS');
+
+    function updateFeesAndTotal() {
+        let total = 0;
+        document.querySelectorAll('.formset_row').forEach(row => {
+            const testSelect = row.querySelector('select[name$="-lab_test_catelogue"]');
+            const feeInput = row.querySelector('input[name$="-test_fee"]');
+
+            if (testSelect && feeInput) {
+                const selectedId = testSelect.value;
+                const price = parseFloat(testPrices[selectedId]) || 0;
+                feeInput.value = price.toFixed(2);
+                total += price;
+            }
+        });
+        document.getElementById('total_cost').textContent = total.toFixed(2);
+    }
+
+    addBtn.addEventListener('click', function() {
+        const currentFormCount = parseInt(totalForms.value);
+        const lastRow = formsetTable.querySelector('.formset_row:last-child');
+        const newRow = lastRow.cloneNode(true);
+        const regex = new RegExp(`form-(\\d+)-`, 'g');
+
+        // Update form indexes
+        newRow.innerHTML = newRow.innerHTML.replace(regex, `form-${currentFormCount}-`);
+
+        // Clear inputs in the cloned row
+        newRow.querySelectorAll('input, select').forEach(input => {
+            if (input.type !== 'hidden') {
+                input.value = '';
+            }
+        });
+
+        // 🛡 Ensure remove button has correct classes
+        const removeBtn = newRow.querySelector('.remove-form-btn');
+        if (removeBtn) {
+            removeBtn.classList.remove('btn-outline', 'btn-light', 'btn-default'); // clear any junk classes
+            removeBtn.classList.add('btn', 'btn-danger', 'btn-sm');
+            removeBtn.textContent = 'Remove'; // reset label if needed
+        }
+
+        formsetTable.querySelector('tbody').appendChild(newRow);
+        totalForms.value = currentFormCount + 1;
+
+        updateFeesAndTotal();
+    });
+
+    // When lab test selection changes, update fees + total
+    formsetTable.addEventListener('change', function(e) {
+        if (e.target && e.target.name.includes('-lab_test')) {
+            updateFeesAndTotal();
+        }
+    });
+
+    // Handle remove button clicks
+    formsetTable.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('remove-form-btn')) {
+            const row = e.target.closest('.formset_row');
+            row.remove();
+
+            // Update total forms count
+            const updatedCount = formsetTable.querySelectorAll('.formset_row').length;
+            totalForms.value = updatedCount;
+
+            updateFeesAndTotal();
+        }
+    });
+
+    // Initialize on page load
+    updateFeesAndTotal();
+});
+</script>
+
+
+
+
+<script>
+$(document).ready(function(){
+    // when the lab_test field changes
+    $("#id_lab_test_catelogue").change(function(){
+        var lab_test_catelogue_id = $(this).val();
+        if (lab_test_catelogue_id) {
+            $.ajax({
+                url: "{% url 'billing:get_test_fee' %}",
+                data: {
+                    'lab_test_catelogue_id': lab_test_catelogue_id
+                },
+                success: function(data) {
+                    // set the test_fee field value
+                    $("#id_test_fee").val(data.fee);
+                }
+            });
+        } else {
+            $("#id_test_fee").val('');
+        }
+    });
+});
+</script>
+   
+{% endblock %}

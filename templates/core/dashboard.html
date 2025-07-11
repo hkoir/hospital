@@ -1,0 +1,379 @@
+
+{% extends 'base.html' %}
+
+{% load static %}
+
+{% block content %}
+<style>
+    /* Hero Section Styles */
+       .hero-section {
+        position: relative;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(255, 255, 255, 1)),
+         url("/static/images/doctor-1.jpg") center/cover no-repeat;
+        height: 70vh;
+	 width: 100vw;
+    	margin-left: calc(-50vw + 50%);
+        padding: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        color: white;
+        text-align: center;
+        overflow: hidden;
+        padding: 0 15px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .hero-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6); /* Darker overlay */
+        z-index: 1;
+    }
+    
+    .hero-content {
+        position: relative;
+        z-index: 2;
+        max-width: 800px;
+        margin: 0 auto;
+        text-shadow: 0px 2px 4px rgba(0, 0, 0, 0.6); /* Subtle shadow for text */
+        animation: fadeInUp 10s ease-out;
+    }
+    
+    .hero-section h1 {
+        font-size: 3.5rem;
+        font-weight: 700;
+        letter-spacing: 1px;
+        margin-bottom: 0.5rem;
+    }
+    
+    .hero-section p {
+        font-size: 1.3rem;
+        font-weight: 300;
+        opacity: 0.95;
+        line-height: 1.6;
+        margin-bottom: 1.5rem;
+    }
+    
+    /* Optional Fade In Animation */
+    @keyframes fadeInUp {
+        from {
+            opacity: 0;
+            transform: translateY(40px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    /* Button Styles */
+    .hero-btn {
+        background-color: #fcb900;
+        color: #333;
+        padding: 12px 30px;
+        font-size: 1rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        border: none;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+    }
+    
+    .hero-btn:hover {
+        background-color: #f5a623;
+        color: #fff;
+        transform: translateY(-3px);
+    }
+
+
+    .quote-container {
+    position: relative;
+    min-height: 60px; /* Adjust height based on content */
+    text-align: center;
+}
+
+.quote-text {
+    position: absolute;
+    width: 100%;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #fff;
+    opacity: 0;
+    transition: opacity 1s ease-in-out;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    /* Divider Shape for Hero Section */
+    .custom-shape-divider-bottom-hero {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        overflow: hidden;
+        line-height: 0;
+    }
+    
+    .custom-shape-divider-bottom-hero svg {
+        position: relative;
+        display: block;
+        width: calc(115% + 1.3px);
+        height: 80px;
+    }
+    
+    .custom-shape-divider-bottom-hero .shape-fill {
+        fill: #ffffff;
+    }
+    
+    /* Job Listings Section */
+    .job-card:hover {
+        transform: translateY(-5px);
+        transition: 0.3s;
+    }
+    
+    .job-title {
+        font-weight: bold;
+        color: #004085;
+    }
+    
+    .btn-apply {
+        background-color: #004085;
+        color: white;
+    }
+    
+    .btn-apply:hover {
+        background-color: #002752;
+        color: cyan;
+    }
+    </style>
+    
+   <!-- Hospital Landing Page -->
+<div class="container-fluid main-content">
+    <div class="row">
+        <section class="hero-section text-center">
+            <div class="hero-overlay"></div>
+            <div class="hero-content">
+                <img src="{% static 'images/Logo.png' %}" 
+                     class="rounded-circle border"                                    
+                     style="width: 150px; height: 150px; object-fit: cover; border: 2px solid #28a745;">
+                             
+                <h1>Idea HealthCare</h1>
+                <p style="color: #f8d32d; font-weight: bold;">Caring for you, every step of the way.</p>
+
+                <!-- Quotes Section -->
+                <div class="quote-container">
+                    <p class="quote-text">"Your health is our highest priority."</p>
+                    <p class="quote-text">"Healing hands. Caring hearts."</p>
+                    <p class="quote-text">"Committed to your well-being."</p>
+                    <p class="quote-text">"Where compassion meets excellence."</p>
+                    <p class="quote-text">"Together towards a healthier tomorrow."</p>
+                </div>
+            </div>
+
+            <div class="custom-shape-divider-bottom-hero">
+                <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+                    <path d="M0,0V46.29c47.6,15.4,98.5,27.4,150,24.67,49.6-2.6,97.1-20.73,146.6-27.27,
+                             64.5-8.53,129.6,1.84,194,9.39,65.1,7.6,130.8,10.9,196.5,2.53,
+                             65.8-8.27,128.9-27.47,192.2-31.1,51.5-3,103.7,4.72,155.2,13.11,
+                             51.5,8.4,103.2,17.6,155.5,20.44,45.5,2.51,91.3-.53,136.8-5.39V0Z" 
+                          fill="#ffffff"></path>
+                </svg>
+            </div>
+        </section>
+    </div>
+</div>
+
+<!-- Hospital Services Tools -->
+<div class="container mt-4">
+  <h2 class="text-center mb-4 fw-bold text-primary">Patient Service Tools</h2>
+  <div class="d-flex justify-content-between">
+    <a href="{% url 'patients:patient_list' %}" class="btn btn-outline-primary w-40 text-start my-4">
+     <i class="bi bi-search me-2"></i> Search Patient
+  </a>
+   <a href="{% url 'facilities:ward_room_bed_status' %}" class="btn btn-outline-success w-40 text-start my-4">
+     <i class="bi bi-search me-2"></i> Search available beds
+   </a>
+   <a href="{% url 'billing:ipd_invoice_list' %}" class="btn btn-outline-success w-40 text-start my-4">
+         <i class="bi bi-search me-2"></i> Search invoices
+      </a>
+
+       <a href="{% url 'appointments:available_doctors'%}" class="btn btn-outline-success w-40 text-start my-4">
+         <i class="bi bi-search me-2"></i> Find Doctor
+      </a>
+
+
+  </div>
+  <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
+
+    <!-- Card: New Patient Registration -->
+    <div class="col">
+      <div class="card h-100 border-info shadow-sm hover-shadow">
+        <div class="card-body text-center">
+          <i class="bi bi-person-plus-fill text-info display-4 mb-3"></i>
+          <h5 class="card-title">Register Patient</h5>
+          <p class="card-text">Create a new user and register them as a patient in the system.</p>
+          <a href="{% url 'accounts:direct_patient_registration' %}" class="btn btn-outline-info w-100">+ New Registration</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: External Lab Visit -->
+    <div class="col">
+      <div class="card h-100 border-warning shadow-sm hover-shadow">
+        <div class="card-body text-center">
+          <i class="bi bi-beaker text-warning display-4 mb-3"></i>
+          <h5 class="card-title">External Lab Visit</h5>
+          <p class="card-text">Log lab tests and generate invoices for walk-in patients.</p>
+          <a href="{% url 'lab_tests:create_external_lab_visit' %}" class="btn btn-outline-warning w-100">+ Lab Visit</a>
+        </div>
+      </div>
+    </div>
+	
+   
+  <!-- Card: Medicine  -->
+<div class="col">
+  <div class="card h-100 border-success shadow-sm hover-shadow">
+    <div class="card-body text-center">
+      <i class="bi bi-capsule text-success display-4 mb-3"></i>
+      <h5 class="card-title">Medicine</h5>
+      <p class="card-text">Trusted Medicines from our certified pharmacy system.</p>
+      <a href="{% url 'inventory:create_medicine_sale_only' %}" class="btn btn-outline-success w-100">+ Sale Medicine</a>
+    </div>
+  </div>
+</div>
+
+
+    <!-- Card: Patient Admission -->
+    <div class="col">
+      <div class="card h-100 border-danger shadow-sm hover-shadow">
+        <div class="card-body text-center">
+          <i class="bi bi-hospital text-danger display-4 mb-3"></i>
+          <h5 class="card-title">Patient Admission</h5>
+          <p class="card-text">Admit a patient for in-patient services including ward and surgery.</p>
+          <a href="{% url 'patients:patient_admission_create' %}" class="btn btn-outline-danger w-100">+ Admission</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: Emergency Service -->
+    <div class="col">
+      <div class="card h-100 border-primary shadow-sm hover-shadow">
+        <div class="card-body text-center">
+          <i class="bi bi-exclamation-triangle-fill text-primary display-4 mb-3"></i>
+          <h5 class="card-title">Emergency Visit</h5>
+          <p class="card-text">Handle emergency visits with direct billing and triage options.</p>
+          <a href="{% url 'billing:emergency_visit_create' %}" class="btn btn-outline-primary w-100">+ Emergency</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- Card: Doctor Appointment -->
+    <div class="col">
+      <div class="card h-100 border-success shadow-sm hover-shadow">
+        <div class="card-body text-center">
+          <i class="bi bi-calendar-check-fill text-success display-4 mb-3"></i>
+          <h5 class="card-title">Doctor Appointment</h5>
+          <p class="card-text">Book outpatient appointments with a doctor of choice.</p>
+          <a href="{% url 'appointments:general_appointment' %}" class="btn btn-outline-success w-100">+ Appointment</a>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+
+<!-- Hospital Services Section -->
+<div class="container" style="margin-top:150px">
+    <h2 class="text-center text-success mb-4">Our Core Services</h2>
+    <div class="row">
+        <div class="col-md-4">
+            <div class="card shadow-lg p-3 text-center">
+                <i class="fas fa-heartbeat fa-3x text-danger"></i>
+                <h4 class="mt-3">Emergency Services</h4>
+                <p>24/7 emergency care with highly skilled medical professionals and life-saving equipment.</p>
+            </div>
+        </div>
+        <div class="col-md-4">
+           <a href="{% url 'appointments:available_doctors' %}" style="text-decoration: none;color:black">
+            <div class="card shadow-lg p-3 text-center">
+                <i class="fas fa-user-md fa-3x text-primary"></i>
+                <h4 class="mt-3">Expert Doctors</h4>
+                <p>Consult with specialists in cardiology, pediatrics, orthopedics, neurology, and more.</p>
+            </div>
+	   </a>
+        </div>
+        <div class="col-md-4">
+	      <div class="card shadow-lg p-3 text-center">
+                <i class="fas fa-vials fa-3x text-warning"></i>
+                <h4 class="mt-3">Lab & Diagnostics</h4>
+                <p>Accurate lab testing and diagnostics powered by advanced technology.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Health Programs Section -->
+<div class="container my-5" id="health-programs">
+    <h2 class="text-center mb-4">Programs & Opportunities</h2>
+    <div class="row">
+        <div class="col-md-6">
+            <div class="card shadow-sm p-3">
+                <h5>Community Health Outreach</h5>
+                <p>Participate in our outreach programs to improve community health awareness and access.</p>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card shadow-sm p-3">
+                <h5>Medical Training & Internships</h5>
+                <p>Join our hands-on training opportunities for students, nurses, and healthcare professionals.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const quotes = document.querySelectorAll(".quote-text");
+        let currentIndex = 0;
+
+        function showNextQuote() {
+            // Hide all quotes
+            quotes.forEach((quote) => (quote.style.opacity = "0"));
+
+            // Show the next quote
+            quotes[currentIndex].style.opacity = "1";
+
+            // Move to the next quote
+            currentIndex = (currentIndex + 1) % quotes.length;
+        }
+
+        // Show the first quote immediately
+        showNextQuote();
+
+        // Rotate quotes every 4 seconds
+        setInterval(showNextQuote, 4000);
+    });
+</script>
+
+
+{% endblock %}

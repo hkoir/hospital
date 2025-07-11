@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block content %}
+<div class="container">
+  <form method="get" class="my-2" novalidate,>
+    {% csrf_token %}
+    <div class="row">
+        {% for field in form %}
+            <div class=" col-6 col-md-2">
+                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                {{ field|add_class:"form-control" }}
+                {% if field.errors %}
+                    <div class="text-danger small mt-1">
+                        {{ field.errors|striptags }}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
+        
+    </div>
+
+    <div class="d-flex justify-content-between mt-4">                    
+        <button type="submit" class="btn btn-primary">Apply filter</button>
+        
+    </div>
+</form>
+
+
+
+
+
+
+
+  <h2>Patient Admissions</h2>
+  <a href="{% url 'patients:patient_admission_create' %}" class="btn btn-primary mb-3">
+    + New Admission
+  </a>
+
+  <div class="col-12 table-responsive">
+    
+      <table class="table table-bordered table-striped">
+        <thead class="table-info">
+          <tr>
+            <th>Patient</th>
+            <th>Admission code</th>
+	   <th>Medical Record </th>    
+            <th>Invoice</th>     
+            <th>Admission Date</th>
+            <th>Doctor</th>
+            <th>Ward</th>
+            <th>Room</th>
+            <th>Bed</th>
+            <th>Status</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for adm in page_obj %}
+          <tr>
+            <td>{{ adm.patient.name }}||{{ adm.patient.patient_id }}</td>
+            <td>{{ adm.admission_code }}</td>
+	    <td>{{ adm.billing_admission.medical_record.medical_record_code }}</td>
+            <td>
+	     <a href="{% url 'billing:finalize_invoice' adm.billing_admission.id %}">
+              {{ adm.billing_admission.invoice_id }}
+            </a>
+            </td>
+            <td>{{ adm.admission_date|date:"Y-m-d H:i" }}</td>
+            <td>{{ adm.admitting_doctor.name }}</td>
+            <td>{{ adm.assigned_ward.name }}</td>
+            <td>{{ adm.assigned_room.number }}</td>
+            <td>{{ adm.assigned_bed.bed_number }}</td>
+            <td>
+              {% if adm.is_discharged %}
+                <span class="badge bg-secondary">Discharged</span>
+              {% else %}
+                <span class="badge bg-success">Admitted</span>
+              {% endif %}
+            </td>
+            <td>
+              <a href="{% url 'patients:patient_admission_detail' admission_id=adm.id %}" class="btn btn-sm btn-info">Admission details</a>
+              {% if not adm.is_discharged %}
+              <a href="{% url 'patients:change_bed' admission_id=adm.id %}" class="btn btn-sm btn-warning">Change Bed</a>
+              <a href="{% url 'patients:discharge_patient' admission_id=adm.id %}" class="btn btn-sm btn-danger">Discharge</a>
+               {% else %}
+              <a href="{% url 'patients:generate_discharge_pdf' adm.discharge_report.id %}" class="btn btn-sm btn-success">Discharge report</a>
+              {% endif %}
+            
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="7" class="text-center">No admissions found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+</div>
+{% endblock %}

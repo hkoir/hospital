@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+
+{% block content %}
+
+
+<div class="container py-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow rounded-4 border-0">
+                <div class="card-header bg-primary text-white rounded-top-4">
+                    <h4 class="mb-0 text-center">Add medial record Update</h4>
+                    <p class="text-center">
+                    <small >Patient: <strong>{{ record.patient.name }}&nbsp;||&nbsp;</strong></small>
+                    <small >Doctor: <strong>{{ record.doctor.name }}&nbsp;||&nbsp;</strong></small>
+                    <small >Date: <strong>{{ current_time }}</strong></small>
+                    </p>
+                </div>
+                <div class="card-body">
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        {% for field in form %}
+                            <div class="mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field|add_class:'form-control' }}
+                                {% if field.help_text %}
+                                    <div class="form-text">{{ field.help_text }}</div>
+                                {% endif %}
+                                {% for error in field.errors %}
+                                    <div class="text-danger small">{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endfor %}
+                        <div class="d-flex justify-content-between mt-4">
+                            <a href="{% url 'medical_records:medical_record_progress_detail' record.id %}" class="btn btn-outline-secondary">
+                                Cancel
+                            </a>
+                            <button type="submit" class="btn btn-success px-4">Submit</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

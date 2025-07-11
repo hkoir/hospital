@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+<div class="container mt-4">
+    <h2 class="text-center mb-4">Ward & Room Bed Status Overview</h2>
+
+    <!-- Search Box -->
+    <div class="mb-4 text-center">
+        <input type="text" id="searchInput" class="form-control w-50 mx-auto" placeholder="Search Ward or Room...">
+    </div>
+
+    <div id="wardStatusContainer">
+        {% for status in ward_status_list %}
+        <div class="card mb-4 shadow ward-card">
+            <div class="card-header bg-primary text-white">
+                <strong class="ward-name">{{ status.ward.name }}</strong>
+                ({{ status.ward.get_ward_type_display }}) — Location: {{ status.ward.location }}
+            </div>
+            <div class="card-body">
+                <p>
+                <strong>Total Beds:</strong> {{ status.total_beds }}
+                <strong>Occupied Beds:</strong> {{ status.occupied_beds }}
+                <strong>Available Beds:</strong> {{ status.available_beds }}
+                </p>
+
+                <table class="table table-bordered mt-3 room-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Room No</th>
+                            <th>Room Type</th>
+                            <th>Total Beds</th>
+                            <th>Occupied</th>
+                            <th>Available</th>
+                            <th>Daily Charge</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for room in status.rooms %}
+                        <tr class="room-row">
+                            <td class="room-number">{{ room.room.number }}</td>
+                            <td>{{ room.room.room_type }}</td>
+                            <td>{{ room.total_beds }}</td>
+                            <td>{{ room.occupied_beds }}</td>
+                            <td>{{ room.available_beds }}</td>
+                             <td>{{ room.daily_charge }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No rooms in this ward.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% empty %}
+        <p>No wards found.</p>
+        {% endfor %}
+
+   
+
+    <div class="card mb-4 shadow ward-card ot-card">
+            <div class="card-header bg-primary text-white">
+                <strong class="ward-name">Operation Theatre Status</strong>               
+            </div>
+            <div class="card-body">
+                <table class="table table-bordered ot-table">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Name</th>
+                            <th>Type</th>
+                            <th>Location</th>
+                            <th>Hourly Rate</th>
+                            <th>Available</th>
+                            <th>Occupied</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for ot in ot_status_list %}
+                        <tr class="ot-row">
+                            <td class="ot-name">{{ ot.name }}</td>
+                            <td class="ot-type">{{ ot.type }}</td>
+                            <td class="ot-location">{{ ot.location }}</td>
+                            <td>{{ ot.hourly_rate }}</td>
+                            <td>{{ ot.is_available|yesno:"Yes,No" }}</td>
+                            <td>{{ ot.is_occupied|yesno:"Yes,No" }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+
+    </div>
+</div>
+<script>
+    const searchInput = document.getElementById('searchInput');
+    searchInput.addEventListener('keyup', function () {
+        const filter = this.value.toLowerCase();
+
+        // Filter ward cards
+        const wardCards = document.querySelectorAll('.ward-card:not(.ot-card)');
+        wardCards.forEach(card => {
+            const wardName = card.querySelector('.ward-name').textContent.toLowerCase();
+            const roomNumbers = Array.from(card.querySelectorAll('.room-number')).map(td => td.textContent.toLowerCase());
+            const matchesWard = wardName.includes(filter);
+            const matchesRoom = roomNumbers.some(room => room.includes(filter));
+            card.style.display = (matchesWard || matchesRoom) ? '' : 'none';
+        });
+
+        // Filter OT rows
+        const otCard = document.querySelector('.ot-card');
+        const otRows = otCard.querySelectorAll('.ot-row');
+        let otHasMatch = false;
+
+        otRows.forEach(row => {
+            const name = row.querySelector('.ot-name').textContent.toLowerCase();
+            const type = row.querySelector('.ot-type').textContent.toLowerCase();
+            const location = row.querySelector('.ot-location').textContent.toLowerCase();
+            const matches = name.includes(filter) || type.includes(filter) || location.includes(filter);
+            row.style.display = matches ? '' : 'none';
+            if (matches) otHasMatch = true;
+        });
+
+        // Hide entire OT card if no rows match
+        otCard.style.display = otHasMatch ? '' : 'none';
+    });
+</script>
+
+{% endblock %}

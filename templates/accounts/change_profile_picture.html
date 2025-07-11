@@ -1,0 +1,42 @@
+{% extends "../sub_base.html" %}
+
+{% load static %} 
+
+{% block content %}
+
+
+<div class="container">
+
+    <div class="row">
+        <div class="col">            
+        </div>
+        <div class="col p-4" style = "border-radius: 10px; box-shadow:5px 10px 10px 20px rgba(210, 150, 120, 0.5)">              
+            <form method="post" enctype="multipart/form-data" id="profileForm">
+                {% csrf_token %}
+                <div class="mb-3 row">
+                    <div class="col">
+                        {{ form.as_p }}
+                    </div>
+                </div>
+                <div class="d-grid">
+                    <button class="btn btn-primary" type="submit">Update Profile Picture</button>
+                    <button class="btn btn-secondary" type="button" onclick="cancelForm()">Cancel</button>
+                </div>
+            </form>               
+        </div>
+        <div class="col">            
+        </div>
+    </div>
+</div>
+
+
+<script>
+    function cancelForm() {
+        var form = document.getElementById("profileForm");
+        form.reset();
+        window.location.href = "{% url 'core:home' %}";
+        console.log("Form cancelled");
+    }
+</script>
+
+{% endblock  %}

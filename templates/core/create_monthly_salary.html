@@ -1,0 +1,88 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+
+
+
+
+
+
+<div class="container-fluid main-content">
+    
+<h4 style="margin-top:30px">Monthly Salary Sheet - {{ month }}/{{ year }}</h4>
+    <div class="row row-cols-1">
+        <div class="col">
+            
+            <form method="GET" action="{% url 'core:create_salary' %}">
+                <label for="month">Enter month:</label>
+                <input type="number" id="month" name="month" min="1" max="12" required>
+                
+                <label for="year">Enter year:</label>
+                <input type="number" id="year" name="year" min="2000" max="2100" required>
+                
+                <button type="submit" class="btn btn-primary">Generate Report</button>
+            </form>
+            
+
+        </div>
+        <div class="co-12 table-responsivel">
+            
+            <h4>Generated Report for {{ month }}/{{ year }}</h4> 
+                        
+         {% if salary %}
+                    <table class="table table-hover">
+                        <thead class="table-dark">
+                            <a href="{% url 'core:download_salary' %}?month={{ month }}&year={{ year }}">Download Salary Report</a>
+
+                            <tr>
+                                <th>Employee ID</th>
+                                <th>Name</th>
+                                <th>Month</th>
+                                <th>Year</th>                              
+                                <th>Basic</th>
+                                <th>House allowance</th>
+                                <th>Conveyance allowance</th>
+                                <th>Medical allowance</th>
+
+                                <th>Festival allowance</th>
+                                <th>Performance allowance</th>
+                                <th>Gross Salary</th>
+                               
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for entry in salary %}
+                                <tr>
+                                    <td>{{ entry.employee.employee_code }}</td>
+                                    <td>{{ entry.employee.name }}</td>
+                                    <td>{{ entry.month }}</td>
+                                    <td>{{ entry.year }}</td>                                   
+                                    <td>{{ entry.employee.salary_structure.basic_salary|add_commas }}</td>
+                                    <td>{{ entry.employee.salary_structure.hra|add_commas}}</td>
+                                    <td>{{ entry.employee.salary_structure.conveyance_allowance|add_commas }}</td>
+                                    <td>{{ entry.employee.salary_structure.medical_allowance|add_commas }}</td>
+                                    <td>{{ entry.employee.salary_structure.festival_allowance|add_commas }}</td>
+                                    <td>{{ entry.employee.salary_structure.performance_bonus|add_commas }}</td>
+                                    <td>{{ entry.employee.salary_structure.gross_salary }}</td>
+                                </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                {% else %}
+                    <p>No salary data found for the selected month and year.</p>
+                {% endif %}
+
+
+                </div>
+
+
+    </div>
+
+</div>
+
+
+
+
+{% endblock %}

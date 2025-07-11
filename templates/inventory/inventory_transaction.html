@@ -1,0 +1,92 @@
+
+{% extends 'base.html' %}
+
+{% load custom_filters %}
+
+{% block content %}
+
+<div class="container">
+    <h2 class="text-center">Product Sales, Purchase and other type Transactions</h2>
+    <form method="post" id="transaction-form" class="max-w-lg mx-auto mt-6 p-4 bg-white rounded-lg shadow-md">
+        {% csrf_token %}
+    <div class="row row-cols-md-4">
+       
+          
+            <div>
+              <label for="id_transaction_type" class="block text-sm font-medium text-gray-700">Transaction Type</label>
+              {{ form.transaction_type|add_class:'form-control' }}
+            </div>
+          
+            <div>
+              <label for="id_product" class="block text-sm font-medium text-gray-700">Product</label>
+              {{ form.product|add_class:'form-control' }}
+            </div>
+          
+            <div>
+              <label for="id_batch" class="block text-sm font-medium text-gray-700">Batch</label>
+              {{ form.batch|add_class:'form-control' }}
+            </div>
+          
+            <div>
+              <label for="id_warehouse" class="block text-sm font-medium text-gray-700">Warehouse</label>
+              {{ form.warehouse|add_class:'form-control' }}
+            </div>
+          
+            <div>
+              <label for="id_location" class="block text-sm font-medium text-gray-700">Location</label>
+              {{ form.location|add_class:'form-control' }}
+            </div>
+          
+            <div>
+              <label for="id_quantity" class="block text-sm font-medium text-gray-700">Quantity</label>
+              {{ form.quantity|add_class:'form-control' }}
+            </div>
+          
+            <div>
+              <label for="id_remarks" class="block text-sm font-medium text-gray-700">Remarks</label>
+              {{ form.remarks|add_class:'form-control' }}
+            </div>
+          
+            <!-- Target Fields (hidden unless transfer) -->
+            <div id="target-warehouse"  style="display: none;">
+              <label for="id_target_warehouse" class="block text-sm font-medium text-gray-700">Target Warehouse</label>
+              {{ form.target_warehouse|add_class:'form-control' }}
+            </div>
+          
+            <div id="target-location"style="display: none;">
+              <label for="id_target_location" class="block text-sm font-medium text-gray-700">Target Location</label>
+              {{ form.target_location|add_class:'form-control' }}
+            </div>         
+                    
+    </div>
+    <div class="d-grid mt-4">
+        <button type="submit" class="btn btn-primary btn-lg"> Confirm Submit</button>
+    </div>
+
+</form>
+</div>
+
+
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const transactionTypeSelect = document.getElementById("id_transaction_type");
+      const targetWarehouse = document.getElementById("target-warehouse");
+      const targetLocation = document.getElementById("target-location");
+  
+      function toggleTargetFields() {
+        const selected = transactionTypeSelect.value;
+        const show = ['TRANSFER_OUT', 'TRANSFER_IN'].includes(selected);
+        targetWarehouse.style.display = show ? "block" : "none";
+        targetLocation.style.display = show ? "block" : "none";
+      }
+  
+      transactionTypeSelect.addEventListener("change", toggleTargetFields);
+  
+      // Initial check in case it's prefilled
+      toggleTargetFields();
+    });
+  </script>
+  
+  
+  {% endblock %}

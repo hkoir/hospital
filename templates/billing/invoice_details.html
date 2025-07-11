@@ -1,0 +1,93 @@
+
+
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <style>
+        .patient-details {
+            margin-top: 30px;
+        }
+        .patient-details h2, .patient-details h3 {
+            color: #0056b3;
+        }
+        .patient-details p {
+            font-size: 1.1rem;
+        }
+        .patient-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .patient-info .row {
+            margin-bottom: 15px;
+        }
+        .btn-change-bed {
+            margin-top: 20px;
+        }
+    </style>
+
+
+
+    <div class="container patient-details">       
+        <h1 class="text-center mb-4">Invoice Details</h1>
+
+        <div class="patient-info">
+            <div class="row">
+                <div class="col-12">             
+                                        <div class="row justify-content-center mb-3">
+                        {% for button in buttons_list %}
+                        <div class="col-6 col-md-2 mb-2 d-flex justify-content-center">
+			 <a href="{{ button.url }}" class="btn btn-sm {{ button.btn_class }} my-2 w-100 text-center">
+                                {{ button.label }}
+                            </a>
+			
+                        </div>
+                        {% endfor %}
+
+			<div class="col-6 col-md-2 mb-2 d-flex justify-content-center">
+    			  <a href="{% url 'billing:ipd_invoice_list' %}" class="btn btn-sm btn-success my-2 w-100 text-center">
+        			Back to invoice
+    			  </a>
+			</div>
+
+                    </div>
+                        
+               </div>                
+
+
+                <div class="col-md-6">
+                    <h2>Patient: <strong>{{invoice.patient.name }}</strong></h2>
+                    <p>Total: {{ invoice.total_amount }} | Paid: {{ invoice.total_paid }} | Remaining: {{ invoice.remaining_amount }}</p>
+
+                </div>
+                <div class="col-md-6">
+                    <h2>Patient ID: <strong>{{ invoice.patient.patient_id }}</strong></h2>
+                    <p><strong>Invoice ID:</strong> {{ invoice.invoice_id }}</p>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-md-6">
+                    <h2>Patient Type Status: <strong>{{invoice.patient_type}}</strong></h2>
+                    <p>Invoice Type: {{ invoice.invoice_type }} </p>
+
+                </div>
+                <div class="col-md-6">
+                    {% if invoice.patient_admission %}
+                    <h2>Admission Status <strong>{{ invoice.patient_admission.status }}</strong></h2>
+                    {% endif %}
+                    
+                    <h2><strong>Payment Status: :</strong> {{ invoice.status }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+            
+
+
+{% endblock %}
+
+
+
+

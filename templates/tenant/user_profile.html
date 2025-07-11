@@ -1,0 +1,50 @@
+
+{% extends 'sub_base.html' %}
+
+{% block content %}
+
+
+
+<div class="container main-content">
+    <div class="row">
+        <div class="col-12 col-md-3"></div>
+        <div class="col-12 col-md-6">
+            <div class="card shadow-lg" style="background-color: aliceblue;">
+                <!-- Card Header -->
+            <div class="card-header bg-primary text-white text-center">
+               <h3 class="mb-0">Please create your profile</h3>
+           </div>      
+                <div class="card-body">                  
+                    
+                        <form method="POST" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            {% if form.errors %}
+                                <div class="alert alert-danger">
+                                    <ul>
+                                        {% for field in form %}
+                                            {% for error in field.errors %}
+                                                <li>{{ error }}</li>
+                                            {% endfor %}
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            {% endif %}
+                        <div class="d-grid">
+                            <button type="submit" name="add_to_basket" class="btn btn-primary btn-lg w-100" onclick="proceed()">Submit</button> 
+                        </div>
+                    </form>
+                 </div>
+                 
+            </div>           
+        </div>
+        <div class="col-12 col-md-3"></div>
+    </div>
+</div>
+
+
+
+
+
+
+{% endblock %}

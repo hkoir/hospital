@@ -1,0 +1,404 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+{% load static %}
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<title>Doctors</title>
+
+
+<!-- Include jQuery -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap CSS (Bootstrap 5.3) -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<!-- Bootstrap JS (Bootstrap 5.3) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Datepicker -->
+<link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/js/bootstrap-datepicker.min.js"></script>
+
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+
+    <!-- Font Awesome CDN -->
+    <!-- <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"> -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+<!-- Bootstrap Icons -->
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+<!-- Add CSS for Select2 -->
+<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+
+<!-- Add JS for Select2 -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+
+<link rel="stylesheet" href="{% static 'css/core.css' %}">
+<script src="{% static 'js/common.js' %}"></script>
+{% block extra_head %}
+
+
+{% endblock %}
+<style>
+
+    
+    html, body {
+        background-color: white;
+        color: #333333;
+        padding-top: 50px; /* Offset for fixed navbars */
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+           
+
+        .navbar-custom {
+            background-color: #004085;
+        }
+        .navbar-custom .navbar-brand, .navbar-custom .nav-link {
+            color: #ffffff;
+        }
+        .hero-section {
+            background: url('https://source.unsplash.com/1600x900/?office,teamwork') no-repeat center center/cover;
+            height: 60vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            text-align: center;
+            background-blend-mode: overlay;
+            background-color: rgba(0, 0, 0, 0.5);
+        }
+        .card-hover:hover {
+            transform: translateY(-5px);
+            transition: 0.3s;
+        }
+        .job-title {
+            font-weight: bold;
+            color: #004085;
+        }
+        .btn-apply {
+            background-color: #004085;
+            color: white;
+        }
+        .btn-apply:hover {
+            background-color: #002752;
+            color: cyan;
+        }
+
+
+
+
+
+
+
+/* Ensure the main dropdown opens on hover */
+.nav-item.dropdown:hover > .dropdown-menu {
+    display: block;
+    background-color: #2d2d2d; /* Darker gray */
+    color: #ffffff; 
+}
+
+/* Prevent submenu flickering */
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu > .dropdown-menu {
+    display: none;
+    position: absolute;
+    top: 0;
+    left: 100%;
+    min-width: 200px; 
+    border: 1px solid #444;
+}
+
+/* Ensure submenu opens only when hovering on the parent submenu item */
+.dropdown-submenu:hover > .dropdown-menu {
+    display: block;
+}
+
+/* Style for the main dropdown */
+.navbar .dropdown-menu {
+    background-color: #2c3e50; 
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Style for dropdown items */
+.navbar .dropdown-menu .dropdown-item {
+    color: white !important; 
+    padding: 10px 20px;
+    font-size: 15px;
+    font-weight: 500;
+    text-decoration: none;
+    font-family: 'Poppins', 'Roboto', sans-serif !important; /* Ensure font applies */
+}
+
+/* Hover effect for dropdown items */
+.navbar .dropdown-menu .dropdown-item:hover {
+    background-color: #34495e; 
+    color: #f1c40f !important; 
+}
+
+/* Style for dropdown submenu */
+.dropdown-submenu .dropdown-menu {
+    background-color: #2c3e50;
+    border-radius: 8px;
+}
+
+/* Hover effect for submenu */
+.dropdown-submenu .dropdown-menu .dropdown-item:hover {
+    background-color: #3a4b5c; 
+    color: #ffcc00 !important;
+}
+
+/* Ensure links stay visible */
+.navbar .dropdown-menu a {
+    color: white !important;
+    font-family: 'Poppins', 'Roboto', sans-serif !important; /* Force font for links */
+}     
+</style>
+
+</head>
+ 
+
+<body>
+
+   
+    <nav class="navbar navbar-expand-lg navbar-custom fixed-top">
+        <div class="container-fluid">
+            <a class="navbar-brand menu-color" style="color:white;font-family: Helvetica;" href="{% url 'customerportal:partner_landing_page' %}">
+                <img src="{% static 'images/Logo.png' %}" alt="Logo" class="rounded-circle" style="width: 45px; height: 45px;">&nbsp;HOPS</a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">               
+        
+                <ul class="navbar-nav me-auto mb-2 mb-lg-0">  <!-- master ul start -->
+                                   
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-warning" href="#" id="placeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-solid fas fa-cogs me-1"></i>&nbsp;Customer Portal
+                        </a>
+
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown" style="max-height: 400px; overflow-y: auto;">                          
+                            <li><hr class="dropdown-divider"style="background-color:gray;"></li>
+                            <li><a class="dropdown-item" href="{% url 'customerportal:sale_order_list' %}" style="text-decoration: none;"><i class="fas fa-tasks"></i>&nbsp;All Sales order</a></li>
+                            <li><a class="dropdown-item" href="{% url 'customerportal:return_request_list' %}" style="text-decoration: none;"><i class="fas fa-tasks"></i>&nbsp;All return list</a></li>
+                            <li><hr class="dropdown-divider"style="background-color:gray;"></li>                            
+                            <li><a class="dropdown-item" href="{% url 'customerportal:ticket_list' %}"><i class="fas fa-tasks"></i>&nbsp;Ticket List</a></li>
+                            <li><a class="dropdown-item" href="{% url 'customerportal:create_ticket' %}"><i class="fas fa-plus-circle"></i>&nbsp;Create Ticket</a></li>                                                                            
+                                                 
+                          
+                        </ul> 
+                    </li> 
+
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-warning" href="#" id="placeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="fas fa-solid fas fa-cogs me-1"></i>Supplier Portal
+                        </a>
+
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown" style="max-height: 400px; overflow-y: auto;">
+                            <li><hr class="dropdown-divider"style="background-color:gray;"></li>
+                            <li><a class="dropdown-item" href="{% url 'customerportal:purchase_order_list' %}" style="text-decoration: none;"><i class="fas fa-tasks"></i>&nbsp;All purchase orders</a></li>
+                                                                        
+                                                      
+                          
+                        </ul> 
+                    </li> 
+                   
+                   
+
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle text-warning" href="#" id="placeDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                             
+                            User Account
+                        </a>                  
+                          
+                        <ul class="dropdown-menu" aria-labelledby="navbarDropdown" style="max-height: 400px; overflow-y: auto;">
+                            {% if user.is_authenticated %}
+                            <li><a class="dropdown-item" href="" style="text-decoration: none;"><i class="fas fa-user-circle"></i>Your account</a></li>
+                            <li>
+                                <form action="{% url 'accounts:logout' %}" method="post" >
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item" style="text-decoration: none;"> <i class="fa fa-sign-out-alt" aria-hidden="true"></i>&nbsp;eLogout</button>
+                                </form>
+                            </li>
+                           
+                            <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}" style="text-decoration: none;"><i class="fas fa-key"></i>&nbsp;eChange Password </a></li>
+                            {% else %}
+                            <li><a class="dropdown-item" href="{% url 'accounts:login_partner_job_seeker' %}"><i class="fa fa-sign-in-alt" aria-hidden="true">&nbsp; eLogin</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:register_partner_job_seeker' %}"><i class="fas fa-user-plus me-2"></i>&nbsp; eRegister</a></li>
+                            </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:pwdreset' %}" style="text-decoration: none;"><i class="fas fa-lock"></i>&nbsp; eForgot Password</a></li>
+                            {% endif %}
+                        </ul>                 
+                    </li> 
+       
+
+                </ul>           
+                <!-- this master Ul end  -->
+             
+                    <div class="user-info">
+                        {% if request.user.is_authenticated %}
+
+                            <a href="{% url 'accounts:update_profile_picture' %}">
+                                {% if profile_picture_url %}
+                                    <img class="profile-picture" src="{{ profile_picture_url }}">
+                                {% else %}
+                                    <i class="fas fa-user-circle user-icon"></i>
+                                {% endif %}
+                            </a>
+                            <br>
+                            <span class="welcome-message" style="color:yellow;">Welcome {{username }}</span>
+                        {% else %}
+                            <a href="#" class="guest-icon">
+                                <i class="fas fa-user-circle"></i>
+                            </a>
+                            <br>
+                            <span class="welcome-message" style="color:yellow;">Guest!</span>
+                        {% endif %}
+                    </div>                
+             
+
+            
+                
+                    <form class="d-flex" method="GET" action="" style="margin-left:20px">
+                        <input class="form-control me-2" type="search" placeholder="Search" aria-label="Search" name="q">
+                        <button class="btn btn-outline-success" type="submit" style="color:rgb(26, 7, 239);background:white">Search</button>
+                    </form>
+               
+            
+                
+            </div>
+        </div>
+    </nav>
+   
+
+    <div class="container-fluid">    
+        {% block content %}
+        {% endblock %}
+    </div>
+   <!-- Footer -->
+    
+   {% include 'footer.html' %}
+
+
+
+
+
+
+
+    
+
+<!-- Bootstrap Modal -->
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageModalLabel">Messages</h5>
+                <!-- Close Button -->
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="messagesContainer">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    $(document).ready(function () {
+    // Open main dropdown on hover (but not submenus)
+    $('.nav-item.dropdown').hover(
+        function () {
+            $(this).children('.dropdown-menu').stop(true, true).delay(200).fadeIn(200);
+        },
+        function () {
+            $(this).children('.dropdown-menu').stop(true, true).delay(200).fadeOut(200);
+        }
+    );
+
+   
+});
+</script>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {   
+        const messageModal = document.getElementById('messageModal');
+        const messagesContainer = document.getElementById('messagesContainer');   
+        if (messageModal && messagesContainer && messagesContainer.children.length > 0) { 
+            const modalInstance = new bootstrap.Modal(messageModal);
+            modalInstance.show();
+   
+            setTimeout(() => {
+                modalInstance.hide();
+            }, 5000);
+        }
+    });
+</script>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const notifications = document.querySelectorAll('.mark-as-read');
+        
+        notifications.forEach(notification => {
+            notification.addEventListener('click', (e) => {
+                e.preventDefault();
+                const notificationElement = e.target.closest('.notification');
+                const notificationId = notificationElement.querySelector('.mark-as-read').dataset.id;
+    
+                fetch(`/reporting/notification/read/${notificationId}/`, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRFToken': '{{ csrf_token }}',
+                        'Content-Type': 'application/json'
+                    }
+                })
+                .then(response => {
+                    if (response.ok) {
+                        notificationElement.remove();
+                        const badge = document.querySelector('.nav-link .badge');
+                        if (badge) {
+                            let count = parseInt(badge.textContent, 10);
+                            count = Math.max(count - 1, 0);
+                            if (count === 0) {
+                                badge.remove();
+                            } else {
+                                badge.textContent = count;
+                            }
+                        }
+                    } else {
+                        console.error('Failed to mark notification as read');
+                    }
+                })
+                .catch(error => console.error('Error:', error));
+            });
+        });
+    });
+    
+    
+</script>
+
+
+</body>
+</html>
+

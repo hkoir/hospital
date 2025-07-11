@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container mt-4">
+    <h3 class="mb-4">🧪 Lab Test Requests for <strong>{{ medical_record.patient.name }}</strong></h3>
+
+    {% for lab_request in lab_test_requests %}
+        <div class="card shadow-sm mb-4 border-0 table-responsive">
+            <div class="card-header bg-light d-flex justify-content-between align-items-center">
+                <div>
+                    <strong>Request #{{ lab_request.id }}</strong> |
+                    <span class="text-muted">{{ lab_request.patient_type }}</span> |
+                    <span>Dr. {{ lab_request.requested_by.name }}</span> |
+                    <small class="text-muted">{{ lab_request.created_at|date:"Y-m-d H:i" }}</small>
+                    <br>
+                    <small class="text-muted">Patient ID: {{ lab_request.medical_record.patient.patient_id }}</small>
+                </div>
+                {% if lab_request.medical_record.test_results.first %}
+                    <a href="{% url 'lab_tests:download_test_report' lab_request.medical_record.test_results.first.id %}" 
+                       class="btn btn-sm btn-outline-success">
+                        View Report
+                    </a>
+                {% endif %}
+            </div>
+
+            <div class="card-body p-0 table-responsive">
+		<div class="table-responsive">
+                <table class="table table-hover table-bordered mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Test Name</th>
+                            <th>Priority</th>
+                            <th>Status</th>
+                            <th>Notes</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in lab_request.test_items.all %}
+                            <tr>
+                                <td>{{ item.lab_test.test_name }}</td>
+                                <td>
+                                    {% if item.priority == 'Urgent' %}
+                                        <span class="badge bg-danger">{{ item.priority }}</span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">{{ item.priority }}</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if item.status == 'Completed' %}
+                                        <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">Pending</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ item.notes|default:"—" }}</td>
+                                <td>
+				  {% if not lab_request.medical_record.test_results.exists %}
+                                     <a href="{% url 'lab_tests:create_lab_test_result_with_items' lab_request.medical_record.id %}" 
+                                          class="btn btn-sm btn-outline-primary">
+                                           Create Report
+                                       </a>
+					{% else %}
+					<span>No action needed</span>
+				    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center text-muted">No test items found.</td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+        <div class="alert alert-warning text-center">
+            No lab test requests found for this medical record.
+        </div>
+    {% endfor %}
+</div>
+{% endblock %}

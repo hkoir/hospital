@@ -1,0 +1,221 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+
+<div class="container-fluid main-content">
+    <div class="row">
+        <div class="col-12 col-md-4">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-body">
+                    <div class="card-header bg-primary text-white text-center mb-4">
+                        <h3 class="mb-0"> {% if instance %} Update Company {% else %} Add Company {% endif %}</h3>
+                    </div>
+                
+                <form method="POST" class="p-2 m-3">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+
+                    <div class="d-grid mt-4">
+                        <button type="submit" name="entity_submit"class="btn btn-primary btn-lg"> {% if instance %} Update {% else %} Add {% endif %}</button>
+                    </div>   
+                    
+                </form>
+            </div>
+        </div>
+        </div>
+        <div class="col-12 col-md-8">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="text-center p-2">Name</th>
+                        <th class="text-center p-2">Contact Person</th>
+                        <th class="text-center p-2">Website</th>                       
+                        <th class="text-center p-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for entity in page_obj %}
+                        <tr>
+                            <td class="text-center p-1">{{ entity.name }}</td>
+                            <td class="text-center p-1">{{ entity.contact_person }}</td>                            
+                            <td class="text-center p-2" style="white-space: nowrap;">{{entity.website}}</td>
+                            <td class="text-center">
+                                <!-- Update Button -->
+                                <button class="btn btn-warning btn-sm" data-bs-toggle="modal" data-bs-target="#updateEntityModal"
+                                    data-id="{{ entity.id }}"
+                                    data-name="{{ entity.name }}"
+                                    data-contact-person="{{ entity.contact_person }}"
+                                    data-website="{{ entity.website }}">
+                                    Update
+                                    </button>
+
+                
+                                <!-- Delete Button -->
+                                <button type="button" class="btn btn-danger btn-sm delete-button text-center" data-bs-toggle="modal" data-bs-target="#deleteEntityModal"
+                                    data-id="{{ entity.id }}"
+                                    data-name="{{ entity.name }}">
+                                    Delete
+                                </button>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No locations available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+        </div>
+    </div>
+    
+     <!-- Pagination Controls -->
+     <div class="pagination">
+        <span class="step-links">
+            {% if page_obj.has_previous %}
+                <a href="?page=1">&laquo; first</a>
+                <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+            {% endif %}
+
+            <span class="current">
+                Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+            </span>
+
+            {% if page_obj.has_next %}
+                <a href="?page={{ page_obj.next_page_number }}">next</a>
+                <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+            {% endif %}
+        </span>
+    </div>
+
+</div>
+
+
+
+<!-- Generalized Update Modal -->
+<div class="modal fade" id="updateEntityModal" tabindex="-1" aria-labelledby="updateEntityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="updateEntityForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="entity_id" name="entity_id">
+                <input type="hidden" name="action" value="update">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateEntityModalLabel">Update</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="entity_name" class="form-label">Name</label>
+                        <input type="text" class="form-control" id="entity_name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="entity_contack_person" class="form-label">Contact Person</label>
+                        <input type="text" class="form-control" id="entity_contact_person" name="contact_person" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="entity_website" class="form-label">Website</label>
+                        <input type="text" class="form-control" id="entity_website" name="website" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Generalized Delete Confirmation Modal -->
+<div class="modal fade" id="deleteEntityModal" tabindex="-1" aria-labelledby="deleteEntityModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="deleteEntityForm">
+                {% csrf_token %}
+                <input type="hidden" name="entity_id" id="delete_entity_id" value="">
+                <input type="hidden" name="action" value="delete">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteEntityModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete <strong id="entityToDeleteName"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">No Cancel</button>
+                    <button type="submit" class="btn btn-primary">Yes Delete</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+        document.addEventListener('DOMContentLoaded', function () {
+            // Update Modal Logic
+            var updateModal = document.getElementById('updateEntityModal');
+            if (updateModal) {
+                updateModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var entityId = button.getAttribute('data-id');
+            var entityName = button.getAttribute('data-name');
+            var entityContactPerson = button.getAttribute('data-contact-person');
+            var entityWebsite = button.getAttribute('data-website');
+
+            var modal = updateModal;
+            modal.querySelector('#entity_id').value = entityId;
+            modal.querySelector('#entity_name').value = entityName;
+            modal.querySelector('#entity_contact_person').value = entityContactPerson;
+            modal.querySelector('#entity_website').value = entityWebsite;
+        });         
+      
+    }
+
+    // Delete Modal Logic
+    var deleteModal = document.getElementById('deleteEntityModal');
+    if (deleteModal) {
+        deleteModal.addEventListener('show.bs.modal', function (event) {
+            var button = event.relatedTarget;
+            var entityId = button.getAttribute('data-id');
+            var entityName = button.getAttribute('data-name');
+
+            var modal = deleteModal;
+            modal.querySelector('#delete_entity_id').value = entityId;
+            modal.querySelector('#entityToDeleteName').textContent = entityName;
+        });
+    }
+
+    // Delete Form Submission Logic
+    $('#deleteEntityForm').on('submit', function (event) {
+        event.preventDefault();
+        var form = $(this);
+
+        $.ajax({
+            type: "POST",
+            url: "/core/delete_company/" + $('#delete_entity_id').val() + "/",  // Use the correct URL format
+            data: form.serialize(),
+            success: function () {
+                window.location.reload();
+            },
+            error: function (xhr, status, error) {
+                console.error("An error occurred: " + error);
+            }
+        });
+
+    });
+});
+
+
+
+</script>
+
+
+
+
+{% endblock %}

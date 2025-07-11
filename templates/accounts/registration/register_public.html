@@ -1,0 +1,39 @@
+{% extends "public_portal_base.html" %}
+{% load custom_filters %}
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <!-- Card Header -->
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="mb-0">Register Public user</h3>
+                </div>
+                
+                <!-- Card Body -->
+                <div class="card-body" style="background-color: #f8f9fa;">
+                    <form method="POST" enctype="multipart/form-data" class="needs-validation p-4" novalidate>
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary btn-lg">Register</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Card Footer -->
+                <div class="card-footer text-center bg-light">
+                    <p class="mb-0">
+                        Already have an account? 
+                        <a href="{% url 'accounts:login_public' %}" class="text-primary text-decoration-none fw-bold">Login Here</a>
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <div style="height:800px"></div>
+
+{% endblock %}

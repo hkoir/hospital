@@ -1,0 +1,148 @@
+{% extends "base.html" %}
+{% load static %}
+
+
+{% block content %}
+
+
+
+    <style>
+
+    html, body { 
+       font-family: Verdana, sans-serif; 
+    
+  }
+
+
+  
+  table {
+            border-collapse: collapse;
+            width: 100%;
+      
+        }
+
+        th, td {
+            border: 1px solid rgb(227, 87, 7); /* Set border color for individual cells */
+            text-align: left;
+            padding: 0px;
+        }
+        th{
+        background-color: rgb(52, 232, 100);
+      }
+      
+
+    table thead th {
+    white-space: normal;
+        }
+
+ #main-content {   
+    overflow-y: auto;
+    margin-left:0px;
+    position: absolute;
+    width: 100%;
+    left: 0;
+  
+}
+
+    </style>
+
+    
+  
+{% if messages %}
+<div class="messages">
+  {% for message in messages %}
+    <div class="alert {% if message.tags %}alert-{{ message.tags }}{% endif %}">
+      {{ message }}
+    </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+
+
+
+
+
+    <h4 class="text-center" style="margin-top:10px">DOPS form</h4>
+    <div class="container-fluid">
+        <div class="row row-cols-1 row-cols-md-3 p-2">
+            <div class="col"></div>
+            <div class="col-md-6 shadow"> <!-- Adjust the width for medium screens -->
+                <div class="card m-4" style="background-color:aliceblue; padding:10px;">
+                    <div class="card-body">
+                        <h4 class="card-title" style="margin-bottom:20px">Create notice</h4>
+                       
+                        <form method="post" enctype="multipart/form-data">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                           
+                            <div><button type="submit" class="btn btn-primary">Submit</button></div>
+                        </form>
+                        
+                    </div>
+                </div>
+            </div>
+            <div class="col"></div>
+        </div>
+    </div>
+   
+
+   
+
+  
+<script>
+    $(document).ready(function(){      
+        var regionZoneMapping = {
+            'Sylhet': ['','Sylhet', 'Moulovibazar','Mymensingh','Kisorganj','Tangail'], 
+            'Rangpur': ['','Rangpur', 'Dinajpur','Bagura','Rajshahi'] ,                          
+            
+        };
+     
+        $('#id_region').change(function(){
+            var selectedRegion = $(this).val();
+            var zoneChoices = regionZoneMapping[selectedRegion];
+            $('#id_zone').empty();
+            $.each(zoneChoices, function(index, value){
+                $('#id_zone').append($('<option>').text(value).attr('value', value));
+            });
+        });
+              
+        var zoneMpMapping = {              
+            'Sylhet': ['','Sylhet','Taherpur','Sunamganj','Bianibazar','Dorbhost','Dherai','Chatak'], // Add more MPs for Sylhet zone
+            'Moulovibazar': ['','Moulovibazar', 'Saestaganj','Juri','Baniachong'],
+            'Mymensingh': ['','Mymensingh', 'Fulpur','Valuka'] ,
+            'Kisorganj': ['','Kisorganj','Katiadi','Netrokona','Mohonpur','Austogram'],
+            'Tangail': ['','Tangail','Madhupur','Jamalpur','Sherpur','Bakshihanj','Rowmari'],
+           
+            'Rangpur':['','Rangpur','Hatibandha','Gaibandha','Ulipur','Boropar','Polasbari'],
+            'Dinajpur':['','Dinajpur','Panchghor','Jaldhaka','Thakurgaon'],
+            'Rajshahi':['','Rajshahi','Bagura','Nachole','Natore','Chapai'],
+            'Bagura':['','Bagura'],
+            '': ['']
+           
+        };
+
+   
+        $('#id_zone').change(function(){
+            $('#id_mp').val('');
+            var selectedZone = $(this).val();
+            var mpChoices = zoneMpMapping[selectedZone];
+
+            $('#id_mp').empty();
+            $.each(mpChoices, function(index, value){
+                $('#id_mp').append($('<option>').text(value).attr('value', value));
+            });
+        });
+
+
+
+});          
+
+</script> 
+
+
+
+{% endblock %}
+
+
+

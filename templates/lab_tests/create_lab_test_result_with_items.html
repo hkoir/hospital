@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% load custom_filters %}
+
+{% block extra_head %}
+
+
+{% endblock %}
+
+{% block content %}
+
+
+<div class="container">
+    <div class="row">
+        <div class="col-12 col-md-1"></div>
+        <div class="col-12 col-md-10">
+
+            <form method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h2 class="text-center">Lab Report data entry</h2>
+
+                    </div>
+                    <div class="card-body m-4" style="background-color: aliceblue;">
+                        <h4 class="text-center">Prepare overall summary Report. This will create Test Order Code</h4>
+                        <div class="row">
+                            {% for field in order_form %}                              
+                                <div class="col-6 mt-2">{{ field.label_tag }} {{ field|add_class:'form-control' }}</div>                               
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card mb-4">
+                    <div class="card-header bg-success text-white">Add individual Test Item's result</div>
+                    <div class="card-body">
+                        {{ formset.management_form }}
+                        <div id="labtest-container">
+                            {% for form in formset %}
+                            <div class="labtest-item border p-3 mb-3">
+                                <div class="row">
+                                    {% for field in form %}
+                                        {% if field.name != 'id' and field.name != 'DELETE' %}
+                                            <div class="col-6 mt-2">{{ field.label_tag }} {{ field|add_class:'form-control' }}</div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </div>
+                                {% if not forloop.first %}
+                                    <button type="button" class="btn btn-danger remove-labtest mt-2">Remove</button>
+                                {% endif %}
+                            </div>
+                            {% endfor %}
+                        </div>
+                        <button type="button" id="add-labtest" class="btn btn-secondary mt-3">+ Add another Test</button>
+                    </div>
+                </div>
+                <div class="d-grid">            
+                <button type="submit" class="btn btn-lg btn-primary">Submit</button>
+            </div>
+            </form>
+        </div>
+        <div class="col-12 col-md-1"></div>
+    </div>
+</div>
+
+
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const container = document.getElementById("labtest-container");
+        const addButton = document.getElementById("add-labtest");
+        const totalForms = document.getElementById("id_form-TOTAL_FORMS");
+    
+        // Event listener for adding new lab test form
+        addButton.addEventListener("click", function () {
+            let formIndex = parseInt(totalForms.value);
+            let newForm = container.children[0].cloneNode(true);
+    
+            newForm.querySelectorAll("input, select, textarea").forEach(input => {
+                let name = input.name.replace(/-\d+-/, `-${formIndex}-`);
+                input.name = name;
+                input.id = `id_${name}`;
+                if (input.type !== 'hidden') input.value = '';
+            });
+    
+            // Remove any existing remove buttons in the new form
+            newForm.querySelectorAll(".remove-labtest").forEach(btn => btn.remove());
+    
+            // Do not add a remove button to the new form, as it's empty.
+            container.appendChild(newForm);
+            totalForms.value = formIndex + 1;
+    
+            // Add a remove button to the last valid (non-empty) form.
+            const lastItem = container.children[formIndex - 1];
+            if (!lastItem.querySelector(".remove-labtest")) {
+                const removeBtn = document.createElement("button");
+                removeBtn.classList.add("btn", "btn-danger", "remove-labtest", "mt-2");
+                removeBtn.type = "button";
+                removeBtn.innerText = "Remove";
+                lastItem.appendChild(removeBtn);
+            }
+        });
+    
+        // Event listener for removing lab test form
+        container.addEventListener("click", function (e) {
+            if (e.target.classList.contains("remove-labtest")) {
+                if (container.children.length > 1) {
+                    e.target.closest(".labtest-item").remove();
+                    totalForms.value = parseInt(totalForms.value) - 1;
+                }
+            }
+        });
+    });
+    </script>
+    
+
+
+{% endblock %}

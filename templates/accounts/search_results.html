@@ -1,0 +1,612 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block content %}
+
+
+
+<div class="container-fluid main-content">
+    <div class="row">
+        
+        <h4 class="text-center">Search Results for "{{ query }}"</h4>
+
+    <div class="col-xl-12">                
+
+            {% if employees %}
+            <table class="table">
+                <thead class="table-dark ">
+                    <tr>
+                        <th class="text-center bg-primary" colspan="13">Search Results for "{{ query }}"</th>
+                    </tr>
+                    <tr>
+                        <th class="text-center p-2">Profile</th>
+                        <th class="text-center p-2">Name/Code</th>
+                        <th class="text-center p-2">Email</th>
+                        <th class="text-center p-2">Phone Number</th>
+                        <th class="text-center p-2">Position</th>
+                        <th class="text-center p-2">Department</th>
+                        <th class="text-center p-2">Update record</th>
+                        <th class="text-center p-2">Preview Appraisal</th>
+                        <th class="text-center p-2">Pay slip</th>
+                        <th class="text-center p-2">Salary certificate</th>
+                        <th class="text-center p-2">Experience Certificate</th>
+                        <th class="text-center p-2">History data</th> 
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for employee in employees %}
+                        <tr>
+                            
+                            <td class="text-center p-2">  <img src="{{ employee.employee_photo_ID.url }}" class="card-img-top" alt="{{ employee.name }}" style="width:50px;height:50px;border-radius: 50%;"></td>
+                        
+                            <td class="text-center p-2">{{ employee.name }}</td>
+                            <td class="text-center p-2">{{ employee.email }}</td>
+                            <td class="text-center p-2">{{ employee.phone }}</td>
+                            <td class="text-center p-2">{{ employee.position }}</td>
+                            <td class="text-center p-2">{{ employee.department }}</td>
+
+                            <td>
+                                <a href="{% url 'core:update_employee' employee.id %}">Update</a>
+                            </td>                
+                                              
+                            <td>
+                                <a href="{% url 'tasks:preview_increment_promotion' employee.id %}">Preview increment promotion</a>
+                            </td> 
+                
+                            <td>
+                                <a href="{% url 'core:preview_pay_slip' employee.id %}">Click to view</a>
+                            </td>           
+                            
+                            <td>
+                                <a href="{% url 'core:preview_salary_certificate' employee.id %}">Click to view</a>
+                            </td> 
+                            <td>
+                                <a href="{% url 'core:preview_experience_certificate' employee.id %}">Click to view</a>
+                            </td> 
+                                         
+                            <td>
+                                <a href="{% url 'core:view_employee_changes_single' employee.id %}">Change History</a>
+                            </td> 
+                           
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+
+    </div>
+
+
+    <div class="col-12">
+        {% if products %}
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Name</th>
+                <th>Category</th>
+                <th>SKU</th>
+                <th>Unit Price</th>
+                <th>Available qty</th>
+                <th>Reorder qty</th>
+                <th>Low stock status</th>
+                <th>Created at</th>  
+                <th>Product report</th>                      
+                <th>Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for data in products %}
+                <tr>
+                    <td class="text-center p-1">{{ data.name }}</td>
+                    <td class="text-center p-1">{{ data.category.name }}</td>  
+                    <td class="text-center p-1">{{ data.sku }}</td>  
+                    <td class="text-center p-1">{{ data.unit_price}}</td>   
+                    <td>{{ data.product_inventories.first.quantity }}</td>
+                        <td>{{ data.reorder_level}}</td>
+                        <td>
+                            {% if data.product_inventories.first.quantity <= data.reorder_level %}
+                            <span style="color:red;font-weight:bold">Low stock</span>
+                            {% else %}
+                            <i class="fas fa-check" style="color:green;font-weight:bold">Stock ok</i>
+                            {% endif %}
+                        </td>      
+                                         
+                    <td class="text-center p-2" style="white-space: nowrap;">{{data.created_at}}</td>
+                    <td>
+                        <a href="{% url 'reporting:product_report' data.id %}">Product report</a>
+                    </td>
+                    <td class="text-center">
+                        <a href="{% url 'product:create_product' %}" class="btn btn-sm btn-info">Add</a>
+                        <a href="{% url 'product:update_product' data.id %}" class="btn btn-sm btn-info">Edit</a>
+                       
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" class="text-center">No records available.</td>
+                </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+   {% endif %}
+</div>
+
+
+
+<div class="col-12 mt-4">        
+                               
+    
+    {% if tickets  %}
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Final assessment by Customer</th>
+                <th>Update</th>
+                <th>Chat</th>
+                <th>Ticket ID</th>                                        
+                <th>Subject</th>
+                <th>Description</th>
+                <th>Ticket type</th>
+                <th>Ticket prority</th>
+                <th>Status</th>
+                <th>Progress by customer</th>    
+                <th>Progress by service provider</th>                                    
+                <th>Updated at</th>                                      
+                <th>Created at</th>
+                <th>Resolution date</th>
+                <th>Customer comment</th>                        
+                                                
+            </tr>
+        </thead>
+        <tbody>
+            
+            {% for ticket in tickets %}
+            <tr>
+
+                <td>      
+                    {% if ticket.status == 'RESOLVED' %}                                      
+                    <a href="{% url 'customerportal:ticket_customer_feedback' ticket.id %}"
+                    style="color:darkred">Please help to improve</a>
+                    {% elif ticket.ticket_feedback.first %}
+                    <i class="fas fa-handshake-o text-success fw-bold"></i>                                            
+                    {% else %}
+                    <i class="fas fa-hourglass-half fas_fa_spin_icon text-danger fw-bold"></i>
+                    {% endif %}
+                    </td>
+
+                <td>   
+                {% if ticket.status == 'RESOLVED' %}     
+                <i class="fas fa-check fw-bold text-success"></i>  
+                {% else %}                                      
+                    <a href="{% url 'customerportal:update_ticket' ticket.id %}"
+                    style="color:darkred">Update</a>
+                {% endif %}
+                </td>
+                
+                <td style="white-space: nowrap;">
+                    {% for task in ticket.task.all %}
+                        <a href="{% url 'tasks:chat' task.id %}" style="text-decoration:none;">
+                            {% if unread_messages|dict_key:task.id %}
+                                <i class="fa fa-exclamation-circle">
+                                    {{ unread_messages|dict_key:task.id|length }}
+                                </i>
+                            {% else %}
+                                <i class="fa fa-envelope" style="color:darkgreen"></i>
+                            {% endif %}
+                        </a>
+                        {% if not forloop.last %}<br>{% endif %} <!-- Add a line break between task links -->
+                    {% endfor %}
+                </td>                         
+                                          
+               
+                <td>{{ ticket.ticket_id }}</td>
+                <td>{{ ticket.subject}}</td>
+                <td>{{ ticket.description}}</td>
+                <td>{{ ticket.get_ticket_type_display}}</td>
+
+                {% if ticket.priority|item_list:'HIGH,CRITICAL' %}
+                <td class="bg-warning">{{ ticket.get_priority_display }} </td>
+                {% else %}
+                <td class="bg-info">{{ ticket.get_priority_display }} </td>
+                {% endif %}                           
+
+                <td>{{ ticket.get_status_display}}</td> 
+
+                <td>                                    
+            
+                {% if ticket.customer_feedback %}
+                    {% if ticket.customer_feedback == 'PROGRESS-20%' %}
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 20%;" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">20%</div>
+                        </div>
+                    {% elif ticket.customer_feedback == 'PROGRESS-30%' %}
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 30%;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">30%</div>
+                        </div>
+                    {% elif ticket.customer_feedback == 'PROGRESS-40%' %}
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 40%;" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">40%</div>
+                        </div>
+                    {% elif ticket.customer_feedback == 'PROGRESS-50%' %}
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">50%</div>
+                        </div>
+                    {% elif ticket.customer_feedback == 'PROGRESS-60%' %}
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 60%;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100">60%</div>
+                        </div>
+                    {% elif ticket.customer_feedback == 'PROGRESS-70%' %}
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 70%;" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">70%</div>
+                        </div>
+                    {% elif ticket.customer_feedback == 'PROGRESS-80%' %}
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 80%;" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100">80%</div>
+                        </div>
+                    {% elif ticket.customer_feedback == 'PROGRESS-90%' %}
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 90%;" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100">90%</div>
+                        </div>
+                    {% elif ticket.customer_feedback == 'PROGRESS-100%' %}
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">100%</div>
+                        </div>
+                    {% endif %}
+
+            {% endif %}
+                </td>                          
+                                            
+                <td>
+                    {% if ticket.progress_by_user >= 20.0 and ticket.progress_by_user < 30.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 20%;" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">20%</div>
+                        </div>
+                    {% elif ticket.progress_by_user >= 30.0 and ticket.progress_by_user < 40.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 30%;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">30%</div>
+                        </div>
+                    {% elif ticket.progress_by_user >= 40.0 and ticket.progress_by_user < 50.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 40%;" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">40%</div>
+                        </div>
+                    {% elif ticket.progress_by_user >= 50.0 and ticket.progress_by_user < 60.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">50%</div>
+                        </div>
+                    {% elif ticket.progress_by_user >= 60.0 and ticket.progress_by_user < 70.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 60%;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100">60%</div>
+                        </div>
+                    {% elif ticket.progress_by_user >= 70.0 and ticket.progress_by_user < 80.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 70%;" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">70%</div>
+                        </div>
+                    {% elif ticket.progress_by_user >= 80.0 and ticket.progress_by_user < 90.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 80%;" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100">80%</div>
+                        </div>
+                    {% elif ticket.progress_by_user >= 90.0 and ticket.progress_by_user < 100.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 90%;" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100">90%</div>
+                        </div>
+                    {% elif ticket.progress_by_user == 100.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">100%</div>
+                        </div>
+                    {% else %}
+                        <div class="progress">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                        </div>
+                    {% endif %}
+                </td>                           
+                                                    
+                <td>{{ ticket.updated_at}}</td>  
+                <td>{{ ticket.created_at }}</td>    
+                <td>{{ ticket.ticket_resolution_date }}</td>   
+                <td>{{ ticket.customer_comments }}</td>   
+                                                    
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center;">No records found.</td>
+            </tr>
+            {% endfor %}
+            
+        </tbody>
+    </table>
+    
+   
+
+    {% else %}
+    <span>No record found</span>
+    {% endif %}
+
+</div>
+
+
+
+<div class="col-12">      
+                         
+    {% if tasks %}
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+              
+                <th>Assign task</th>
+                <th>Chat</th>
+                <th>Task ID</th>
+                <th>Entity</th>
+                <th>Task Title</th>
+                <th>Ticket</th>
+                <th>Priority</th>
+                <th>Assigned Date</th>
+
+                <th>Due date</th>
+                <th>Extended date</th>
+                <th>Assigned to</th>
+                <th>Progress</th>
+           
+                <th>Update task Progress</th>
+                <th>Time extension Request</th>
+                <th>Time extension Approval</th>
+                                  
+                <th>Manager's Final evaluation</th>
+                <th>Remarks</th>  
+                <th>Updated</th>
+
+                <th>Assigned quantitative number</th>
+                <th>Obtained quantitative number</th>
+                <th>Given quantitative number</th>
+                <th>Obtained quantitative score</th>   
+                <th>Given quantitative score</th>                                                                                    
+
+                <th>Assigned Qualitative number</th>                       
+                <th>Obtained Qualitative Number</th>
+                <th>Obtained Qualitative Score</th>
+
+                <th>Total assigned number</th>
+                <th>Total obtained number</th>
+                <th>Total given number</th>
+                <th>Final obtained score</th>
+                <th>Final given score</th>
+                
+                
+            </tr>
+        </thead>
+        <tbody>
+            {% for task in tasks %}
+            <tr>
+                <td>
+                    {% if not task.assigned_datetime %}
+                    <a href="{% url 'tasks:assigned_task' task.id %}"
+                    style="color:darkred">Assign task</a>
+                    {% else %}
+                    <span><i class="fas fa-check text-warning"></i></span>
+                    {% endif %}
+                </td>
+                <td style="white-space: nowrap;">
+                    <a href="{% url 'tasks:chat' task.id %}" style="text-decoration:none;">
+                        {% if unread_messages|dict_key:task.id %}
+                            <i class="fa fa-exclamation-circle">
+                                {{ unread_messages|dict_key:task.id|length }}
+                            </i>
+                        {% else %}
+                            <i class="fa fa-envelope" style="color:darkgreen"></i>
+                        {% endif %}
+                    </a>                       
+                </td>                                    
+                                        
+                <td>
+                    <a href="#" 
+                       class="view-task-details" 
+                       data-task-id="{{ task.id }}" 
+                       data-bs-toggle="modal" 
+                       data-bs-target="#taskDetailsModal">
+                       {{ task.id }}/{{task.task_id}}
+                    </a>
+                </td>
+                
+
+
+
+
+                <td>{{ task.ticket.get_organization_display }}</td>
+                <td>
+                    {% if task.task_type == 'TICKET' %}
+                    <span>Ticket</span>
+                    {% else %}
+                    {{ task.title }}
+                    {% endif %}
+                </td>
+                <td>
+                    {% if task.ticket %}
+                    {{ task.ticket.ticket_id }}
+                    {% else %}
+                    <span>No Ticket</span>
+                    {% endif %}
+                </td>
+
+                
+                {% if task.priority|item_list:'HIGH,CRITICAL' %}
+                <td class="bg-warning">{{ task.get_priority_display }} </td>
+                {% else %}
+                <td class="bg-info">{{ task.get_priority_display }} </td>
+                {% endif %}
+
+                <td>{{ task.assigned_datetime|date:'d M,h:i' }}</td>
+                <td>{{ task.due_datetime|date:'d M,h:i' }}</td>
+
+                <td>
+                    {% if task.extended_due_datetime %}
+                    {{ task.extended_due_datetime|date:'d M,h:i' }}
+                    {% else %}
+                    <span style="color:blue;font-weight: bold;">No extension</span>
+                    {% endif %}
+                </td>
+                
+                <td>
+                    {% if task.assigned_to_employee %}
+                        {{ task.assigned_to_employee }}
+                    {% else %}
+                    <a href="{% url 'tasks:view_team_members' task.id %}">  {{ task.assigned_to_team }}</a>
+                      
+                    {% endif %}
+                </td>   
+               
+                <td>
+        
+                {% if task.progress >= 20.0 and task.progress < 30.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 20%;" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100">20%</div>
+                        </div>
+                    {% elif task.progress >= 30.0 and task.progress < 40.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 30%;" aria-valuenow="30" aria-valuemin="0" aria-valuemax="100">30%</div>
+                        </div>
+                    {% elif task.progress >= 40.0 and task.progress < 50.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 40%;" aria-valuenow="40" aria-valuemin="0" aria-valuemax="100">40%</div>
+                        </div>
+                    {% elif task.progress >= 50.0 and task.progress < 60.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-warning" role="progressbar" style="width: 50%;" aria-valuenow="50" aria-valuemin="0" aria-valuemax="100">50%</div>
+                        </div>
+                    {% elif task.progress >= 60.0 and task.progress < 70.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 60%;" aria-valuenow="60" aria-valuemin="0" aria-valuemax="100">60%</div>
+                        </div>
+                    {% elif ticket.progress_by_user >= 70.0 and ticket.progress_by_user < 80.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-info" role="progressbar" style="width: 70%;" aria-valuenow="70" aria-valuemin="0" aria-valuemax="100">70%</div>
+                        </div>
+                    {% elif task.progress >= 80.0 and task.progress < 90.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 80%;" aria-valuenow="80" aria-valuemin="0" aria-valuemax="100">80%</div>
+                        </div>
+                    {% elif task.progress >= 90.0 and task.progress < 100.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 90%;" aria-valuenow="90" aria-valuemin="0" aria-valuemax="100">90%</div>
+                        </div>
+                    {% elif task.progress == 100.0 %}
+                        <div class="progress">
+                            <div class="progress-bar bg-success" role="progressbar" style="width: 100%;" aria-valuenow="100" aria-valuemin="0" aria-valuemax="100">100%</div>
+                        </div>
+                    {% else %}
+                        <div class="progress">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100">0%</div>
+                        </div>
+                    {% endif %}
+                </td>
+                                
+        
+                <!-- Update tasks -->
+                <td>
+                    {% if task.task_qualitative_evaluations.first and task.status != 'COMPLETED' %}
+                        <span class="bg-warning"> Task ended by manager</span>
+                    {% else %}
+                        {% if task.status == 'COMPLETED' %}
+                            <i class="fas fa-check" style="color:blue;font-weight: bold;">Completed</i>
+                        {% else %}
+                            <a href="{% url 'tasks:update_task_progress' task.id %}" class="btn btn-sm btn-primary">Update</a>
+                        {% endif %}
+                    {% endif %}
+                </td>
+                
+                
+                <!-- request time extension button -->
+                <td>
+                    {% if task.task_qualitative_evaluations.first and task.status != 'COMPLETED' %}
+                        <span class="bg-warning">Task ended by manager</span>
+                    {% else %}
+                        {% if task.status == 'COMPLETED' %}
+                            <i class="fas fa-check" style="color:rgb(245, 11, 46); font-weight: bold;">Task completed</i>
+                        {% elif task.status == 'TIME_EXTENSION' %}
+                            {% if not task.time_extension_requests.first.is_approved %}
+                                <span class="bg-warning">Approval Pending</span>
+                            {% else %}
+                                <a href="{% url 'tasks:request_extension' task.id %}" class="btn btn-sm btn-primary">Apply</a>
+                            {% endif %}
+                        {% else %}
+                            <a href="{% url 'tasks:request_extension' task.id %}" class="btn btn-sm btn-primary">Apply</a>
+                        {% endif %}
+                    {% endif %}
+                </td>
+                
+                
+
+                <!-- time extension approval button -->
+                <td>
+                    {% if task.status == 'TIME_EXTENSION' %}
+                        {% if not task.time_extension_requests.first.is_approved %}
+                            <a href="{% url 'tasks:approve_extension' task.id %}" class="btn btn-sm btn-success">Approve Extension</a>
+                        {% else %}
+                            <span><i class="fas fa-check" style="color:blue;font-weight: bolder;">Approved</i></span>
+                        {% endif %}
+                        {% else %}
+                        <i class="fas fa-check" style="color:rgb(0, 17, 255);font-weight: bolder;"></i>
+                    {% endif %}
+                </td>
+                
+                
+                                
+                            
+                <!-- manager's evaluation button -->
+                    <td>
+                        {% if task.task_qualitative_evaluations.first and task.status != 'COMPLETED' %}
+                            <i class="fas fa-check" style="color:rgb(233, 14, 79);font-weight: bold;">Task early ended</i>
+                        {% elif task.status == 'COMPLETED' and not task.task_qualitative_evaluations.first %}
+                            <a href="{% url 'tasks:qualitative_evaluation' task.id %}" class="btn btn-sm btn-primary">Evaluate</a>
+                        {% elif task.task_qualitative_evaluations.first and task.status == 'COMPLETED' %}
+                            <i class="fas fa-check" style="color:blue;font-weight: bold;">Completed</i>
+                        {% else %}
+                        <a href="{% url 'tasks:qualitative_evaluation' task.id %}" class="btn btn-sm btn-primary">Evaluate</a>
+                        {% endif %}
+                    </td>
+                    
+                <td>{{ task.remarks }}</td>
+
+                <td>{{ task.updated_at|date:'d M,h:i' }}</td>
+              
+
+                <td>{{ task.assigned_number|floatformat:'2' }}</td>
+                <td>{{ task.task_ev.first.obtained_quantitative_number|floatformat:'2' }}</td>
+                <td>{{ task.task_ev.first.given_quantitative_number|floatformat:'2'}}</td>
+                <td>{{ task.task_ev.first.obtained_quantitative_score|floatformat:'2' }}%</td>
+                <td>{{ task.task_ev.first.given_quantitative_score|floatformat:'2' }}%</td>
+
+                                   
+                <td>{{ task.task_ev.first.assigned_qualitative_number|floatformat:'2' }}</td>
+                <td>{{ task.task_ev.first.obtained_qualitative_number|floatformat:'2' }}</td>
+                <td>{{ task.task_ev.first.obtained_qualitative_score|floatformat:'2' }}%</td>
+
+                <td>{{ task.task_ev.first.total_assigned_number|floatformat:'2' }}</td>
+                <td>{{ task.task_ev.first.total_obtained_number|floatformat:'2' }}</td>
+                <td>{{ task.task_ev.first.total_given_number|floatformat:'2' }}</td>
+                <td class="bg-success">{{ task.task_ev.first.total_obtained_score|floatformat:'2'}}%</td>
+                <td class="bg-info">{{ task.task_ev.first.total_given_score|floatformat:'2'}}%</td>
+               
+
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="7" style="text-align: center;">No records found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+            
+        </table>
+        {% endif %}
+    </div>  
+    
+
+
+
+    </div>
+</div>
+
+
+
+<h4 style="height:800px"></h4>
+
+{% endblock %}

@@ -1,0 +1,147 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block extra_head %}
+
+
+{% endblock %}
+
+{% block content %}
+
+    <style>
+        .chart-container {
+            text-align: center;
+            margin-bottom: 50px;
+        }
+    </style>
+
+    
+
+
+<div class="contaainer-fluid">
+  <h1 class="text-center my-5">Top 10 Expense Heads and Their Amounts</h1>
+  <p>
+    <a href="{% url 'finance:revenue_report' %}" class="btn btn-sm btn-success">Revenue</a>
+    <a href="{% url 'finance:shareholder_dashboard' %}" class="btn btn-sm btn-primary">Dashboard</a>
+     
+ </p>
+    <div class="row">
+        <div class="col-12 col-md-4 table-responsive">          
+           
+        <table class="table" border="1" cellpadding="10">
+            <thead class="table-info">
+                <tr>
+                    <th>Expense Head</th>
+                    <th>Total Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense_head, amount in combined_data %}
+                    <tr>
+                        <td>{{ expense_head }}</td>
+                        <td>{{ amount|add_commas }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+            <h4>Total expenses = {{ total_amount|add_commas }}</h4>
+
+        </div>
+        <div class="col-12 col-md-5">           
+             <canvas id="barChart"></canvas>
+        </div>
+        <div class="col-12 col-md-3">       
+        <canvas id="pieChart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+
+
+    <script>
+      
+    const expenseHeads = JSON.parse('{{ expense_heads|escapejs }}');
+    const amounts = JSON.parse('{{ amounts|escapejs }}');
+
+        const barColors = [
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 206, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+            'rgba(255, 159, 64, 0.8)',
+            'rgba(199, 199, 199, 0.8)',
+            'rgba(83, 102, 255, 0.8)',
+            'rgba(255, 99, 255, 0.8)',
+            'rgba(99, 255, 132, 0.8)'
+        ];
+
+        // Bar Chart Data
+        const barChartData = {
+            labels: expenseHeads,
+            datasets: [{
+                label: 'Expense Amount',
+                data: amounts,
+                backgroundColor: barColors,
+                borderColor: barColors.map(color => color.replace('0.8', '1')),  // stronger border
+                borderWidth: 1
+            }]
+        };
+
+        // Pie Chart Data
+        const pieChartData = {
+            labels: expenseHeads,
+            datasets: [{
+                data: amounts,
+                backgroundColor: ['rgba(255, 99, 132, 1)', 'rgba(75, 192, 192, 1)', 'rgba(255, 159, 64, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)', 'rgba(255, 99, 132, 1)', 'rgba(75, 192, 192, 1)', 'rgba(255, 159, 64, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
+                borderColor: ['rgba(255, 99, 132, 1)', 'rgba(75, 192, 192, 1)', 'rgba(255, 159, 64, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)', 'rgba(255, 99, 132, 1)', 'rgba(75, 192, 192, 1)', 'rgba(255, 159, 64, 1)', 'rgba(153, 102, 255, 1)', 'rgba(255, 159, 64, 1)'],
+                borderWidth: 1
+            }]
+        };
+
+        // Create Bar Chart
+        const ctxBar = document.getElementById('barChart').getContext('2d');
+        new Chart(ctxBar, {
+            type: 'bar',
+            data: barChartData,
+            options: {
+                responsive: true,
+                scales: {
+                    x: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+
+        // Create Pie Chart
+        const ctxPie = document.getElementById('pieChart').getContext('2d');
+        new Chart(ctxPie, {
+            type: 'pie',
+            data: pieChartData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'top',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function(tooltipItem) {
+                                return tooltipItem.label + ': ' + tooltipItem.raw;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+    </script>
+
+
+{% endblock %}

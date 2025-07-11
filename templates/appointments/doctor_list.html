@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-5">
+  <div class="card shadow rounded-3">
+    <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+      <h4 class="mb-0">Doctors</h4>
+      <form method="get" class="d-flex" style="gap: 10px;">
+        <input type="text" name="q" value="{{ query }}" class="form-control form-control-sm" placeholder="Search doctor or specialization...">
+        <button type="submit" class="btn btn-sm btn-light">Search</button>
+      </form>
+    </div>
+    <div class="card-body">
+      <div class="table-responsive">
+        <table class="table table-bordered table-hover align-middle">
+          <thead class="table-light">
+            <tr>
+              <th>#</th>
+              <th>Name</th>
+              <th>Specialization</th>
+              <th>Contact</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for doctor in doctors %}
+              <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ doctor.name }}</td>
+                <td>{{ doctor.specialization|default:"—" }}</td>
+                <td>{{ doctor.phone_number|default:"—" }}</td>
+                <td>
+                  <a href="{% url 'billing:doctor_payment_summary' doctor.id %}" class="btn btn-sm btn-outline-primary">
+                    View Payment Summary
+                  </a>
+                </td>
+              </tr>
+            {% empty %}
+              <tr>
+                <td colspan="5" class="text-center">No doctors found.</td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

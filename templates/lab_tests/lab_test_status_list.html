@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+
+{% block content %}
+<div class="container mt-4 table-responsive">
+  <h2 class="mb-4">Lab Test Report (Draft)</h2>
+  <table class="table table-bordered table-hover">
+    <thead class="table-light">
+      <tr>
+        <th>Result Code</th>
+        <th>Patient</th>
+        <th>Status</th>
+        <th>Test Names</th>
+        <th>Recorded</th>
+        <th>Action</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for order in result_orders %}
+        <tr>
+          <td>{{ order.lab_test_result_oder_code }}</td>
+          <td>{{ order.medical_record.patient.full_name }}</td>
+          <td>{{ order.status }}</td>
+          <td>
+            {% for result in order.results.all %}
+              {{ result.test_name.test_name }}{% if not forloop.last %}, {% endif %}
+            {% endfor %}
+          </td>
+          <td>{{ order.recorded_at|date:"d M Y, h:i A" }}</td>
+          <td>
+            {% if order.status == 'Completed' and not order.delivery %}
+              <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#labModal{{ order.id }}">
+                Review & Deliver
+              </button>
+            {% elif order.status == 'Delivered' or order.delivery %}
+              <span class="badge bg-success">Delivered</span>
+            {% else %}
+              <span class="text-muted">No action</span>
+            {% endif %}
+          </td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="6">No lab tests found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<!-- Modals for Each Order -->
+{% for order in result_orders %}
+<div class="modal fade" id="labModal{{ order.id }}" tabindex="-1" aria-labelledby="labModalLabel{{ order.id }}" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="labModalLabel{{ order.id }}">Lab Test Details for order-code:{{ order.lab_test_result_oder_code}}</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p><strong>Patient:</strong> {{ order.medical_record.patient.name }}</p>
+        <p><strong>Status:</strong> {{ order.status }}</p>
+        <h4>Summary Report:</h4>
+        <p style="text-align: justify;">{{ order.summary_report }}</p>
+        <hr>
+        <table class="table table-sm table-bordered">
+          <thead>
+            <tr>
+              <th>Test Name</th>
+              <th>Value</th>
+              <th>Standard</th>
+              <th>Findings</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for result in order.results.all %}
+              <tr>
+                <td style="white-space:normal">{{ result.test_name.test_name }}</td>
+                <td>{{ result.test_value }}</td>
+                <td>{{ result.standard_value }}</td>
+                <td style="white-space: pre-wrap; word-wrap: break-word; max-width: 300px;text-align:justify">{{ result.findings }}</td>
+
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+      <div class="modal-footer">
+        {% if order.status == 'Completed' and not order.delivery %}
+          <a href="{% url 'lab_tests:deliver_lab_tests' order.id %}" class="btn btn-success">
+            Confirm Delivery
+          </a>
+        {% endif %}
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endfor %}
+
+
+
+
+{% endblock %}

@@ -1,0 +1,81 @@
+{% extends "partner_portal_base.html" %}
+{% load custom_filters %}
+{% block content %}
+
+
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-12 col-md-6">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <!-- Card Header -->
+                <div class="card-header bg-primary text-white text-center">
+                    <h3 class="mb-0">Tenant's customer Login</h3>
+                </div>
+                
+                <!-- Card Body -->
+                <div class="card-body">
+                    <form method="POST" action="{% url 'accounts:login_partner_job_seeker' %}" enctype="multipart/form-data" class="needs-validation p-4" novalidate>
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="d-grid">
+                            <button type="submit"class="btn btn-primary btn-lg w-100">Login</button> 
+                          
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- Card Footer -->
+                <div class="card-footer text-center">
+                    <small>Don't have an account?
+                        <a href="{% url 'accounts:register_partner_job_seeker' %}">register</a></small>
+                    
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+ 
+<div style="height:300px"></div>
+    
+
+<!-- Bootstrap Modal for displaying Django message -->
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageModalLabel">Messages</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+
+            </div>
+            <div class="modal-body" id="messagesContainer">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+ // Show Django message modal if there are messages
+ document.addEventListener("DOMContentLoaded", function() {
+        const messageModal = document.getElementById('messageModal');
+        if (messageModal) {
+            const messagesContainer = document.getElementById('messagesContainer');
+            if (messagesContainer && messagesContainer.children.length > 0) {
+                const modalInstance = new bootstrap.Modal(messageModal);
+                modalInstance.show();
+            }
+        }
+    });
+</script>
+
+
+
+    
+{% endblock %}

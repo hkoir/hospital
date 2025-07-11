@@ -1,0 +1,21 @@
+
+
+{% autoescape off %}
+Hi {{ user.username }},
+
+Your account has successfully created. Please click below link to activate your account
+
+
+{% if subdomain %}
+http://{{ subdomain }}.{{ domain }}:8000{% url 'accounts:activate' uidb64=uid token=token %}
+{% else %}
+http://{{ domain }}:8000{% url 'accounts:activate' uidb64=uid token=token %}
+{% endif %}
+
+
+{% endautoescape %}
+
+
+
+
+

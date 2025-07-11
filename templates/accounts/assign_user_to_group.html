@@ -1,0 +1,85 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+
+<div class="container-fluid">
+    <div class="row">       
+
+        <div class="col-12 col-md-4">
+            <div class="card shadow-lg" style="background-color: aliceblue;">
+                <!-- Card Header -->
+                <div class="card-header bg-primary text-white text-center">
+                    <h4>Assign User to Group</h>
+                </div> 
+                <div class="card-body">                       
+                    <form method="post" enctype="multipart/form-data" action="" id="add_customer">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <div class="d-grid">
+                            <button type="submit" name="customer_submit"value="customer_submit" class="btn btn-primary btn-lg">Submit</button>
+                        </div>
+                    </form>
+                 </div>
+            </div>           
+        </div>
+        <div class="col-12 col-md-8">
+            <h2>User Permissions</h2>
+            <table class="table table-striped">
+                <thead>
+                <tr>
+                    
+                    <th>Group name</th>
+                    <th>users</th>
+                </tr>
+                </thead>
+                <tbody>
+                {% for data in group_data %}
+                    <tr>
+                        <td>{{ data.name }}</td>
+                        <td>{% for user_data in data.user_set.all %}
+                            <ul>
+                                <li>  {{ user_data.username }}</li>
+                            </ul>
+                          
+                            {% endfor %}
+
+                        </td>
+                        
+                    </tr>
+                {% endfor %}
+                </tbody>
+            </table>
+             <!-- Pagination Controls -->
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+
+        </div>
+        
+       
+    </div>
+</div>
+
+
+<div style="height:1000px"></div>
+
+
+
+{% endblock %}

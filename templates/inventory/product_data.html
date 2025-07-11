@@ -1,0 +1,246 @@
+{% extends 'base.html' %}  
+
+{% block content %}
+
+
+
+<div class="container">
+    <div class="card shadow p-3" style="background-color: aliceblue;">
+        <div class="card-header text-center">
+            <h4 class="card-title mb-0">Product Catalogue</h4>
+        </div>
+        <div class="card-body">
+            <div class="container-fluid">
+                <div class="row justify-content-center">
+                    <div class="col-12 col-md-8">
+                        <table class="table table-bordered table-striped">
+                            <tbody>
+                                <tr>
+                                    <th>Product Name</th>
+                                    <td>{{ product_instance.name }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Product ID</th>
+                                    <td>{{ product_instance.product_id }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Category</th>
+                                    <td>{{ product_instance.category }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Product Type</th>
+                                    <td>{{ product_instance.product_type }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>SKU</th>
+                                    <td>{{ product_instance.sku }}</td>
+                                </tr>
+                                <tr>
+                                    <th>Brand</th>
+                                    <td>{{ product_instance.brand }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>UOM</th>
+                                    <td>{{ product_instance.UOM}}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Unit Price</th>
+                                    <td>{{ product_instance.unit_price }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Barcode</th>
+                                    <td>{{ product_instance.barcode }}</td>
+                                </tr>
+                                <tr>
+                                    <th>weight</th>
+                                    <td>{{ product_instance.weight }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Dimensions</th>
+                                    <td>{{ product_instance.dimensions }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Manufacture date</th>
+                                    <td>{{ product_instance.manufacture_date }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Expire date</th>
+                                    <td>{{ product_instance.expire_date }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>warranty</th>
+                                    <td>{{ product_instance.warranty }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Description</th>
+                                    <td>{{ product_instance.sku }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Active Status</th>
+                                    <td>{{ product_instance.is_active }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Reorder Level</th>
+                                    <td>{{ product_instance.reorder_level }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Lead Time</th>
+                                    <td>{{ product_instance.lead_time }}</td>
+                                </tr>
+
+                                <tr>
+                                    <th>Created at</th>
+                                    <td>{{ product_instance.created_at }}</td>
+                                </tr>
+
+
+                                <tr>
+                                    <th>Updated at</th>
+                                    <td>{{ product_instance.updated_at }}</td>
+                                </tr>
+                             
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<!-- Update Warehouse Modal -->
+<div class="modal fade" id="updateProductModal" tabindex="-1" aria-labelledby="updateProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form id="updateProductForm" method="post">
+                {% csrf_token %}
+                <input type="hidden" id="product_id" name="product_id">
+                <input type="hidden" name="action" value="update">
+              
+
+                <div class="modal-header">
+                    <h5 class="modal-title" id="updateProductModalLabel">Update product</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="product_name" class="form-label">Name</label>
+                          <input type="text" class="form-control" id="product_name" name="product_name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="product_category" class="form-label">Category</label>
+                        <input type="text" class="form-control" id="product_category" name="category" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="product_unit_price" class="form-label">Unit Price</label>
+                        <input type="text" class="form-control" id="product_unit_price" name="unit_price" required>
+
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="submit" class="btn btn-primary">Save changes</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteProductModal" tabindex="-1" aria-labelledby="deleteProductModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form method="POST" id="deleteProductForm">
+                {% csrf_token %}
+                <input type="hidden" name="product_id" id="delete_product_id" value="">
+                <input type="hidden" name="action" value="delete">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="deleteProductModalLabel">Confirm Deletion</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    Are you sure you want to delete <strong id="productToDeleteName"></strong>?
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" id="exitWithoutSavingBtn" data-bs-dismiss="modal">No Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="saveChangesBtn"> Yes Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+         
+
+
+
+
+<script>
+   
+
+// update //////////////////////////////////////////////
+$(document).ready(function () {
+    $('#updateProductModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); // Button that triggered the modal
+        var productId = button.data('id'); 
+        var productName = button.data('name'); 
+        var productCategory = button.data('category'); 
+        var productUnitPrice = button.data('unit_price'); 
+
+        console.log("Product Unit Price:", productUnitPrice); // Log the unit price
+
+        // Check if productUnitPrice is defined
+        if (productUnitPrice !== undefined) {
+            productUnitPrice = parseFloat(productUnitPrice).toFixed(2); // Convert to float and format
+        } else {
+            productUnitPrice = ""; // Handle undefined case
+        }
+
+        var modal = $(this);
+        modal.find('#product_id').val(productId);
+        modal.find('#product_name').val(productName);
+        modal.find('#product_category').val(productCategory);
+        modal.find('#product_unit_price').val(productUnitPrice);
+    });
+});
+
+
+
+// delete modal
+$('#deleteProductModal').on('show.bs.modal', function (event) {
+        var button = $(event.relatedTarget); 
+        var productId = button.data('product-id'); 
+        var productName = button.data('product-name');
+        // Set the modal fields with these values
+        var modal = $(this);
+        modal.find('#delete_product_id').val(productId);
+        modal.find('#productToDeleteName').text(productName);
+    });
+
+
+
+
+</script>
+
+
+
+
+
+{% endblock %}

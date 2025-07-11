@@ -1,0 +1,83 @@
+{% extends 'sub_base.html' %}  
+
+{% block content %}
+
+
+
+<div class="container-fluid main-content">
+    <div class="row">
+        <div class="col-12 col-md-3"></div>
+        <div class="col-12 col-md-6">
+            <div class="card shadow">
+                <!-- Card Header -->
+            <div class="card-header bg-primary text-white text-center">
+               <h3 class="mb-0">Application for Tenant</h3>
+           </div>      
+                <div class="card-body">                   
+                    <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ form.as_p }}
+                        <input type="hidden" name="plan_id" value="{{ plan_id }}">
+                        <div class="d-grid">
+                            <button type="submit" name="add_to_basket" class="btn btn-primary btn-lg w-100" onclick="proceed()">Submit</button> 
+                        </div>
+                    </form>
+                 </div>
+                 
+            </div>           
+        </div>
+        <div class="col-12 col-md-3"></div>
+    </div>
+</div>
+
+
+
+
+
+<script>
+    function proceed() {       
+        function showLoadingMessage() {
+                if (!document.querySelector('.loader-container')) {
+                    const loaderContainer = document.createElement('div');
+                    loaderContainer.className = 'loader-container';
+                    loaderContainer.innerHTML = `
+                        <div class="loader"></div>
+                        <div class="loading-text">Loading...</div>
+                    `;
+                    document.body.appendChild(loaderContainer);
+                }
+            }    
+
+        function hideLoadingMessage() {
+                const loaderContainer = document.querySelector('.loader-container');
+                if (loaderContainer) {
+                    loaderContainer.remove(); 
+                }
+            }
+    
+        $.ajax({
+            type: 'POST',
+            url: '{% url "clients:apply_for_tenant" %}', 
+            headers: { 'X-CSRFToken': '{{ csrf_token }}' },
+            data: {
+                csrfmiddlewaretoken: '{{ csrf_token }}',
+            },
+            beforeSend: function() {  
+                showLoadingMessage(); 
+            },           
+            success: function(response) { 
+                setTimeout(function() {
+                    hideLoadingMessage();               
+                   
+                }, 3000); 
+            },
+            error: function(error) {           
+                console.error(error);
+            }
+        });
+    }
+    </script> 
+    
+
+
+{% endblock %}

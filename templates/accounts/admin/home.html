@@ -1,0 +1,92 @@
+{% extends 'base.html' %}  
+
+{% block content %}
+
+
+
+<h6 class="text-center" style="margin-top: 40px;">User authentication management<br>
+    <button class="btn btn-primary">
+        <a href="{% url 'accounts:login' %}" style="color:white;text-decoration: none;">Login</a>
+    </button>
+    <button class="btn btn-danger" onclick="event.preventDefault(); document.getElementById('logout-form').submit();">
+        Logout
+    </button>
+    <form id="logout-form" action="{% url 'accounts:logout' %}" method="POST" style="display: none;">
+        {% csrf_token %}
+    </form>
+    <button class="btn btn-secondary">
+        <a href="{% url 'accounts:register' %}" style="color:white;text-decoration: none;">Register</a>
+    </button>
+    <button class="btn btn-warning">
+        <a href="{% url 'accounts:password_change' %}" style="color:white;text-decoration: none;">Password Change</a>
+    </button>
+    <button class="btn btn-info">
+        <a href="{% url 'accounts:pwdreset' %}" style="color:white;text-decoration: none;">Forgot password?</a>
+    </button>
+</h6>
+
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <h4 class="text-center" style="color: green;font-weight: bolder;">Performance</h4>
+
+        <div class="col-4 col-md-3">  
+            <div class="card">     
+                <a href="{% url 'core:core_dashboard' %}" class="btn btn-primary">Core</a> 
+            </div> 
+        </div>
+       
+        <div class="col-4 col-md-3">  
+            <div class="card">     
+                <a href="{% url 'tasks:tasks_dashboard' %}" class="btn btn-primary">Task management</a> 
+            </div> 
+        </div>
+
+       
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+
+<!-- Bootstrap Modal for displaying Django message -->
+<div class="modal fade" id="messageModal" tabindex="-1" aria-labelledby="messageModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="messageModalLabel">Messages</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="messagesContainer">
+                {% for message in messages %}
+                    <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+    // Show Django message modal if there are messages
+    document.addEventListener("DOMContentLoaded", function() {
+        const messageModal = document.getElementById('messageModal');
+        if (messageModal && document.getElementById('messagesContainer').children.length > 0) {
+            new bootstrap.Modal(messageModal).show();
+        }
+    });
+
+</script>
+
+
+    {% endblock %}

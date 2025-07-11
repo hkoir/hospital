@@ -1,0 +1,530 @@
+{% extends 'visitor_portal_base.html' %}
+{% load custom_filters %}
+
+
+{% block content %}
+<style>
+    /* General Screen Styles */
+    .invoice-container {
+      background: #ffffff;
+      padding: 30px;
+      border: 1px solid #ccc;
+      margin: 20px auto;
+      max-width: 900px;
+      font-family: 'Arial', sans-serif;
+    }
+    
+    .invoice-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .invoice-header img {
+      width: 100px;
+      max-width: 100%;
+    }
+    
+    .invoice-header h2 {
+      text-align: center;
+      margin-bottom: 10px;
+    }
+    
+    .invoice-table {
+      width: 100%;
+      margin-top: 20px;
+      border-collapse: collapse;
+    }
+    
+    .invoice-table th, .invoice-table td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      text-align: left;
+    }
+    
+    .total-section {
+      margin-top: 30px;
+      font-size: 18px;
+    }
+    
+    .signature {
+      margin-top: 50px;
+      text-align: right;
+      font-size: 16px;
+      white-space:nowrap;
+    }
+    
+    /* Print-specific adjustments */
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    
+      /* Hide buttons and no-print elements */
+      button, .no-print {
+        display: none !important;
+      }
+    
+      /* Flexbox adjustments */
+      .print-flex {
+        display: flex !important;
+        flex-direction: row !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        text-align: center;
+      }
+    
+      .print-flex > div {
+        flex: 1;
+        text-align: center;
+        margin: 10px;
+      }
+    
+      /* Page-break protection */
+      .invoice-header,
+      .grand-total-section,
+      .payment-status-section,
+      .signature-section,
+      .invoice-container,
+      .invoice-table,
+      .row {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+      }
+    
+      .grand-total-section {
+        page-break-before: always;
+      }
+    
+      /* Row and column flex layout */
+      .row {
+        display: flex !important;
+        flex-wrap: wrap !important;
+      }
+    
+      .col-md-2 {
+        flex: 0 0 16.66666667% !important;
+        max-width: 16.66666667% !important;
+      }
+    
+      .col-md-6 {
+        flex: 0 0 50% !important;
+        max-width: 50% !important;
+      }
+    
+      .col-md-10 {
+        flex: 0 0 83.33333333% !important;
+        max-width: 83.33333333% !important;
+      }
+    
+      /* Ensure images fit nicely */
+      img {
+        max-width: 100%;
+        height: auto;
+      }
+    
+    }
+    </style>
+    
+
+<div class="invoice-container" id="invoice">
+    <div class="row">
+      <div class="invoice-header d-flex align-items-center mb-4">
+        <!-- Logo and Company Name -->
+        <div class="me-3 text-center">
+            <img src="/static/images/Logo.png" alt="Hospital Logo" style="width:60px; height:60px;">
+            <div style="font-weight: bold; margin-top: 5px;">MyMePlus</div>
+        </div>
+    
+        <!-- Invoice Title and Address -->
+        <div>
+            <h2 class="mb-1">Patient Invoice</h2>
+            <p class="mb-0">{{ hospital.address }} | {{ hospital.company.phone }}</p>
+        </div>
+    </div>
+    
+        <div class="card mb-4 shadow-sm">
+            <div class="card-body">
+              <h3 class="card-title text-center mb-4">🧾 Provisional Bill</h3>
+          
+              <div class="row">
+                <div class="col-md-2 text-center">
+                  {% if invoice.invoice_type == 'OPD' %}
+                    {% if invoice.patient.photo %}
+                      <img src="{{ invoice.admission.patient_photo.url }}" alt="Patient Photo" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                      <img src="/static/images/patient.png" alt="Patient Photo" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% endif %}
+                  {% else %}
+                    {% if invoice.admission.patient_photo %}
+                      <img src="{{ invoice.admission.patient_photo.url }}" alt="Patient Photo" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% else %}
+                      <img src="/static/images/doctor-1.jpg" alt="Patient Photo" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+                    {% endif %}
+                  {% endif %}
+                </div>
+          
+                <div class="col-md-10">
+                  {% if invoice.invoice_type == 'OPD' %}
+                    <div class="row mb-2">
+                      <div class="col-md-6"><strong>Patient ID:</strong> {{ invoice.patient.patient_id }}</div>
+                      <div class="col-md-6"><strong>Name:</strong> {{ invoice.patient.name }}</div>
+                    </div>
+                    <div class="row mb-2">
+                      <div class="col-md-6"><strong>Doctor:</strong> {{ invoice.patient.patient_appointments.first.doctor }}</div>
+                      <div class="col-md-6"><strong>Invoice No:</strong> {{ invoice.invoice_id }}</div>
+                    </div>
+          
+                  {% else %}
+                    <div class="row mb-2">
+                      <div class="col-md-6"><strong>Patient ID:</strong> {{ invoice.admission.patient.patient_id }}</div>
+                      <div class="col-md-6"><strong>Name:</strong> {{ invoice.admission.patient.name }}</div>
+                    </div>
+                   
+                    <div class="row mb-2">
+                      <div class="col-md-6"><strong>Doctor:</strong> {{ invoice.admission.admitting_doctor }}</div>
+                      <div class="col-md-6"><strong>Admission No:</strong> {{ invoice.admission.admission_code }}</div>
+                    </div>
+                  
+                    <div class="row mb-2">
+                      <div class="col-md-6"><strong>Ward:</strong> {{ invoice.admission.assigned_ward.name }}</div>
+                      <div class="col-md-6"><strong>Bed / Room:</strong> {{ invoice.admission.assigned_bed.bed_number }} / {{ invoice.admission.assigned_room.number }}</div>                                    
+                   </div>
+                   
+                   <div class="row mb-2">   
+                        <div class="col-md-6"><strong>Invoice No:</strong> {{ invoice.invoice_id }}</div>                 
+                        <div class="col-md-6"><strong>Patient Contact:</strong>{{ invoice.patient.email }}</div>                                         
+                        
+                   </div>
+                    
+                   
+                  {% endif %}
+                </div>
+              </div>
+          
+            </div>
+          </div>
+          
+          
+          {% if invoice.consultation_bills.exists %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body"> 
+                    <h3>Consultation Bills</h3>
+                    <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Appointment/Admission</th>
+                                <th>Doctor</th>
+                                <th>Consultation date</th>
+                                <th>Patient Type</th>
+                                <th>Consultation Fee</th>                      
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bill in invoice.consultation_bills.all %}
+                            <tr>
+				<td>
+                                  {% if bill.appointment %}
+                                  {{ bill.appointment.appointment_code}}
+                                  {% elif bill.invoice.admission %}
+                                   {{ bill.invoice.admission.admission_code}}
+                                  {% endif %}
+                                </td>
+                             
+                                <td>{{ bill.doctor }}</td>
+                                <td>{{ bill.consultation_date }}</td>
+                                <td>{{ bill.patient_type }}</td>
+                                <td>{{ bill.consultation_fee}}</td>
+                            
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="4">Subtotal</th>
+                                <th>{{ consultation_subtotal }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                  </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if invoice.lab_test_bills.exists %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body"> 
+                    <h3>Lab test Bills</h3>
+		<div class="table-responsive">                   
+                    <table class="table table-bordered">
+        
+                        <thead>
+                            <tr>
+                                <th>Lab test name</th>
+                                <th>Test Date</th>
+                                <th>Test Charge</th>
+                                <th>Status</th>
+                                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bill in invoice.lab_test_bills.all %}
+                            <tr>
+                                <td>{{ bill.lab_test}}</td>
+                                <td>{{ bill.test_date }}</td>
+                                <td>{{ bill.test_fee }}</td>
+                                <td>{{ bill.status}}</td>
+                            
+                            
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="3">Subtotal</th>
+                                <th>{{ lab_test_subtotal }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                  </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if invoice.ward_bills.exists %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body"> 
+                    <h3>Ward/Bed Charge </h3>
+                  <div class="table-responsive">
+                    <table class="table table-bordered">
+        
+                        <thead>
+                            <tr>
+                              <th>Patient Admission</th>
+                                <th>Ward</th>
+                                <th>Room/Bed</th>
+                                <th>Charge Per day</th>                               
+                                <th>Days Stayed</th>
+                                <th>Total Charge</th>
+                                                
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for bill in invoice.ward_bills.all %}
+                            <tr>
+                              <td>{{ bill.patient_admission.admission_code}}</td>
+                                <td>{{ bill.ward.name}}</td>
+                                <td>{{ bill.bed }}||{{ bill.room }}</td>
+                                <td>{{ bill.bed.daily_charge }}</td>                                
+                                <td>{{ bill.days_stayed}}</td>                              
+                                <td>{{ bill.total_bill}}</td>
+                            
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th colspan="5">Subtotal</th>
+                                <th>{{ ward_subtotal }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+		   </div>
+                   <p class="text-center text-primary fw-bold"> Unbilled/Running ward bill:{{ ward_running_bill }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if invoice.medicine_bills.exists %}
+        <div class="col-12">        
+            <div class="card">
+                <div class="card-body">     
+                    <h3>Medicine Bills</h3>
+                      <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Medicine</th>
+                                    <th>Unit Price</th>
+                                    <th>Quantity</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for medicine in invoice.medicine_bills.all %}
+                                <tr>
+                                    <td>{{ medicine.medicine }}</td>
+                                    <td>{{ medicine.price_per_unit }}</td>
+                                    <td>{{ medicine.quantity }}</td>
+                                    <td>
+                                      {{ medicine.total_price }}
+                                  </td>
+                                  
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th colspan="3">Subtotal</th>
+                                    <th>{{ medicine_subtotal }}</th>
+                                </tr>
+                            </tfoot>
+                       </table>                    
+		    </div>                               
+  
+                </div>
+            </div>
+        </div>
+        {% endif %}
+        {% if invoice.ot_bills.exists %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">   
+                    <h3>Operation Theatre Charges</h3>
+                    <div class="table-responsive">
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Procedure</th>
+                                <th>Total Charge</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for ot in invoice.ot_bills.all %}
+                            <tr>
+                                <td>{{ ot.procedure_name }}</td>
+                                <td>{{ ot.total_charge }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th>Subtotal</th>
+                                <th>{{ ot_subtotal }}</th>
+                            </tr>
+                        </tfoot>
+                    </table>
+                   </div>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if invoice.misc_bills.exists %}
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">   
+                    <h3>Miscellaneous Charges</h3>
+                      <div class="table-responsive">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>Description</th>
+                                    <th>Amount</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for misc in invoice.misc_bills.all %}
+                                <tr>
+                                    <td>{{ misc.description }}</td>
+                                    <td>{{ misc.amount }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                            <tfoot>
+                                <tr>
+                                    <th>Subtotal</th>
+                                    <th>{{ misc_subtotal }}</th>
+                                </tr>
+                           </tfoot>               
+		  	</table>
+		    </div>                      
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+<hr>
+
+   
+
+<div class="col-12 payment-status">  
+    
+<div>
+
+  <p><strong>Grand Total:</strong> {{ grand_total_bill }} || <strong>Total paid:</strong> {{ grand_total_paid}} || <strong>Total due:</strong> {{ grand_total_remaining }}</p>
+  <p><strong>Total Due Bill in Words:</strong> {{ grand_total_remaining|number_to_words }}</p>
+</div>              
+
+    {% if invoice.status == "Paid" %}
+      <div class="text-success fw-bold" style="font-size: 40px; text-align: center;">
+        PAID
+      </div>
+    {% elif invoice.status == "Partially Paid" %}
+      <div class="text-warning fw-bold" style="font-size: 40px; text-align: center;">
+        PARTIALLY PAID
+      </div>
+    {% else %}
+      <div class="text-danger fw-bold" style="font-size: 40px; text-align: center;">
+        DUE
+      </div>
+    {% endif %}
+</div>
+
+
+
+<!-- Row with QR Code, Signature, and Print Button -->
+ <div class="col-12">
+    <div class="container-fluid">   
+        <div class="card">
+            <div class="card-body"> 
+                <div class="row text-center text-md-start align-items-center mt-5 table-responsive">   
+                    <div class="col-4 mb-3 mb-md-0 text-md-start text-center">
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" width="100px">
+                    </div>
+
+                    <div class="col-4 mb-3 mb-md-0 text-center">
+                        <div class="signature" style="white-space:nowrap">
+                            Authorized Signature<br><br>
+                            ................................
+                        </div>
+                    </div>
+
+                    <div class="col-4 text-md-end text-center">
+                        <button onclick="window.print()" class="btn btn-primary" >Print</button>
+                        <a href="{% url 'billing:download_invoice' invoice.id %}" class="btn btn-primary my-2">download</a>
+                    </div>
+              </div>
+          </div>
+        </div>
+    </div>   
+ </div>
+
+
+
+
+
+  </div>
+</div>
+
+
+<script>
+    function printInvoice() {
+        var originalContents = document.body.innerHTML;
+        var invoiceContents = document.getElementById('invoice').innerHTML;
+        
+        document.body.innerHTML = invoiceContents;
+        window.print();
+        document.body.innerHTML = originalContents;
+        location.reload(); // Reload page to restore everything
+    }
+    </script>
+    
+
+{% endblock %}

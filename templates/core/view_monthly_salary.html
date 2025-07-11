@@ -1,0 +1,38 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+
+
+{% block content %}
+
+
+<h1>Monthly Salary Sheet - {{ month }}/{{ year }}</h1>
+
+<table class="table table-hover">
+    <thead class="table-dark">
+        <tr>
+            <th>Employee ID</th>
+            <th>Month</th>
+            <th>Year</th>
+            <th>Name</th>
+            <th>Total Salary</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for entry in salary %}
+        <tr>
+            <td>{{ entry.employee.employee_code }}</td>
+            <td>{{ entry.month }}</td>
+            <td>{{ entry.year }}</td>
+            <td>{{ entry.employee.name }}</td>
+            <td>{{ entry.total_salary }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+
+
+{% endblock %}

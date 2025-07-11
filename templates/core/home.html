@@ -1,0 +1,135 @@
+
+{% extends 'base.html' %}  
+{% load static  %}
+{% load custom_filters %}
+
+
+
+
+{% block content %}
+
+
+<div class="container-fluid main-content">
+    
+    <div class="row">
+        <h4 class="text-center mb-4" >
+           <span style="color: blue;font-weight: bolder;"> ||DSCM Supply Chain||</span> 
+        </h4>
+       
+
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'supplier:supplier_dashboard' %}"class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="fas fa-folder-open menu-icon"></i>
+                    <div class="menu-title">Suppliers</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'customer:customer_dashboard' %}"class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="fas fa-folder-open menu-icon"></i>
+                    <div class="menu-title">Customers</div>
+                </div>
+            </a>
+        </div>
+
+
+       
+
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'inventory:inventory_dashboard' %}" class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="fas fa-solid fas fa-warehouse menu-icon"></i>
+                    <div class="menu-title">Inventory</div>
+                </div>
+            </a>
+        </div>      
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'product:product_dashboard' %}"class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="fas fa-folder-open menu-icon"></i>
+                    <div class="menu-title">Product</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'purchase:purchase_dashboard' %}"class="text-decoration-none">
+                <div class="menu-card">
+                    <i class=" fas fa-solid fas fa-folder-open menu-icon"></i>
+                    <div class="menu-title">Purchase</div>
+                </div>
+            </a>
+        </div>
+
+
+
+
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'sales:sale_dashboard' %}" class="text-decoration-none">
+                <div class="menu-card">
+                    <i class=" fas fa-solid fas fa-folder-open menu-icon"></i>
+                    <div class="menu-title">Sales</div>
+                </div>
+            </a>
+        </div>   
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'repairreturn:return_dashboard' %}"class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="fas fa-folder-open menu-icon"></i>
+                    <div class="menu-title">RRR</div>
+                </div>
+            </a>
+        </div>             
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'manufacture:manufacture_dashboard' %}"class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="fas fa-folder-open menu-icon"></i>
+                    <div class="menu-title">Production</div>
+                </div>
+            </a>
+        </div>
+
+      
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'reporting:report_dashboard' %}" class="text-decoration-none">
+                <div class="menu-card">
+                    <i class=" fas fa-solid fas fa-chart-line menu-icon"></i>
+                    <div class="menu-title">Reports</div>
+                </div>
+            </a>
+        </div>   
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'operations:operations_dashboard' %}"class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="fas fa-folder-open menu-icon"></i>
+                    <div class="menu-title">Operations</div>
+                </div>
+            </a>
+        </div>        
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'core:all_qc' %}"class="text-decoration-none">
+                <div class="menu-card">
+                  
+                    <i class="fas fa-folder-open menu-icon"></i>
+                    <div class="menu-title">Quality Control</div>
+                </div>
+            </a>
+        </div>
+
+
+
+       
+    </div>
+</div>
+
+
+
+
+
+
+
+
+
+
+    {% endblock %}

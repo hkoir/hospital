@@ -1,0 +1,12 @@
+{% extends "base.html" %}
+
+{% block content %}
+<h2>Confirm Discharge</h2>
+<p>Are you sure you want to discharge <strong>{{ admission.patient.full_name }}</strong>?</p>
+
+<form method="post">
+    {% csrf_token %}
+    <button type="submit" class="btn btn-danger">Confirm Discharge</button>
+    <a href="{% url 'patients:patient_admission_detail' admission.id %}" class="btn btn-secondary">Cancel</a>
+</form>
+{% endblock %}

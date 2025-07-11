@@ -1,0 +1,66 @@
+
+{% extends 'base.html' %}
+
+{% block content %}
+  
+    <div class="container-fluid main-content mb-5">
+        <div class="row">
+            <div class="col-12 col-md-2"></div>
+            <div class="col-12 col-md-6">
+                <div class="card shadow-lg border-0 rounded-lg">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h3 class="mb-0"> Leave approval</h3>
+                    </div>
+                      <div class="card-body">
+                        <h4 class="text-center">Approve Leave Application</h4>
+                        <p class="ms-4">Employee: {{ leave_application.employee }}<br>
+                        Leave Type: {{ leave_application.leave_type.name }}<br>
+                        Applied Start Date: {{ leave_application.applied_start_date }}<br>
+                        Applied End Date: {{ leave_application.applied_end_date }}<br>
+                        Applied Days:{{leave_application.applied_no_of_days}} days</p>
+                        
+                        <form method="POST" class="ms-4 mt-5">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <div class="d-grid">
+                                <button type="submit" name="entity_submit"class="btn btn-primary my-2"> Approve</button>
+                                <a href="{% url 'leavemanagement:pending_leave_list' %}" class="btn btn-secondary">Cancel</a>
+                            </div> 
+                        </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-12 col-md-2"></div>
+
+    </div>
+    <h4 style="height:50px"></h4>
+</div>
+
+<div style="height:20px"></div>
+
+
+
+
+
+<script>
+    $(document).ready(function () {
+     function toggleFields() {
+         var entityType = $('#id_status').val();
+ 
+         if (entityType === 'APPROVED' || entityType === 'PENDING') {
+                $('#id_rejection_reason').closest('p').hide();
+            } else {
+                $('#id_rejection_reason').closest('p').show();
+            }
+         }
+ 
+     toggleFields(); // Initial call
+     $('#id_status').change(function () {
+         toggleFields(); // Update fields on change
+     });
+ });
+ 
+ </script>
+
+{% endblock %}

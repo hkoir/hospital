@@ -1,0 +1,26 @@
+{% extends "ase.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+
+            <h1>History List</h1>
+            <ul>
+                {% for history in histories %}
+                <li>{{ history.employee }} - {{ history.date }} - {{ history.history }} - {{ history.old_data.old_incentive}} -
+                    {{ history.old_data.promotion}} - {{ history.old_data}}
+        </li>
+                {% endfor %}
+            </ul>
+        
+
+
+        </div>
+    </div>
+</div>
+   
+
+    {% endblock %}

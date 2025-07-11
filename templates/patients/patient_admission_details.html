@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+    <style>
+        .patient-details {
+            margin-top: 30px;
+        }
+        .patient-details h2, .patient-details h3 {
+            color: #0056b3;
+        }
+        .patient-details p {
+            font-size: 1.1rem;
+        }
+        .patient-info {
+            background-color: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .patient-info .row {
+            margin-bottom: 15px;
+        }
+        .btn-change-bed {
+            margin-top: 20px;
+        }
+    </style>
+
+    <div class="container patient-details">
+        <h1 class="text-center mb-4">Patient Admission Details</h1>
+
+        <div class="patient-info">
+            <div class="row">
+                <div class="col-md-6">
+                    <h2>Patient: <strong>{{ admission.patient }}</strong></h2>
+                    <p><strong>Admission Date:</strong> {{ admission.admission_date }}</p>
+                </div>
+                <div class="col-md-6">
+                    <h2>Patient ID: <strong>{{ admission.patient.patient_id }}</strong></h2>
+                    <p><strong>Invoice ID:</strong> {{ admission.billing_admission.invoice_id }}</p>
+                </div>
+            </div>
+
+            {% if assigned_bed %}
+                <h3>Assigned Bed Information</h3>
+                <div class="row">
+                    <div class="col-md-4">
+                        <p><strong>Bed:</strong> {{ assigned_bed.bed_number }}</p>
+                    </div>
+                    <div class="col-md-4">
+                      <p><strong>Room:</strong> {{ assigned_room }}</p>
+                  </div>
+                    <div class="col-md-4">
+                        <p><strong>Ward:</strong> {{ assigned_ward.name }}</p>
+                    </div>
+                </div>
+            {% else %}
+                <div class="alert alert-warning">
+                    <p>No bed assigned yet. Please assign a bed.</p>
+                </div>
+            {% endif %}
+
+            <a href="{% url 'patients:change_bed' admission_id=admission.id %}" class="btn btn-primary btn-change-bed">Change Bed</a>
+        </div>
+    </div>
+
+
+
+{% endblock %}

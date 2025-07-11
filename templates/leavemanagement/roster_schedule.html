@@ -1,0 +1,48 @@
+{% extends "base.html" %} 
+
+{% block content %}
+<h2>Roster Schedule for {{ selected_month }}/{{ selected_year }}</h2>
+
+<!-- Month Selection Form -->
+<form method="GET">
+    <label for="month">Select Month:</label>
+    <select name="month" id="month">
+        {% for m in "123456789101112" %}
+            <option value="{{ m }}" {% if selected_month == m|add:0 %}selected{% endif %}>{{ m }}</option>
+        {% endfor %}
+    </select>
+
+    <label for="year">Select Year:</label>
+    <input type="number" name="year" id="year" value="{{ selected_year }}" min="2000" max="2100">
+    
+    <button type="submit">View</button>
+</form>
+
+<!-- Roster Schedule Table -->
+<table>
+    <thead>
+        <tr>
+            <th>Employee Name</th>
+            <th>Date</th>
+            <th>Shift</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for schedule in roster_schedules %}
+        <tr>
+            <td>{{ schedule.employee.name }}</td>
+            <td>{{ schedule.date }}</td>
+            <td>
+                {% if schedule.shift %}
+                    {{ schedule.shift.name }}
+                {% else %}
+                    Off Day
+                {% endif %}
+            </td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+
+{% endblock %}

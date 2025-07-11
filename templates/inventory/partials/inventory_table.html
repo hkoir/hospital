@@ -1,0 +1,29 @@
+
+<div class=" table-responsive">
+<table class="table table-bordered table-striped">
+    <thead>
+        <tr>
+            <th>Product</th>
+            <th>Warehouse</th>
+            <th>Location</th>
+            <th>Batch</th>
+            <th>Quantity</th>
+            <th>Reorder Level</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in page_obj %}
+        <tr>
+            <td>{{ item.product.name }}</td>
+            <td>{{ item.warehouse.name }}</td>
+            <td>{{ item.location.name }}</td>
+            <td>{{ item.batch.batch_number }}</td>
+            <td>{{ item.quantity }}</td>
+            <td>{{ item.reorder_level }}</td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="6">No records found.</td></tr>
+        {% endfor %}
+    </tbody>
+</table>
+</div>

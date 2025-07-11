@@ -1,0 +1,11 @@
+
+{% extends 'base.html' %}
+{% block content %}
+
+
+<h2>Invoice created for {{ patient.name }}</h2>
+<p>Invoice ID: {{ invoice.invoice_id }}</p>
+<a href="{% url 'billing:invoice_detail' invoice.id %}">Go to Invoice</a>
+
+
+{% endblock %}

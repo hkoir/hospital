@@ -1,0 +1,105 @@
+{% extends 'visitor_portal_base.html' %}
+{% load custom_filters %}
+{% block content %}
+
+
+<div class="container">
+    <div class="col-12 table-responsive">
+      <form method="get" class="my-2" novalidate,>
+                {% csrf_token %}
+                <div class="row">
+                    {% for field in form %}
+                        <div class="col-md-2">
+                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                            {{ field|add_class:"form-control" }}
+                            {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors|striptags }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+                    
+                </div>
+
+                <div class="d-flex justify-content-between mt-4">                    
+                    <button type="submit" class="btn btn-primary">Apply filter</button>
+                    
+                </div>
+      </form>
+
+        <h2>IPD Invoice List</h2>
+        <table class="table table-bordered table-striped">
+            <thead>
+                <tr>
+                    <th>#Invoice ID</th>
+		    <th>Invoice Type</th>
+                    <th>Patient</th>
+                    <th>Total Amount</th>
+                    <th>Total Paid</th>
+                    <th>Remaining</th>
+                    <th>Status</th>               
+                    <th>Created</th>                   
+                    <th>Bill details</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for invoice in page_obj %}
+                <tr>
+                    <td>{{ invoice.invoice_id }}</td>
+		    <td>{{ invoice.invoice_type }}</td>
+                    <td>{{ invoice.patient.name }}/{{ invoice.patient.patient_id }}</td>
+                    <td>{{ invoice.total_amount }}</td>
+                    <td>{{ invoice.total_paid }}</td>
+                    <td>{{ invoice.remaining_amount }}</td>
+                    <td>
+                        {% if invoice.status == 'Paid' %}
+                            <span class="badge bg-success">Paid</span>
+                        {% elif invoice.status == 'Partially Paid' %}
+                            <span class="badge bg-warning text-dark">Partial</span>
+                        {% else %}
+                            <span class="badge bg-danger">Unpaid</span>
+                        {% endif %}
+                    </td>
+                
+                    <td>{{ invoice.created_at|date:"Y-m-d H:i" }}</td>                   
+			
+                    <td>
+			{% if invoice %}
+			    {% if invoice.total_amount != 0 %} 
+			       <a href="{% url 'visitors:download_invoice' invoice.id %}" class="btn btn-sm btn-success">Download invoices</a>
+		   	   {% else %}
+			       <strong>In Process</strong>
+			   {% endif %}
+			{% endif %} 
+		   </td>
+                     
+		</tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center">No invoices found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <!-- Pagination Controls -->
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+</div>
+{% endblock %}

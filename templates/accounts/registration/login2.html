@@ -1,0 +1,106 @@
+{% extends "sub_base.html" %}
+{% load custom_filters %}
+{% load static %}
+
+{% block title %}Log-in{% endblock %}
+{% block content %}
+
+<style>
+
+
+
+</style>
+
+
+
+
+
+
+
+
+<form class="account-form" action="{% url 'accounts:login' %}" method="post">
+  {% csrf_token %}
+
+  <div class="container mt-5">
+ 
+    <div class="card shadow p-4">
+      <div class="card-body">     
+
+        <div class="form-group" style="text-align: center;">
+          <img class="rounded-pill" src="{% static 'images/Logo.png' %}" style="width:50px;height:50px;" alt="Logo" id="logo"> 
+         
+          <h2 class="text-center" style="color:blue;text-decoration:underline; font-weight: bold;"> DOPS</h2>
+          <h2 class="text-center" style="color:green;text-decoration: solid; font-weight: bold;"> Digital Operations </h2>
+          <h6 class="text-center" style="color:rgb(238, 151, 11);text-decoration: solid; font-weight: bold;"> Excellence in Engineering</h6>
+          <h3 class="mb-2 mt-4">Please Sign In</h3>
+          {% if form.errors %}
+          <div class="alert alert-primary" role="alert">
+            Error: Username or Password not correct!
+          </div>
+          {% endif %}         
+        </div>          
+        <div class="form-group">
+          <label class="form-label" for="id_username">{{ form.username.label }}</label>
+          <div class="input-group">
+            {{ form.username|add_class:"form-control" }}
+            <div class="input-group-append">
+              <span class="input-group-text">
+                <i class="fas fa-user"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="form-group">
+          <label class="form-label" for="id_password">{{ form.password.label }}</label>
+          <div class="input-group">
+            <input type="password" name="password" id="id_password" class="form-control">
+            <div class="input-group-append">
+              <span class="input-group-text">
+                <i class="fas fa-eye" id="togglePassword" style="height:25px"></i>
+              </span>
+            </div>
+          </div>
+        </div>
+        
+        
+
+        <div class="d-grid gap-2">
+          <input type="hidden" name="next" value="{{ next }}">
+          <button class="btn btn-primary py-2 mb-4 mt-5 fw-bold" type="submit" value="Log-in">Sign in
+          </button>
+        </div>
+      
+      
+      </div>
+    </div>
+  </div>
+    
+  
+  <div class="flex-column justify-content-center mx-auto pb-3">
+    <div class="text-center"><a href="{% url "accounts:register" %}">Create an account</a></div>
+    <div class="text-center"><a href="{% url "accounts:pwdreset" %}">Forgotten Password?</a></div>
+  </div>
+</form>
+
+
+<div class="col" style="height:400px"></div>
+
+<script>
+  var passwordField = document.getElementById("id_password");
+  var togglePassword = document.getElementById("togglePassword");
+
+  togglePassword.addEventListener("click", function() {
+    if (passwordField.type === "password") {
+      passwordField.type = "text";
+      togglePassword.classList.remove("fa-eye");
+      togglePassword.classList.add("fa-eye-slash");
+    } else {
+      passwordField.type = "password";
+      togglePassword.classList.remove("fa-eye-slash");
+      togglePassword.classList.add("fa-eye");
+    }
+  });
+</script>
+
+{% endblock %}

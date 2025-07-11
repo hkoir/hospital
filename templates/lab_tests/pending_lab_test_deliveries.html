@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block content %}
+
+
+
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12 table-responsive">
+
+
+<h2>Pending Lab Test Deliveries</h2>
+<table class="table">
+    <thead>
+        <tr>
+            <th>Invoice ID</th>
+            <th>Patient Name</th>
+	    <th>Patient Type</th>
+	   <th>Patient ID </th>
+            <th>Total Amount</th>
+            <th>Actions</th>
+        </tr>
+    </thead>
+    <tbody>
+
+	{% for invoice, lab_test_total in invoice_data %}
+        <tr>
+            <td>{{ invoice.invoice_id }}</td>
+            <td>{{ invoice.patient.name }}</td>
+	   <td>{{ invoice.invoice_type }}</td> 
+	   <td>{{ invoice.patient.patient_id }}</td>  
+	    <td>{{ lab_test_total|floatformat:'2' }}</td>
+            <td>
+                <!-- Button to trigger modal -->
+                <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#labTestModal{{ invoice.id }}">
+                    View
+                </button>
+                <a href="{% url 'lab_tests:deliver_lab_tests' invoice.id %}" class="btn btn-primary btn-sm">Deliver</a>
+            </td>
+        </tr>
+
+        <!-- Modal -->
+        <div class="modal fade" id="labTestModal{{ invoice.id }}" tabindex="-1" aria-labelledby="labModalLabel{{ invoice.id }}" aria-hidden="true">
+	  <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+              <div class="modal-header">
+                <h5 class="modal-title" id="labModalLabel{{ invoice.id }}">Invoice #{{ invoice.invoice_id }}</h5>
+		<h3 class="text-center my-4"> Lab Test Details</h3>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                  <p><strong>Patient Name:</strong> {{ invoice.patient.name }}<br>
+                    <strong>Patient ID:</strong> {{ invoice.patient.patient_id }}<br>
+                 </p>
+
+		 <p>
+                     <strong>Doctor:
+                       {% if invoice.medical_record.doctor %}
+                          {{ invoice.medical_record.doctor.name }}
+                          {% elif invoice.medical_record.external_doctor %}
+                          {{ invoice.medical_record.external_doctor }}
+                        {% endif %}
+                      </strong>                                 
+                            
+                  </p>	
+
+                  <strong>Source:</strong> {{ invoice.lab_test_bills.first.patient_type }}
+		</p>
+
+                  <h5>Lab Tests:</h5>
+                  <ul>
+                      {% for test in invoice.lab_test_bills.all %}
+                          <li>{{ test.lab_test_catelogue.test_name }} — Fee: {{ test.test_fee }}</li>
+                      {% endfor %}
+                  </ul>
+
+		 <p><strong>Total:</strong> {{ lab_test_total }}</p>
+              </div>
+              <div class="modal-footer">
+                <a href="{% url 'lab_tests:deliver_lab_tests' invoice.id %}" class="btn btn-success">Deliver Now</a>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+    {% endfor %}
+    </tbody>
+</table>
+
+        </div>
+    </div>
+</div>
+
+
+
+
+{% endblock %}

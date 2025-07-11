@@ -1,0 +1,170 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load static %}
+
+{% block content %}
+<div class="container">
+    {% if lab_visit_form.errors %}
+  <div class="alert alert-danger">
+    <strong>Form errors:</strong>
+    {{ lab_visit_form.errors }}
+  </div>
+{% endif %}
+
+{% if formset.non_form_errors %}
+  <div class="alert alert-danger">
+    <strong>Formset errors:</strong>
+    {{ formset.non_form_errors }}
+  </div>
+{% endif %}
+
+    <form id="medicine-sale-form" method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        {{ formset.management_form }}
+        <div class="row">
+            <!-- Medicine Sale Details -->
+            <div class="col-12 col-md-6">
+                <div class="card shadow-lg border-0 mb-4">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4>Medicine Sale Only</h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            {% for field in lab_visit_form %}
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ field.errors|striptags }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Medicine Selection -->
+            <div class="col-12 col-md-6">
+                <div class="card shadow-lg border-0 mb-4">
+                    <div class="card-header bg-primary text-white text-center">
+                        <h4>Medicines</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table" id="formset_table">
+                            <thead>
+                                <tr>
+                                    <th>Medicine</th>
+                                    <th>Quantity</th>
+                                    <th>Subtotal</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for form in formset %}
+                                    <tr class="formset_row">
+                                        {{ form.id }}
+                                          <div style="display: none;">{{ form.DELETE }}</div>
+                                        <td>{{ form.batch|add_class:'form-control' }}</td>
+                                        <td>{{ form.quantity }}</td>
+                                        <td class="subtotal">0.00</td>
+                                        <td>
+                                            <button type="button" class="remove-form-btn btn btn-danger btn-sm">Remove</button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <button type="button" id="add-form-btn" class="btn btn-primary mt-2">Add Another Medicine</button>
+
+                        <div class="mt-3">
+                            <p>Total Estimated Cost: <strong id="total_cost">0.00</strong></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-success px-5">Submit</button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Hidden empty form template -->
+    <div id="empty-form" style="display: none;">
+        <table>
+            <tr class="formset_row">
+                {{ formset.empty_form.id }}
+                <div style="display: none;">{{ formset.empty_form.DELETE }}</div>
+                <td>{{ formset.empty_form.batch|add_class:'form-control' }}</td>
+                <td>{{ formset.empty_form.quantity }}</td>
+                <td class="subtotal">0.00</td>
+                <td>
+                    <button type="button" class="remove-form-btn btn btn-danger btn-sm">Remove</button>
+                </td>
+            </tr>
+        </table>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const medicinePrices = JSON.parse('{{ medicine_prices|escapejs }}');
+    const addBtn = document.getElementById('add-form-btn');
+    const formsetTable = document.getElementById('formset_table');
+    const totalForms = document.querySelector('#id_form-TOTAL_FORMS');
+
+    function updateSubtotalsAndTotal() {
+        let total = 0;
+        document.querySelectorAll('.formset_row').forEach(row => {
+            const medicineSelect = row.querySelector('select[name$="-batch"]');
+            const quantityInput = row.querySelector('input[name$="-quantity"]');
+            const subtotalCell = row.querySelector('.subtotal');
+
+            if (medicineSelect && quantityInput && subtotalCell) {
+                const selectedId = medicineSelect.value;
+                const quantity = parseFloat(quantityInput.value) || 0;
+                const pricePerUnit = parseFloat(medicinePrices[selectedId]) || 0;
+                const subtotal = pricePerUnit * quantity;
+                subtotalCell.textContent = subtotal.toFixed(2);
+                total += subtotal;
+            }
+        });
+        document.getElementById('total_cost').textContent = total.toFixed(2);
+    }
+
+    addBtn.addEventListener('click', function() {
+        const currentFormCount = parseInt(totalForms.value);
+        const emptyFormHtml = document.getElementById('empty-form').querySelector('tr').outerHTML;
+        const newRowHtml = emptyFormHtml.replace(/__prefix__/g, currentFormCount);
+        const tempDiv = document.createElement('tbody');
+        tempDiv.innerHTML = newRowHtml;
+        const newRow = tempDiv.firstElementChild;
+        formsetTable.querySelector('tbody').appendChild(newRow);
+        totalForms.value = currentFormCount + 1;
+        updateSubtotalsAndTotal();
+    });
+
+    formsetTable.addEventListener('input', function(e) {
+        if (e.target && (e.target.name.includes('-batch') || e.target.name.includes('-quantity'))) {
+            updateSubtotalsAndTotal();
+        }
+    });
+
+    formsetTable.addEventListener('click', function(e) {
+        if (e.target && e.target.classList.contains('remove-form-btn')) {
+            const row = e.target.closest('.formset_row');
+            row.remove();
+            const updatedCount = formsetTable.querySelectorAll('.formset_row').length;
+            totalForms.value = updatedCount;
+            updateSubtotalsAndTotal();
+        }
+    });
+
+    updateSubtotalsAndTotal();
+});
+</script>
+{% endblock %}

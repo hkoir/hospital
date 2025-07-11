@@ -1,0 +1,66 @@
+
+{% extends 'base.html' %}  
+
+{% block content %}
+
+
+
+
+</style>
+
+
+<div class="container-fluid main-content">
+    <div class="row">       
+       
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'inventory:create_category' %}" class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="fas fa-plus-square menu-icon"></i>
+                    <div class="menu-title">Create Category</div>
+                </div>
+            </a>
+        </div>
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'inventory:create_product' %}" class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="fas fa-plus-square menu-icon"></i>
+                    <div class="menu-title">Create Product</div>
+                </div>
+            </a>
+        </div>      
+     
+        <div class="col-6 col-md-3 col-lg-2 p-2">
+            <a href="{% url 'inventory:product_list' %}" class="text-decoration-none">
+                <div class="menu-card">
+                    <i class="fas fa-list menu-icon"></i>
+                    <div class="menu-title">Product List</div>
+                </div>
+            </a>
+        </div>    
+          
+    </div>
+</div>
+
+
+
+
+{% endblock %}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+   
+            
+
+   
+

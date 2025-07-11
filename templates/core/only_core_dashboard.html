@@ -1,0 +1,129 @@
+{% extends 'base.html' %}  
+
+{% block content %}
+
+    
+
+
+
+<div class="container-fluid main-content">
+    <div class="row">       
+       
+            <h4 class="text-center mb-4" >
+                <span style="color: blue;font-weight: bolder;"> ||Core HR||</span> 
+             </h4>
+        <div class="col-6 col-md-3 col-lg-2 mt-2">
+            <a href="{% url 'accounts:register' %}"  class="text-decoration-none">
+                <div class="menu-card">   
+                    <i class="fas fa-user menu-icon"></i>                    
+                    <div class="menu-title">User Registration</div>
+                </div>
+            </a>
+        </div>
+        
+
+        <div class="col-6 col-md-3 col-lg-2 mt-2 ">
+            <a href="{% url 'core:manage_department' %}"  class="text-decoration-none">
+                <div class="menu-card">   
+                    <i class="fas fa-plus-square menu-icon"></i>                    
+                    <div class="menu-title">Create Department</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-3 col-lg-2 mt-2">
+            <a href="{% url 'core:create_position' %}"  class="text-decoration-none">
+                <div class="menu-card">   
+                    <i class="fas fa-plus-square menu-icon"></i>                    
+                    <div class="menu-title">Create Position</div>
+                </div>
+            </a>
+        </div>
+
+
+        
+        <div class="col-6 col-md-3 col-lg-2 mt-2">
+            <a href="{% url 'core:create_company' %}" class="text-decoration-none">
+                <div class="menu-card">   
+                    <i class="fas fa-plus-square menu-icon"></i>                    
+                    <div class="menu-title">Manage company</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-3 col-lg-2 mt-2">
+            <a href="{% url 'core:manage_location' %}"  class="text-decoration-none">
+                <div class="menu-card">   
+                    <i class="fas fa-plus-square menu-icon"></i>                    
+                    <div class="menu-title">Compnay's location</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-3 col-lg-2 mt-2">
+            <a href="{% url 'core:manage_employee' %}" class="text-decoration-none">
+                <div class="menu-card">   
+                    <i class="fas fa-plus-square menu-icon"></i>                    
+                    <div class="menu-title">Enroll employee</div>
+                </div>
+            </a>
+        </div>
+
+
+        <div class="col-6 col-md-3 col-lg-2 mt-2 ">
+            <a href="{% url 'core:view_employee' %}" class="text-decoration-none">
+                <div class="menu-card">   
+                    <i class="fas fa-file menu-icon"></i>                    
+                    <div class="menu-title">View employee</div>
+                </div>
+            </a>
+        </div>
+        
+        <div class="col-6 col-md-3 col-lg-2 mt-2">
+            <a href="{% url 'core:employee_list' %}"  class="text-decoration-none">
+                <div class="menu-card">   
+                    <i class="fas fa-file menu-icon"></i>                    
+                    <div class="menu-title">Employee List</div>
+                </div>
+            </a>
+        </div>
+
+     
+
+       
+        <div class="col-6 col-md-3 col-lg-2 mt-2">
+            <a href="{% url 'core:create_salary' %}"  class="text-decoration-none">
+                <div class="menu-card">   
+                    <i class="fas fa-file menu-icon"></i>                    
+                    <div class="menu-title">Prepare salary</div>
+                </div>
+            </a>
+        </div>
+
+        <div class="col-6 col-md-3 col-lg-2 mt-2">
+            <a href="{% url 'core:view_employee_changes' %}"  class="text-decoration-none">
+                <div class="menu-card">   
+                    <i class="fas fa-file menu-icon"></i>                    
+                    <div class="menu-title">View history</div>
+                </div>
+            </a>
+        </div>
+
+         
+    <div class="col-6 col-md-3 col-lg-2 mt-2">
+        <a href="{% url 'tasks:increment_promotion' %}" class="text-decoration-none">
+            <div class="menu-card">   
+                <i class="fas fa-chart-area menu-icon"></i>                    
+                <div class="menu-title">Appraisal</div>
+            </div>
+        </a>
+    </div>
+
+     
+
+    </div>
+</div>
+
+
+    
+{% endblock %}

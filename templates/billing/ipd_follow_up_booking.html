@@ -1,0 +1,113 @@
+
+
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block content %}
+
+
+
+<div class="container mt-5">
+  <div class="row justify-content-center">
+    <div class="col-12">
+      <div class="card shadow-lg">
+        <div class="card-header bg-primary text-white text-center">
+          <h5 class="mb-0">IPD follow up Appointment</h5>
+        </div>
+        <div class="card-body">
+          <form method="POST">
+            {% csrf_token %}
+
+            <div class="row">           
+
+          <div class="col-6 col-md-3">
+              <label for="patientTypeSelect" class="form-label">Patient Type</label>
+              <select class="form-select" name="patient_type" id="patientTypeSelect" required>
+                <option value="">-- Select Patient Type --</option>
+                <option value="OPD">OPD</option>
+                <option value="IPD">IPD</option>
+                <option value="Emergency">Emergency</option>
+              </select>
+            </div>
+
+               <div class="col-6 col-md-3">
+                  <label for="doctorSelect" class="form-label">Select Doctor</label>
+                  <select class="form-select" name="doctor_id" id="doctorSelect" required>
+                    <option value="">-- Select Doctor --</option>
+                    {% for doctor in doctors %}
+                      <option value="{{ doctor.id }}">{{ doctor.name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="col-6 col-md-3">
+                  <label for="dateSelect" class="form-label">Appointment Date</label>
+                  <input type="date" class="form-control" name="appointment_date" id="dateSelect" required>
+                </div>
+
+              <div class="col-6 col-md-3">
+                  <label for="slotSelect" class="form-label">Available Time Slot</label>
+                  <select class="form-select" name="slot_id" id="slotSelect" required>
+                    <option value="">-- Select Slot --</option>
+                  </select>
+                </div>
+
+               <div class="col-6 col-md-3">
+                  <label for="feeInput" class="form-label">Consultation Fee</label>
+                  <input type="number" class="form-control" name="consultation_fee" id="feeInput" step="0.01" required>
+                </div>
+
+                <!-- Hidden Fields -->
+                <input type="hidden" name="patient_id" value="{{ patient.id }}">
+                <input type="hidden" name="invoice_id" value="{{ invoice.id }}">
+              <div class="col-6 col-md-3 mt-4">
+                 <button type="submit" class="btn btn-success">Confirm Booking</button>
+                </div>
+             </div> <!-- row close -->
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+<script>
+  const feeInput = document.getElementById('feeInput');
+
+  document.getElementById('dateSelect').addEventListener('change', fetchSlots);
+  document.getElementById('doctorSelect').addEventListener('change', fetchSlots);
+
+  function fetchSlots() {
+    const doctorId = document.getElementById('doctorSelect').value;
+    const date = document.getElementById('dateSelect').value;
+    if (!doctorId || !date) return;
+
+    const urlBase = "{% url 'appointments:get_timeslots' %}";
+    fetch(`${urlBase}?doctor_id=${doctorId}&date=${date}`)
+      .then(res => res.json())
+      .then(data => {
+        const slotSelect = document.getElementById('slotSelect');
+        slotSelect.innerHTML = '<option value="">-- Select Slot --</option>';
+        let fee = 0;
+
+        (data.slots || []).forEach(slot => {
+          const option = document.createElement('option');
+          option.value = slot.id;
+          option.textContent = `${slot.start_time} - ${slot.end_time}`;
+          slotSelect.appendChild(option);
+          if (!fee && slot.consultation_fee) {
+            fee = slot.consultation_fee;
+          }
+        });
+
+        if (fee) {
+          feeInput.value = fee;
+        }
+      });
+  }
+</script>
+
+{% endblock %}
+
+

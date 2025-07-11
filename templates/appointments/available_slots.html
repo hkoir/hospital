@@ -1,0 +1,184 @@
+
+{% extends 'base.html' %}
+{% block content %}
+
+
+     
+ <div class="container-fluid main-content">  
+      <div class="row">     
+         <h2 class="text-center my-4">Available Slots for {{ doctor.name }}</h2>
+        <form method="get"class=mb-4>
+            <label>Select Date:</label>
+            <input type="date" name="date" value="{{ selected_date }}">
+            <button class="btn btn-sm btn-success" type="submit">Search</button>
+        </form>
+
+        {% if selected_date %}        
+            <h3>Available Slots on {{ selected_date }}</h3>
+            {% if slots %}          
+                {% for slot in slots %}
+                <div class="col-6 col-md-2 mb-2">
+                    {% if slot.is_booked %}
+                    <button class="btn w-100 text-white" disabled style="background-color: lightcoral;">
+                        {{ slot.start_time }} - {{ slot.end_time }}
+                    </button>
+                    {% else %}
+                    <button 
+                        class="btn w-100 bookable-slot"
+                        data-slot-id="{{ slot.id }}" 
+                        data-doctor-id="{{ doctor.id }}" 
+                        style="background-color: lightgreen;">
+                        {{ slot.start_time }} - {{ slot.end_time }}
+                     </button>
+                    {% endif %}
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        {% else %}
+            <p>No slots available on this date.</p>
+        {% endif %}
+    {% endif %}
+
+<!-- Patient Details Modal -->
+<div class="modal fade" id="patientModal" tabindex="-1" aria-labelledby="patientModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable"> 
+        <div class="modal-content">
+            <div class="modal-header" style="background-color:chocolate;">
+                <h5 class="modal-title" id="patientModalLabel">Enter Your Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="modal-body" style="max-height: 300px; overflow-y: auto; background-color: aquamarine;">
+              <form id="patient-form" enctype="multipart/form-data" method="post">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="name">Name</label>
+                        <input type="text" id="name" name="name" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" name="email" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="phone">Phone</label>
+                        <input type="text" id="phone" name="phone" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" class="form-control">
+                            <option value="">Select</option>
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label for="date_of_birth">Date of Birth</label>
+                        <input type="date" id="date_of_birth" name="date_of_birth" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="address">Address</label>
+                        <input type="text" id="address" name="address" class="form-control">
+                    </div>
+                    <div class="mb-3">
+                        <label for="medical_history">Medical History</label>
+                        <textarea id="medical_history" name="medical_history" class="form-control" rows="2"></textarea>
+                    </div>
+                     <div class="mb-3">
+                        <label for="patient_photo">Upload Photo</label>
+                        <input type="file" id="patient_photo" name="patient_photo" class="form-control" accept="image/*">
+                    </div>
+
+                    <!-- Hidden fields for slot_id and doctor_id -->
+                    <input type="hidden" id="selected-slot-id" name="slot_id">
+                    <input type="hidden" id="selected-doctor-id" name="doctor_id">
+
+                    <button type="submit" class="btn btn-success">Confirm Booking</button>
+                </form>
+
+                <div id="patient-message" class="mt-3 text-success"></div>                
+            </div>
+
+            <div class="modal-footer" style="background-color: chocolate;">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div id="message"></div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const buttons = document.querySelectorAll(".bookable-slot");
+    const patientModal = new bootstrap.Modal(document.getElementById("patientModal"));
+    const patientForm = document.getElementById("patient-form");
+    const messageBox = document.getElementById("patient-message");
+
+    let selectedSlot = {};
+
+    buttons.forEach(btn => {
+        btn.addEventListener("click", function (e) {
+            e.preventDefault();
+            selectedSlot = {
+                slot_id: this.dataset.slotId,
+                doctor_id: this.dataset.doctorId
+            };
+            patientForm.reset();
+
+            // Inject values into hidden fields
+            document.getElementById("selected-slot-id").value = selectedSlot.slot_id;
+            document.getElementById("selected-doctor-id").value = selectedSlot.doctor_id;
+
+            messageBox.innerHTML = "";
+            patientModal.show();
+        });
+    });
+
+    patientForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        const formData = new FormData(patientForm);
+
+        fetch("{% url 'appointments:book_slot' %}", {
+            method: "POST",
+            headers: {
+                "X-CSRFToken": formData.get("csrfmiddlewaretoken")
+                // Do NOT set Content-Type manually for FormData — browser sets it correctly
+            },
+            body: formData
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success) {
+                const modal = bootstrap.Modal.getInstance(document.getElementById("patientModal"));
+                modal.hide();
+                messageBox.innerHTML = `<div class="alert alert-success">${result.message}</div>`;
+
+                setTimeout(() => {
+                    patientModal.hide();
+                }, 1000);
+
+                const bookedSlot = document.querySelector(`.bookable-slot[data-slot-id="${selectedSlot.slot_id}"]`);
+                if (bookedSlot) {
+                    bookedSlot.textContent += " (Booked)";
+                    bookedSlot.classList.remove("bookable-slot");
+                    bookedSlot.disabled = true;
+                    bookedSlot.style.backgroundColor = "lightcoral";
+                    bookedSlot.style.color = "white";
+                    bookedSlot.style.cursor = "not-allowed";
+                }
+            } else {
+                messageBox.innerHTML = `<div class="alert alert-danger">${result.error}</div>`;
+            }
+        })
+        .catch(error => {
+            console.error("Error:", error);
+            messageBox.innerHTML = `<div class="alert alert-danger">An error occurred. Please try again.</div>`;
+        });
+    });
+});
+</script>
+
+{% endblock %}

@@ -1,0 +1,121 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+
+{% block extra_head %}
+
+
+{% endblock %}
+
+{% block content %}
+
+<div class="contaainer-fluid">
+    <h3 class="text-center my-5">Revenue report</h3>
+      <p>
+    <a href="{% url 'finance:top_expenses_head' %}"class="btn btn-sm btn-success">Expenses</a>
+    <a href="{% url 'finance:shareholder_dashboard' %}"class="btn btn-sm btn-primary">Dashboard</a>
+     
+ </p>
+    <div class="row">
+        <div class="col-12 col-md-4 table-responsive">           
+            <table class="table">
+                <thead class="table-info">
+                    <tr>
+                        <th>Invoice Type</th>
+                        <th>Total Amount</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for label, amount in labels_amounts %}
+                    <tr>
+                        <td>{{ label }}</td>
+                        <td>{{ amount|add_commas }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+	<h4>Total revenue = {{ total_revenue|add_commas }}</h4>
+        </div>
+        <div class="col-12 col-md-5">           
+            <canvas id="barChart"></canvas>
+        </div>
+        <div class="col-12 col-md-3">       
+        <canvas id="pieChart"></canvas>
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<script>
+    // Load data from Django context
+    const labels = JSON.parse('{{ labels|escapejs }}');
+    const amounts = JSON.parse('{{ amounts|escapejs }}');
+
+    const backgroundColors = [
+        'rgba(255, 99, 132, 0.5)',
+        'rgba(54, 162, 235, 0.5)',
+        'rgba(255, 206, 86, 0.5)',
+        'rgba(75, 192, 192, 0.5)',
+        'rgba(153, 102, 255, 0.5)',
+        'rgba(255, 159, 64, 0.5)',
+    ];
+
+    const borderColors = [
+        'rgba(255,99,132,1)',
+        'rgba(54,162,235,1)',
+        'rgba(255,206,86,1)',
+        'rgba(75,192,192,1)',
+        'rgba(153,102,255,1)',
+        'rgba(255,159,64,1)',
+    ];
+
+    // Bar Chart
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    const barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Total Amount by Invoice Type',
+                data: amounts,
+                backgroundColor: backgroundColors,
+                borderColor: borderColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            scales: {
+                y: {
+                    beginAtZero: true
+                }
+            }
+        }
+    });
+
+    // Pie Chart
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    const pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: labels,
+            datasets: [{
+                label: 'Total Amount by Invoice Type',
+                data: amounts,
+                backgroundColor: backgroundColors,
+                borderColor: borderColors,
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: false,
+        }
+    });
+</script>
+
+
+{% endblock %}

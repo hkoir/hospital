@@ -1,0 +1,86 @@
+
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-3">Prescriptions for {{ medical_record }}</h2>
+
+    {% if prescriptions %}
+        {% for prescription in prescriptions %}
+            <div class="card mb-4 shadow-sm">
+               <div class="d-flex flex-column flex-sm-row flex-wrap justify-content-between gap-2">
+		   <div class="card-header bg-primary text-white d-flex justify-content-between">
+                    <span><strong>Prescription ID:</strong> {{ prescription.prescription_id }}</span>
+                    <span><a href="{% url 'medical_records:medical_record_list' %}" class="btn btn-outline-info btn-sm">
+                        Back to List
+                    </a>
+                    </span>
+                    <span><a href="{% url 'patients:ipd_doctor_consultation' medical_record.id %}" class="btn btn-sm btn-outline-info"> Add Pescription</a> </span>
+                    <span><strong>Date:</strong> {{ prescription.created_at|date:"d M Y H:i" }}</span>
+                </div>
+	     </div>
+                <div class="card-body">
+                    <p>
+                    <strong>Created By:</strong> {{ prescription.created_by }}|Doctor:{{ medical_record.doctor }}<br>
+                    <strong>Patient Type:</strong> {{ prescription.patient_type }}<br>
+                    <strong>Notes:</strong> {{ prescription.notes|default:"-Diagnosis is the process of determining the nature of a disease or disorder and distinguishing it from other possible conditions. It involves the identification of a disease from its signs and symptoms. Diagnosis can" }}
+                   <br>
+                   
+                    <a href="{% url 'patients:download_ipd_prescription' prescription.id %}" 
+                       class="btn btn-sm btn-outline-success">
+                        Download PDF
+                    </a>
+              
+                </p>
+
+                    {% if prescription.medicines.all %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered mt-3">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Medication</th>
+                                        <th>Type</th>
+                                        <th>Category</th>
+                                        <th>Dosage</th>
+                                        <th>Schedule</th>
+                                        <th>Duration (days)</th>
+                                        <th>Quantity</th>
+                                        <th>Instructions</th>
+                                        <th>Date Issued</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for med in prescription.medicines.all %}
+                                    <tr>
+                                        <td>{{ med.medication_name }}</td>
+                                        <td>{{ med.medication_type }}</td>
+                                        <td>{{ med.medication_category }}</td>
+                                        <td>{{ med.dosage }}</td>
+                                        <td>{{ med.dosage_schedule }}</td>
+                                        <td>{{ med.medication_duration }}</td>
+                                        <td>{{ med.quantity }}</td>
+                                        <td>{{ med.additional_instructions|default:"-" }}</td>
+                                        <td>{{ med.date_issued }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                            
+                        </div>
+                    {% else %}
+                        <p class="text-muted">No medicines prescribed in this entry.</p>
+                    {% endif %}
+                  
+                </div>
+            </div>
+        {% endfor %}
+    {% else %}
+        <div class="alert alert-warning">No prescriptions found for this medical record.
+            
+        </div>
+    {% endif %}
+      
+</div>
+{% endblock %}

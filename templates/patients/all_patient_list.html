@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+
+<style>
+    .btn-search {
+        background-color: #007bff;
+        color: white;
+        padding: 0.5rem 1.5rem;
+        border: none;
+        border-radius: 4px;
+        transition: background-color 0.3s ease;
+    }
+
+    .btn-search:hover {
+        background-color: #0056b3;
+        color: white;
+    }
+
+    .form-inline-custom {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 1rem;
+        align-items: center;
+    }
+
+    .form-inline-custom input[type="text"] {
+        flex: 1;
+        min-width: 250px;
+    }
+</style>
+
+
+
+<div class="container-fluid">   
+        <h2 class="text-xl font-bold mb-4">Patient List</h2>
+
+
+	
+   <form method="get" class="my-4 form-inline-custom">
+    <input type="text" id="searchInput" name="search" placeholder="Search by name or phone"
+           class="p-2 border rounded form-control" value="{{ request.GET.search }}">
+    
+    <button type="submit" class="btn-search">🔍 Search</button>
+
+    <a href="{% url 'accounts:direct_patient_registration' %}" class="btn btn-success btn-sm">
+        ➕ Register new patient
+    </a>
+</form>
+
+         <div class="row">
+
+            {% if page_obj %}
+            <div class="col table-responsive">
+            <table class=" table w-full table-auto border">
+                <thead class="table-info">
+                    <tr class="bg-gray-200">
+                        <th class="p-2 border">ID</th>
+                        <th class="p-2 border">Name</th>
+                        <th class="p-2 border">Phone</th>
+                    
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for patient in page_obj %}
+                    <tr>
+                        <td class="p-2 border">{{ patient.patient_id }}</td>
+                        <td class="p-2 border">{{ patient.name }}</td>
+                        <td class="p-2 border">{{ patient.phone }}</td>
+                        
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">previous</a>
+                    {% endif %}
+            
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+            
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+
+            {% else %}
+            <div class="mt-4 p-4 bg-yellow-100 text-yellow-800 rounded">
+                No patients found. You can 
+                <a href="{% url 'accounts:direct_patient_registration' %}" class="underline text-blue-600">register a new patient here</a>.
+            </div>
+            {% endif %}
+        </div>
+
+    </div>
+</div>
+{% endblock %}

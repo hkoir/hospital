@@ -1,0 +1,180 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+<div class="container">
+  <div class="card shadow-lg border-0">
+    <div class="card-header bg-primary text-white text-center">
+      <h4 class="mb-0">Add Medicine </h4>
+    </div>
+    
+    <div class="card-body mx-4">
+        <p><strong>Patient:</strong>{{ invoice.patient }} | {{ invoice.patient.patient_id }}</p>        
+        <p><strong>Invoice:</strong>{{ invoice.invoice_id }}</p>
+
+        <form method="post" id="medicine-formset-form">
+          {% csrf_token %}
+          {{ formset.management_form }}
+        
+ 	  <div class="table-responsive">
+          <table class="table table-bordered" id="formset-table">
+            <thead>
+              <tr>
+                <th>Patient Type</th>
+                <th>Medicine</th>
+                <th>Quantity</th>
+                <th>Rate</th>
+                <th>Delete</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for form in formset %}
+                <tr class="formset-row">
+                  {% for field in form.visible_fields %}
+                    {% if field.name != "DELETE" %}
+                      <td>{{ field }}</td>
+                    {% endif %}
+                  {% endfor %}
+                  <td>
+                      <button type="button" class="btn btn-danger delete-row-btn">{{ form.DELETE }}</button>
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+            
+          </table>
+	</div>
+
+          <button type="button" class="btn btn-outline-success" id="add-form-btn">+ Add Medicine</button>
+          <button type="submit" class="btn btn-primary mt-2">Save Medicines</button>
+        </form>
+
+        <br>
+        <a class="btn btn-secondary" href="{% url 'billing:invoice_detail' invoice.id %}">Back to Invoice</a>
+      </div>
+
+  </div>
+</div>
+
+
+
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const tableBody = document.querySelector("#formset-table tbody");
+      const prefix = document
+        .querySelector('input[name$="-TOTAL_FORMS"]')
+        .name.replace('-TOTAL_FORMS','');
+    
+      // Delegate change events on any medicine select
+      tableBody.addEventListener("change", function(e) {
+        if (!e.target.name.endsWith("-medicine")) return;
+    
+        const medicineSelect = e.target;
+        const rowIndex = medicineSelect.name.match(/-(\d+)-/)[1];
+        const priceInput = document.querySelector(
+          `input[name="${prefix}-${rowIndex}-price_per_unit"]`
+        );
+        const productId = medicineSelect.value;
+    
+        if (!productId) {
+          priceInput.value = "";
+          return;
+        }
+    
+        fetch(`{% url 'billing:ajax_get_batch_price' %}?medicine_id=${productId}`)
+          .then(res => res.json())
+          .then(data => {
+            priceInput.value = data.unit_price;
+          })
+          .catch(console.error);
+      });
+
+      
+    });
+    </script>
+    
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const addBtn = document.getElementById("add-form-btn");
+    const tableBody = document.querySelector("#formset-table tbody");
+    const totalForms = document.querySelector("#id_form-TOTAL_FORMS");
+
+    addBtn.addEventListener("click", function () {
+        const formCount = parseInt(totalForms.value);
+        const newForm = document.querySelector(".formset-row").cloneNode(true);
+        const regex = new RegExp(`form-(\\d){1}-`, 'g');
+
+        newForm.innerHTML = newForm.innerHTML.replace(regex, `form-${formCount}-`);
+        
+        // Clear the values
+        newForm.querySelectorAll('input, select').forEach(input => {
+            if (input.type === 'checkbox') {
+                input.checked = false;
+            } else {
+                input.value = '';
+            }
+        });
+
+        tableBody.appendChild(newForm);
+        totalForms.value = formCount + 1;
+    });
+
+    tableBody.addEventListener("click", function (e) {
+        if (e.target && e.target.name.includes("DELETE")) {
+            e.target.closest(".formset-row").remove();
+        }
+    });
+});
+</script> 
+
+<!-- 
+
+<script>
+  $(document).ready(function () {
+      function initSelect2() {
+          $('.medication-name-select').select2({
+              width: '100%',
+              placeholder: 'Search medicine...',
+              allowClear: true,
+              ajax: {
+                  url: "{% url 'accounts:common_search' %}",
+                  dataType: 'json',
+                  delay: 250,
+                  data: function (params) {
+                      return {
+                          q: params.term
+                      };
+                  },
+                  processResults: function (data) {
+                      return {
+                          results: $.map(data.results, function (item) {
+                              return {
+                                  id: item.id,
+                                  text: item.text
+                              };
+                          })
+                      };
+                  },
+                  cache: true
+              },
+              minimumInputLength: 1,
+              language: {
+                  inputTooShort: function () {
+                      return "";
+                  }
+              }
+          });
+      }    
+
+      initSelect2();   
+
+    
+  });
+  </script>
+   -->
+
+{% endblock %}
