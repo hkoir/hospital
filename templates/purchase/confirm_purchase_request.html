@@ -1,0 +1,65 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block content %}
+
+
+
+<div class="container">
+     <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+         <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:rfq_list' %}" class="btn btn-sm btn-success">RFQ List</a>     
+        <a href="{% url 'purchase:supplier_quotation_list' %}" class="btn btn-sm btn-success">Supplier Quotation List</a>   
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+         <a href="{% url 'purchase:batch_list' %}" class="btn btn-sm btn-success">Batch List</a>
+    
+    </div>
+    <h4 class="text-center mt-4">Confirm Purchase Request Order</h4>
+
+    <h4>Items requested</h4>
+    {% if dbasket %}
+    <div class="table-responsive">
+    <table class="table table-hover">
+        <thead class="table-dark">
+            <tr>
+                <th>Product</th>
+                <th>Category</th>
+                <th>Quantity</th>
+                <th>Product Base price</th>
+                <th>Sub total</th>
+                <th>Supplier</th>
+                          
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in dbasket %}
+            <tr>
+                <td>{{ item.name }}</td>
+                <td>{{ item.category }}</td>
+                <td>{{ item.quantity|add_commas }}</td>
+                <td>{{ item.unit_price }}</td>
+                 <td>{{ item.total_amount|add_commas }}</td>
+                <td>{{ item.supplier }}</td>
+                          
+            </tr>
+            {% endfor %}
+        </tbody>      
+    </table>
+    </div>
+    <h2>Grand total amount:{{grand_total|add_commas }}</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">Confirm Purchase Order</button>
+    </form>
+    {% else %}
+    <p>No items in the basket to confirm purchase.</p>
+    {% endif %}
+</div>
+
+
+
+
+{% endblock %}

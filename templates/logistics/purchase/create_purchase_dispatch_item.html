@@ -1,0 +1,140 @@
+{% extends 'base.html' %}  
+{% load custom_filters %}
+{% block content %}
+
+
+
+
+<div class="container-fluid main-content">
+   <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+        
+    </div>
+   
+
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card shadow" style="padding:5px;background-color:aliceblue;">
+                <div class="card-body">
+                    <h6 class="card-title text-center"><strong>Create Dispatch Item</strong></h6>
+
+                    <form method="post" enctype="multipart/form-data" id="add_dispatch_item">
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <!-- Purchase Shipment -->
+                            <div class="col-md-4">
+                                <label for="{{ form.purchase_shipment.id_for_label }}" class="form-label">
+                                    {{ form.purchase_shipment.label }}
+                                </label>
+                                {{ form.purchase_shipment|add_class:"form-control" }}
+                            </div>
+
+                            <!-- Dispatch Item -->
+                            <div class="col-md-4">
+                                <label for="{{ form.dispatch_item.id_for_label }}" class="form-label">
+                                    {{ form.dispatch_item.label }}
+                                </label>
+                                {{ form.dispatch_item|add_class:"form-control" }}
+                            </div>
+
+                            <!-- Dispatch Quantity -->
+                            <div class="col-md-4">
+                                <label for="{{ form.dispatch_quantity.id_for_label }}" class="form-label">
+                                    {{ form.dispatch_quantity.label }}
+                                </label>
+                                {{ form.dispatch_quantity|add_class:"form-control" }}
+                            </div>
+
+                            <!-- Dispatch Date -->
+                            <div class="col-md-4">
+                                <label for="{{ form.dispatch_date.id_for_label }}" class="form-label">
+                                    {{ form.dispatch_date.label }}
+                                </label>
+                                {{ form.dispatch_date|add_class:"form-control" }}
+                            </div>
+
+                            <!-- Delivery Date -->
+                            <div class="col-md-4">
+                                <label for="{{ form.delivery_date.id_for_label }}" class="form-label">
+                                    {{ form.delivery_date.label }}
+                                </label>
+                                {{ form.delivery_date|add_class:"form-control" }}
+                            </div>
+
+                            <!-- Status -->
+                            <div class="col-md-4">
+                                <label for="{{ form.status.id_for_label }}" class="form-label">
+                                    {{ form.status.label }}
+                                </label>
+                                {{ form.status|add_class:"form-select" }}
+                            </div>
+                        </div>
+
+                        <div class="mt-3 text-center">
+                            <button type="submit" name="add_to_basket" class="btn btn-primary">Add to List</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+
+        <div class="col-12 mt-4 table-responsive">
+            {% if dbasket %}
+                <table class="table table-striped">
+                    <thead>                        
+                        <h4>Items to be dispatched</h4>
+                        <tr>
+                            <th>Product</th>
+                            <th style="white-space: nowrap;">Quantity</th>
+                            <th>Dispatch Date</th>
+                            <th>Estimated Delivery Date</th>
+                            <th>Change</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in dbasket %}
+                        <tr>
+                            <td style="white-space: nowrap;">{{ item.name }}</td>
+                            <td style="white-space: nowrap;">{{ item.quantity }}</td>
+                            <td style="white-space: nowrap;">{{ item.dispatch_date }}</td>
+                            <td style="white-space: nowrap;">{{ item.delivery_date }}</td>
+                            <td style="white-space: nowrap;">
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="product_id" value="{{ item.id }}">
+                                    <input type="number" name="quantity" value="{{ item.quantity }}" min="1" class="form-control d-inline w-25">
+                                    <button type="submit" name="action" value="update" class="btn btn-sm btn-warning">Update</button>
+                                </form>
+                                <form method="post" style="display:inline;">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="product_id" value="{{ item.id }}">
+                                    <button type="submit" name="action" value="delete" class="btn btn-sm btn-danger">Delete</button>
+                                </form>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+        
+                <form method="post">
+                    {% csrf_token %}
+                    <button type="submit" name="confirm_dispatch" value="confirm_dispatch" class="btn btn-success">Confirm dispatch</button>
+                </form>
+            {% else %}
+                <p>No products added to the list yet.</p>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+
+
+
+{% endblock %}
+

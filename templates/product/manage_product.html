@@ -1,0 +1,244 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+
+
+<div class="container-fluid main-content">
+    <div class="row">        
+<div class="col-12">
+    <div class="card shadow-lg" style="background-color: aliceblue;">
+        <!-- Card Header -->
+        <div class="card-header bg-primary text-white text-center">
+            <h3 class="mb-0">{% if instance %} Update Product {% else %} Add Product {% endif %}</h3>
+        </div> 
+        <div class="card-body">                       
+            <form method="post" enctype="multipart/form-data" id="add_product">
+                {% csrf_token %}
+
+                <!-- Basic Information -->
+                <h5 class="mb-3 text-primary">Basic Information</h5>
+                <div class="row">
+                    <div class="col-6 col-md-3">
+                        <label for="{{ form.name.id_for_label }}" class="form-label">Name</label>
+                        {{ form.name|add_class:'form-control' }}
+                    </div>
+                     <div class="col-6 col-md-3">
+                        <label for="{{ form.sku.id_for_label }}" class="form-label">SKU</label>
+                        {{ form.sku|add_class:'form-control' }}
+                    </div>                  
+                     
+                    <div class="col-6 col-md-3">
+                        <label for="{{ form.slug.id_for_label }}" class="form-label">Slug</label>
+                        {{ form.slug|add_class:'form-control' }}
+                    </div>
+                     <div class="col-6 col-md-3">
+                        <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                        {{ form.category|add_class:'form-control' }}
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label for="{{ form.product_type.id_for_label }}" class="form-label">Product Type</label>
+                        {{ form.product_type|add_class:'form-control' }}
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label for="{{ form.brand.id_for_label }}" class="form-label">Brand</label>
+                        {{ form.brand|add_class:'form-control' }}
+                    </div>
+                </div>
+
+                <!-- Pricing & Stock -->
+                <h5 class="mt-4 text-primary">Pricing & Stock</h5>
+                <div class="row">
+                     <div class="col-6 col-md-3">
+                        <label for="{{ form.unit_price.id_for_label }}" class="form-label">Unit Price</label>
+                        {{ form.unit_price|add_class:'form-control' }}
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label for="{{ form.base_selling_price.id_for_label }}" class="form-label">Base Selling Price</label>
+                        {{ form.base_selling_price|add_class:'form-control' }}
+                    </div>
+                     <div class="col-6 col-md-3">
+                        <label for="{{ form.UOM.id_for_label }}" class="form-label">UOM</label>
+                        {{ form.UOM|add_class:'form-control' }}
+                    </div>
+                     <div class="col-6 col-md-3">
+                        <label for="{{ form.reorder_level.id_for_label }}" class="form-label">Reorder Level</label>
+                        {{ form.reorder_level|add_class:'form-control' }}
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label for="{{ form.lead_time.id_for_label }}" class="form-label">Lead Time (days)</label>
+                        {{ form.lead_time|add_class:'form-control' }}
+                    </div>
+                </div>
+
+                <!-- Logistics -->
+                <h5 class="mt-4 text-primary">Logistics</h5>
+                <div class="row">
+                   <div class="col-6 col-md-3">
+                        <label for="{{ form.barcode.id_for_label }}" class="form-label">Barcode</label>
+                        {{ form.barcode|add_class:'form-control' }}
+                    </div>
+                     <div class="col-6 col-md-3">
+                        <label for="{{ form.weight.id_for_label }}" class="form-label">Weight</label>
+                        {{ form.weight|add_class:'form-control' }}
+                    </div>
+                     <div class="col-6 col-md-3">
+                        <label for="{{ form.dimensions.id_for_label }}" class="form-label">Dimensions</label>
+                        {{ form.dimensions|add_class:'form-control' }}
+                    </div>
+                     <div class="col-6 col-md-3">
+                        <label for="{{ form.manufacture_date.id_for_label }}" class="form-label">Manufacture Date</label>
+                        {{ form.manufacture_date|add_class:'form-control' }}
+                    </div>
+                   <div class="col-6 col-md-3">
+                        <label for="{{ form.expiry_date.id_for_label }}" class="form-label">Expiry Date</label>
+                        {{ form.expiry_date|add_class:'form-control' }}
+                    </div>
+                     <div class="col-6 col-md-3">
+                        <label for="{{ form.warranty.id_for_label }}" class="form-label">Warranty</label>
+                        {{ form.warranty|add_class:'form-control' }}
+                    </div>
+                </div>
+
+                <!-- Media -->
+                <h5 class="mt-4 text-primary">Media</h5>
+                <div class="row">
+                    <div class="col-6 col-md-3">
+                        <label for="{{ form.image.id_for_label }}" class="form-label">Image</label>
+                        {{ form.image|add_class:'form-control' }}
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <label for="{{ form.product_image.id_for_label }}" class="form-label">Product Image</label>
+                        {{ form.product_image|add_class:'form-control' }}
+                    </div>
+                   <div class="col-6 col-md-3">
+                        <label for="{{ form.video.id_for_label }}" class="form-label">Video</label>
+                        {{ form.video|add_class:'form-control' }}
+                    </div>
+                </div>
+
+                <!-- Flags -->
+                <h5 class="mt-4 text-primary">Flags</h5>
+                <div class="row g-3">
+                    <div class="col-md-2">{{ form.is_active }} <label for="{{ form.is_active.id_for_label }}">Active</label></div>
+                    <div class="col-md-2">{{ form.is_popular }} <label for="{{ form.is_popular.id_for_label }}">Popular</label></div>
+                    <div class="col-md-2">{{ form.is_hot_sale }} <label for="{{ form.is_hot_sale.id_for_label }}">Hot Sale</label></div>
+                    <div class="col-md-2">{{ form.is_regular }} <label for="{{ form.is_regular.id_for_label }}">Regular</label></div>
+                    <div class="col-md-2">{{ form.is_offer }} <label for="{{ form.is_offer.id_for_label }}">Offer</label></div>
+                </div>
+
+                <!-- Description -->
+                <h5 class="mt-4 text-primary">Description</h5>
+                <div class="row">
+                    <div class="col-md-12">
+                        {{ form.description }}
+                    </div>
+                </div>
+
+                <!-- Submit -->
+                <div class="d-grid mt-4">
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        {% if instance %} Update {% else %} Add {% endif %}
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>           
+</div>
+
+        <div class="col-12">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="text-center p-2">Name</th>
+                        <th class="text-center p-2">Category</th>
+                        <th class="text-center p-2">SKU</th>
+                        <th class="text-center p-2">Unit Price</th>
+                        <th class="text-center p-2">Created at</th>                       
+                        <th class="text-center p-2">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in page_obj %}
+                        <tr>
+                            <td class="text-center p-1">{{ data.name }}</td>
+                            <td class="text-center p-1">{{ data.category.name }}</td>  
+                            <td class="text-center p-1">{{ data.sku }}</td>  
+                            <td class="text-center p-1">{{ data.unit_price}}</td>                          
+                            <td class="text-center p-2" style="white-space: nowrap;">{{data.created_at}}</td>
+                            <td class="text-center">
+                                <a href="{% url 'product:create_product' %}" class="btn btn-sm btn-info">Add</a>
+                                <a href="{% url 'product:update_product' data.id %}" class="btn btn-sm btn-info">Edit</a>
+                                <a href="#" 
+                                class="btn btn-danger btn-sm" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#deleteModal" 
+                                data-id="{{ data.id }}" 
+                                data-name="{{ data.name }}">
+                                    Delete
+                                </a>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No locations available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+           
+        </div>
+    </div>
+
+    <div style="height:50px"></div>
+</div>
+
+ <!-- Delete Confirmation Modal -->
+ <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                Are you sure you want to delete the transport record: <strong id="modal-entity-name"></strong>?
+            </div>
+            <div class="modal-footer">
+                <form method="post" id="delete-form">
+                    {% csrf_token %}
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</div>
+</div>
+
+
+</div>
+
+
+
+<script>
+const deleteModal = document.getElementById('deleteModal');
+deleteModal.addEventListener('show.bs.modal', function (event) {
+const button = event.relatedTarget; 
+const entityId = button.getAttribute('data-id');
+const entityName = button.getAttribute('data-name');
+
+const modalEntityName = deleteModal.querySelector('#modal-entity-name');
+modalEntityName.textContent = entityName;
+
+const deleteForm = deleteModal.querySelector('#delete-form');
+deleteForm.action = `/product/delete_product/${entityId}/`;
+});
+</script>
+
+
+
+
+{% endblock %}

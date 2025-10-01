@@ -662,7 +662,8 @@ def get_permissions_for_model(request):
 
 from core.models import Employee
   #medication_type/ medication_category/medication_name
-from inventory.models import Product,ProductCategory,ProductType 
+# from inventory.models import Product,ProductCategory,ProductType 
+from product.models import Product,Category,ProductType
 from medical_records.models import Prescription
 
 def common_search(request):
@@ -685,7 +686,7 @@ def common_search(request):
             for prod in medications
         ])
 
-        medication_categories = ProductCategory.objects.filter(
+        medication_categories = tCategory.objects.filter(
             Q(name__icontains=query)
         ).values('id', 'name')
         results.extend([

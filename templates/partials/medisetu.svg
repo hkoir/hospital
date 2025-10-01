@@ -1,0 +1,40 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  viewBox="0 0 560 140"
+  preserveAspectRatio="xMidYMid meet"
+  role="img"
+  aria-labelledby="csTitle"
+  style="display:block;max-width:100%;margin:0 auto;"
+>
+  <title id="csTitle">CareSetu Logo</title>
+  <style>
+    .cs-green { fill: #28A745; }
+    .cs-blue { fill: #007BFF; }
+    .cs-text {
+      font-family: 'Poppins', sans-serif;
+      font-weight: 700;
+    }
+    .cs-bn-text {
+      font-family: 'Hind Siliguri', 'Noto Sans Bengali', sans-serif;
+      font-weight: 700;           /* Bold for premium feel */
+      fill: #444;                 /* Elegant dark gray */
+      letter-spacing: 0.5px;      /* Slight spacing */
+    }
+  </style>
+
+  <!-- Icon -->
+  <g transform="translate(10,20)">
+    <path class="cs-green" d="M0 60c20-30 60-60 110-60s90 30 110 60h-22c-16-22-48-44-88-44S38 38 22 60H0Z"/>
+    <rect x="28" y="46" width="8" height="14" class="cs-green" opacity=".6"/>
+    <rect x="184" y="46" width="8" height="14" class="cs-green" opacity=".6"/>
+    <circle cx="110" cy="60" r="26" class="cs-blue"/>
+    <rect x="106" y="48" width="8" height="24" fill="#fff" rx="2"/>
+    <rect x="98" y="56" width="24" height="8" fill="#fff" rx="2"/>
+  </g>
+
+  <!-- English -->
+  <text x="260" y="80" class="cs-text" font-size="58" fill="#28A745">Medi</text>
+  <text x="405" y="80" class="cs-text" font-size="58" fill="#007BFF">Setu</text>
+  <!-- Bangla -->
+  <text x="260" y="125" class="cs-bn-text" font-size="32">মেডিসেতু</text>
+</svg>

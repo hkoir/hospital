@@ -1,0 +1,95 @@
+code,name,type,parent
+1000,Assets,ASSET,
+1100,Current Assets,ASSET,1000
+1110,Cash on Hand,ASSET,1100
+1120,Checking Account,ASSET,1100
+1121,Checking Account - Bank A,ASSET,1120
+1122,Checking Account - Bank B,ASSET,1120
+1130,Savings Account,ASSET,1100
+1131,Savings Account - Bank A,ASSET,1130
+1132,Savings Account - Bank B,ASSET,1130
+1140,Accounts Receivable,ASSET,1100
+1141,Accounts Receivable - Trade,ASSET,1140
+1142,Accounts Receivable - Other,ASSET,1140
+1150,Inventory,ASSET,1100
+1151,Raw Materials,ASSET,1150
+1152,Work in Progress,ASSET,1150
+1153,Finished Goods,ASSET,1150
+1160,Prepaid Expenses,ASSET,1100
+1170,Advances to Employees,ASSET,1100
+1180,Input VAT Recoverable,ASSET,1100
+1190,AIT Receivable,ASSET,1100
+1200,Fixed Assets,ASSET,1000
+1210,Office Equipment,ASSET,1200
+1220,Furniture & Fixtures,ASSET,1200
+1230,Computers & IT Equipment,ASSET,1200
+1240,Building,ASSET,1200
+1250,Land,ASSET,1200
+1260,Accumulated Depreciation,ASSET,1200
+1270,Motor Vehicles,ASSET,1200
+1280,Leasehold Improvements,ASSET,1200
+
+2000,Liabilities,LIABILITY,
+2100,Current Liabilities,LIABILITY,2000
+2110,Accounts Payable,LIABILITY,2100
+2111,Accounts Payable - Trade,LIABILITY,2110
+2112,Accounts Payable - Other,LIABILITY,2110
+2120,Wages Payable,LIABILITY,2100
+2130,Taxes Payable,LIABILITY,2100
+2131,Output VAT Payable,LIABILITY,2130
+2132,AIT Payable,LIABILITY,2130
+2133,Withholding Tax Payable,LIABILITY,2130
+2140,Unearned Revenue,LIABILITY,2100
+2150,Accrued Expenses,LIABILITY,2100
+2200,Non-Current Liabilities,LIABILITY,2000
+2210,Long-term Loan,LIABILITY,2200
+2220,Lease Obligations,LIABILITY,2200
+2230,Provision for Gratuity,LIABILITY,2200
+
+3000,Equity,EQUITY,
+3100,Share Capital,EQUITY,3000
+3101,Common Stock,EQUITY,3100
+3102,Preferred Stock,EQUITY,3100
+3200,Retained Earnings,EQUITY,3000
+3300,Dividends,EQUITY,3000
+3400,Reserves,EQUITY,3000
+
+4000,Income,INCOME,
+4100,Sales Revenue,INCOME,4000
+4110,Domestic Sales,INCOME,4100
+4120,Export Sales,INCOME,4100
+4200,Service Revenue,INCOME,4000
+4300,Other Income,INCOME,4000
+4310,Interest Income,INCOME,4300
+4320,Gain on Sale of Asset,INCOME,4300
+4330,Rental Income,INCOME,4300
+4340,Commission Income,INCOME,4300
+4350,Foreign Exchange Gain,INCOME,4300
+
+5000,Expenses,EXPENSE,
+5100,Cost of Goods Sold,EXPENSE,5000
+5110,Raw Materials,EXPENSE,5100
+5120,Direct Labor,EXPENSE,5100
+5130,Factory Overheads,EXPENSE,5100
+5140,Purchase Freight & Duties,EXPENSE,5100
+5200,Operating Expenses,EXPENSE,5000
+5210,Salaries & Wages,EXPENSE,5200
+5211,Base Salary,EXPENSE,5210
+5212,Overtime,EXPENSE,5210
+5213,Bonuses & Incentives,EXPENSE,5210
+5220,Rent Expense,EXPENSE,5200
+5230,Utilities,EXPENSE,5200
+5231,Electricity,EXPENSE,5230
+5232,Water,EXPENSE,5230
+5233,Internet & Phone,EXPENSE,5230
+5240,Office Supplies,EXPENSE,5200
+5250,Repairs & Maintenance,EXPENSE,5200
+5260,Insurance Expense,EXPENSE,5200
+5270,Marketing & Advertising,EXPENSE,5200
+5280,Travel & Entertainment,EXPENSE,5200
+5290,Professional Fees,EXPENSE,5200
+5300,Depreciation Expense,EXPENSE,5000
+5310,Interest Expense,EXPENSE,5000
+5320,Income Tax Expense,EXPENSE,5000
+5330,Foreign Exchange Loss,EXPENSE,5000
+5340,Bad Debt Expense,EXPENSE,5000

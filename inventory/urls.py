@@ -31,4 +31,14 @@ path('pending_medicine_deliveries/', views.pending_medicine_deliveries,name='pen
 path('deliver_invoice_medicines/<int:invoice_id>/', views.deliver_invoice_medicines,name='deliver_invoice_medicines'), 
 
 
+
+path('create_warehouse/', views.manage_warehouse, name='create_warehouse'),
+path('update_warehouse/<int:id>/', views.manage_warehouse, name='update_warehouse'),
+path('delete_warehouse/<int:id>/', views.delete_warehouse, name='delete_warehouse'),
+path('create_location/', views.manage_location, name='create_location'),
+path('update_location/<int:id>/', views.manage_location, name='update_location'),
+path('delete_location/<int:id>/', views.delete_location, name='delete_location'),
+path('get_locations/', views.get_locations, name='get_locations'), 
+path('complete_quality_control/<int:qc_id>/', views.complete_quality_control, name='complete_quality_control'),    
+
 ]   

@@ -1,0 +1,214 @@
+{% extends 'base.html' %}  
+
+
+{% load custom_filters %}
+
+{% block content %}
+
+
+
+
+<div class="container-fluid main-content">
+    <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+         <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:rfq_list' %}" class="btn btn-sm btn-success">RFQ List</a>     
+        <a href="{% url 'purchase:supplier_quotation_list' %}" class="btn btn-sm btn-success">Supplier Quotation List</a>   
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+         <a href="{% url 'purchase:batch_list' %}" class="btn btn-sm btn-success">Batch List</a>
+    
+    </div>
+
+    <div class="row mt-4"> 
+        <div class="col">
+            <div class="container">
+                <div class="row">
+                    <div class="col-6">
+                        <form method="GET" action="">    
+                            <label for="id_purchase_request_order_id">Request Number</label>            
+                            {{ form.purchase_request_order_id}}                
+                        <button type="submit" class="btn btn-primary">Search</button>  
+                        </form>
+                    </div>
+                    <div class="col-6">
+                        {% if request_order %}
+                        Result for Request order ID <b>:{{request_order }}</b>
+                    {% else %}
+                    <span>No matching result found</span>
+                    {% endif %}   
+                    </div>
+                </div>
+            </div>
+        </div>
+    
+        <hr class="mt-2">
+        
+        <div class="col table-responsive">       
+
+            <h4>Requested Order list</h4>
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr class="btn-primary text-white">
+                   
+                        <th class="text-center p-2">Order Number</th>                       
+                        <th class="text-center p-2">Total amount</th>  
+
+                        <th class="text-center p-2">Created at</th>                    
+                        <th class="text-center p-2">Status</th>
+                        <th class="text-center p-2">Requested by</th>
+                        <th class="text-center p-2">Requested Items</th>
+
+                        <th class="text-center p-2">Submission</th>
+                        <th class="text-center p-2">Reviewed</th>
+                        <th class="text-center p-2">Approval</th>
+
+                        <th class="text-center p-2">Create RFQ</th>
+                    </tr>
+                </thead>
+                <tbody>                
+
+                 {% for order in page_obj %}
+                <tr>
+                                           
+                    <td class="text-center p-1" style="white-space: nowrap;">{{ order.order_id }}</td>
+                    <td class="text-center p-2" style="white-space: nowrap;">{{order.total_amount}}</td>                
+                    <td class="text-center p-2" style="white-space: nowrap;">{{order.created_at}}</td>
+                    
+                 
+                    <td class="text-center p-2" style="white-space: nowrap;">
+                        {% if order.status == "DELIVERED" %}                       
+                        <i class="fas fa-check" style="color:green;font-weight: bold;">{{order.get_status_display}}</i>
+                        {% else %}
+                        <span style="color:red;font-weight: bold;">In Process</span>
+                        {% endif %}
+                    </td>
+                    <td class="text-center p-2" style="white-space: nowrap;">{{order.user}}</td>
+                    <td class="text-center p-1" style="white-space: nowrap;">
+                        <a href="{% url 'purchase:purchase_request_items' order.id %}">Items</a>
+                    </td>  
+        <!-- Requester Button -->
+<td>
+    {% if order.requester_approval_status == 'SUBMITTED' %}
+    <strong><i class="fas fa-check" style="color:green">Submitted</i></strong>   
+   {% else %}
+   <a href="{% url 'purchase:process_purchase_request' order.id %}" class="btn btn-primary">Submit Request</a>
+   {% endif %}
+</td>
+
+<!-- Reviewer Button -->
+<td>
+    {% if order.requester_approval_status != 'SUBMITTED'  %}   
+    <button class="btn btn-secondary" disabled>Pending Submission</button>
+    {% elif order.reviewer_approval_status == 'CANCELLED'  %}  
+    <strong><i class="fas fa-times" style="color:rgb(236, 17, 6)">Cancelled</i></strong> 
+   {% elif order.reviewer_approval_status == 'REVIEWED' %}
+   <strong><i class="fas fa-check" style="color:green">Reviewed</i></strong>  
+   {% else %}
+   <a href="{% url 'purchase:process_purchase_request' order.id %}" class="btn btn-primary">Review Request</a>
+   {% endif %}
+</td>
+
+<!-- Approver Button -->
+<td>
+    {% if order.reviewer_approval_status != 'REVIEWED'  %}
+    <button class="btn btn-secondary" disabled>Pending review</button>
+   {% elif order.approver_approval_status == 'APPROVED'  %}
+   <strong><i class="fas fa-check" style="color:green">Approved</i></strong> 
+   {% elif order.approver_approval_status == 'CANCELLED'  %}
+   <strong><i class="fas fa-check" style="color:rgb(235, 9, 9)">Cancelled</i></strong> 
+   {% else %}
+   <a href="{% url 'purchase:process_purchase_request' order.id %}" class="btn btn-primary">Approve Request</a>
+   {% endif %}
+</td>
+
+
+
+                            
+                    <td>
+                      {% if order.rfqs.first %}
+                     <strong><i class="fas fa-check" style="color:green">RFQ placed</i></strong>
+                     <a href="{% url 'purchase:rfq_detail' order.rfqs.first.id %}"
+                     class="btn btn-sm btn-outline-success">View RFQ</a>
+                      {% elif order.approver_approval_status != 'APPROVED'  %}
+                      <button class="btn btn-secondary" disabled>Pending approval</button>                     
+                       {% else %}
+                    
+                    <a href="{% url 'purchase:create_rfq' order.id %}" class="btn btn-sm btn-primary">Create RFQ</a>
+                  
+                     {% endif %}
+                     
+                    </td>
+                </tr>
+
+                    {% endfor %}
+                </tbody>
+            </table>               
+        </div>
+         
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+    </div>
+
+    
+</div>      
+
+
+
+<script>
+    $(document).ready(function() {
+        $('#id_purchase_request_order_id').select2({
+            width: '50%',
+            placeholder: 'Search id...',
+            allowClear: true,
+            ajax: {
+                url: "{% url 'accounts:common_search' %}",  // Ensure this URL is correct
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data.results, function(item) {
+                            return {
+                                id: item.id,
+                                text: item.text
+                            };
+                        })
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 1,
+            placeholder: 'Search for Purchase request order',
+            allowClear: true
+        });
+    });
+
+
+
+    </script>
+    
+
+
+
+{% endblock %}

@@ -1,0 +1,58 @@
+{% extends "../base.html" %}
+{% block content %}
+<div class="container mt-4">
+    
+      <a href="{% url 'accounting:balance_sheet' %}"
+    class="btn btn-sm btn-primary">Balance sheet</a>
+             <a href="{% url 'accounting:balance_sheet_quarterly' %}"
+    class="btn btn-sm btn-primary">Balance sheet Quarterly</a>
+            <a href="{% url 'accounting:trial_balance' %}"
+    class="btn btn-sm btn-primary">Trial balance</a>
+      <a href="{% url 'accounting:profit_loss' %}"
+    class="btn btn-sm btn-primary">Profit & Loss</a>
+                <a href="{% url 'accounting:profit_loss_quarterly' %}"
+    class="btn btn-sm btn-primary">Profit & Loss Quarterly</a>
+
+       <a href="{% url 'accounting:journalentry_create' %}"
+    class="btn btn-sm btn-primary">Journal entry</a>
+          <a href="{% url 'accounting:journalentry_list' %}"
+    class="btn btn-sm btn-primary">Journal entry List</a>
+     <a href="{% url 'accounting:account_create' %}"
+    class="btn btn-sm btn-primary">Add account</a>
+
+        <a href="{% url 'accounting:account_list' %}"
+    class="btn btn-sm btn-primary">Account List</a>
+   
+    
+    <div class="row">
+       <h3 class="my-4">Ledger: {{ account.name }}</h3>
+        <div class="table-responsive">
+
+            <table class="table table-bordered table-striped table-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Date</th>
+                        <th>Description</th>
+                        <th class="text-end">Debit</th>
+                        <th class="text-end">Credit</th>
+                        <th class="text-end">Balance</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in ledger_rows %}
+                    <tr>
+                        <td>{{ row.date }}</td>
+                        <td>{{ row.description }}</td>
+                        <td class="text-end">{{ row.debit|default_if_none:"0"|floatformat:2 }}</td>
+                        <td class="text-end">{{ row.credit|default_if_none:"0"|floatformat:2 }}</td>
+                        <td class="text-end">{{ row.balance|floatformat:2 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center">No transactions</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}

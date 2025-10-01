@@ -1,8 +1,9 @@
 from.models import Warehouse,Location
 from django import forms
-from .models import Inventory, InventoryTransaction,Batch,Product,ProductCategory
+from .models import Inventory, InventoryTransaction
 
-
+from product.models import Product,Category
+from purchase.models import Batch
 
 
 class InventoryTransactionForm(forms.ModelForm):
@@ -48,7 +49,7 @@ class InventoryTransactionForm(forms.ModelForm):
                 raise forms.ValidationError("Not enough inventory to perform this transaction.")
         
         return cleaned_data
-
+        
     def save(self, commit=True):
         transaction = super().save(commit=False)
         transaction.user = self.user
@@ -68,9 +69,8 @@ class InventoryTransactionForm(forms.ModelForm):
             batch=batch
         ).first()
 
-        # 🔁 INBOUND + similar transactions
-        if transaction_type in ['INBOUND', 'TRANSFER_IN', 'EXISTING_ITEM_IN', 'SCRAPPED_IN']:         
-            # Update or create inventory
+        # 🔹 INBOUND-like transactions
+        if transaction_type in ['INBOUND', 'EXISTING_ITEM_IN', 'SCRAPPED_IN']:
             if inventory:
                 inventory.quantity += quantity
                 inventory.save()
@@ -84,8 +84,8 @@ class InventoryTransactionForm(forms.ModelForm):
                     user=self.user
                 )
 
-        # 🔁 OUTBOUND-like transactions
-        elif transaction_type in ['OUTBOUND', 'TRANSFER_OUT', 'SCRAPPED_OUT', 'RETURN']:
+        # 🔹 OUTBOUND-like transactions
+        elif transaction_type in ['OUTBOUND', 'SCRAPPED_OUT', 'RETURN']:
             if not inventory or inventory.quantity < quantity:
                 raise forms.ValidationError("Not enough inventory to perform this transaction.")
             inventory.quantity -= quantity
@@ -97,15 +97,24 @@ class InventoryTransactionForm(forms.ModelForm):
                 batch.remaining_quantity -= quantity
                 batch.save()
 
-        transaction.inventory_transaction = inventory
-        if commit:
-            transaction.save()
+        # 🔹 TRANSFER transaction (source OUT + target IN)
+        elif transaction_type == 'TRANSFER_OUT':
+            if not inventory or inventory.quantity < quantity:
+                raise forms.ValidationError("Not enough inventory to perform transfer.")
+            # Decrease from source inventory
+            inventory.quantity -= quantity
+            inventory.save()
 
-        # 🔁 TRANSFER_OUT: create matching TRANSFER_IN
-        if transaction_type == 'TRANSFER_OUT':
+            if batch:
+                if (batch.remaining_quantity or 0) < quantity:
+                    raise forms.ValidationError("Not enough batch quantity.")
+                # ❗ Do NOT increment batch again later — transfer keeps total stock unchanged
+                batch.remaining_quantity -= quantity
+                batch.save()
+
+            # Target info
             target_warehouse = self.cleaned_data.get('target_warehouse')
             target_location = self.cleaned_data.get('target_location')
-
             if not target_warehouse or not target_location:
                 raise forms.ValidationError("Target warehouse and location required for transfer.")
 
@@ -116,7 +125,6 @@ class InventoryTransactionForm(forms.ModelForm):
                 location=target_location,
                 batch=batch
             ).first()
-
             if not target_inventory:
                 target_inventory = Inventory.objects.create(
                     product=product,
@@ -130,11 +138,6 @@ class InventoryTransactionForm(forms.ModelForm):
             target_inventory.quantity += quantity
             target_inventory.save()
 
-            # Batch adjustment for transfer in
-            if batch:
-                batch.remaining_quantity += quantity
-                batch.save()
-
             # Create transfer in record
             InventoryTransaction.objects.create(
                 inventory_transaction=target_inventory,
@@ -147,6 +150,10 @@ class InventoryTransactionForm(forms.ModelForm):
                 quantity=quantity,
                 remarks=f"Auto-created TRANSFER_IN from {warehouse.name}/{location.name}"
             )
+
+        transaction.inventory_transaction = inventory
+        if commit:
+            transaction.save()
 
         return transaction
 
@@ -194,7 +201,7 @@ class CommonFilterForm(forms.Form):
     
 
     category = forms.ModelChoiceField(
-        queryset=ProductCategory.objects.all(),
+        queryset=Category.objects.all(),
         required=False,
         widget=forms.Select(attrs={'id': 'id_category'}),
     )
@@ -215,7 +222,7 @@ class AddCategoryForm(forms.ModelForm):
     )
  
     class Meta:
-        model = ProductCategory
+        model = Category
         fields = ['name','description']
 
 
@@ -234,8 +241,7 @@ class AddProductForm(forms.ModelForm):
     expiry_date = forms.DateField(required=False, widget=forms.DateInput(attrs={'type': 'date'}))
     class Meta:
         model = Product
-        exclude=['user','product_id']
-
+        exclude=['user','product_id','barcode','is_popular','is_hot_sale','is_regular','is_offer','likes','users_wishlist','product_image']
 
 
 
@@ -263,8 +269,86 @@ class MedicineSaleOnlyForm(forms.ModelForm):
 
 class MedicineSaleItemForm(forms.ModelForm):
     class Meta:
-        model = MedicineSaleItem
+        model = MedicineSaleItem 
         fields = ['medicine', 'batch', 'quantity']
 
 
 
+##############################################
+
+
+from.models import InventoryTransaction,Warehouse,Location
+from product.models import Product
+from purchase.models import Batch
+from .models import Inventory
+
+
+class AddWarehouseForm(forms.ModelForm):      
+    class Meta:
+        model = Warehouse
+        exclude = ['created_at','updated_at','history','user','warehouse_id','reorder_level','lead_time']
+        widgets = {
+            
+            'description': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Enter a description', 
+                'rows': 3
+            }),
+        }
+
+class AddLocationForm(forms.ModelForm):      
+    class Meta:
+        model = Location
+        fields= ['warehouse','name','address','description']
+        widgets = {
+            'address': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Enter the address', 
+                'rows': 3
+            }),
+            'description': forms.Textarea(attrs={
+                'class': 'form-control', 
+                'placeholder': 'Enter a description', 
+                'rows': 3
+            }),
+        }
+
+          
+
+
+class QualityControlCompletionForm(forms.Form):
+    warehouse = forms.ModelChoiceField(
+        queryset=Warehouse.objects.all(),
+        label="Select Warehouse",
+        required=True
+    )
+    location = forms.ModelChoiceField(
+        queryset=Location.objects.none(),  # Initially empty, will be dynamically loaded
+        label="Select Location",
+        required=True
+    )  
+    # batch= forms.ModelChoiceField(
+    #     queryset=Batch.objects.all(),  # Initially empty, will be dynamically loaded
+    #     label="Select Batch",
+    #     required=False
+    # )  
+
+    def __init__(self, *args, **kwargs): 
+        warehouse = kwargs.pop('warehouse', None)
+        super().__init__(*args, **kwargs)
+        
+        if warehouse:
+            self.fields['location'].queryset = Location.objects.filter(warehouse=warehouse)
+
+
+
+
+class WarehouseReorderLevelForm(forms.ModelForm):
+    class Meta:
+        model = Inventory
+        fields = ['product', 'warehouse', 'reorder_level']
+        widgets = {
+            'product': forms.Select(attrs={'class': 'form-control'}),
+            'warehouse': forms.Select(attrs={'class': 'form-control'}),
+            'reorder_level': forms.NumberInput(attrs={'class': 'form-control'}),
+        }

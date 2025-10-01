@@ -1,0 +1,64 @@
+{% extends 'base.html' %}  
+
+{% block content %}
+
+
+<div class="container">
+    <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+         <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:rfq_list' %}" class="btn btn-sm btn-success">RFQ List</a>     
+        <a href="{% url 'purchase:supplier_quotation_list' %}" class="btn btn-sm btn-success">Supplier Quotation List</a>   
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+         <a href="{% url 'purchase:batch_list' %}" class="btn btn-sm btn-success">Batch List</a>
+    
+    </div>
+
+<h4>Quality Control Inspection:&nbsp;
+    Purchase order ID: {{ purchase_order }}; &nbsp;
+    Shipment ID: {{purchase_shipment }}
+</h4>
+<div class="card mt-4">
+    <div class="card-body">       
+        <p>
+        <strong>Product:</strong> {{ purchase_dispatch_item.dispatch_item.product.name }}<br>
+        <strong>Supplier:</strong> {{ purchase_order.supplier.name }}<br>
+        <strong>Total Quantity:</strong> {{  purchase_dispatch_item.dispatch_item.quantity }}
+        </p>
+    </div>
+</div>
+
+<form method="post" class="mt-4">
+    {% csrf_token %}
+    <table class="table table-bordered">
+        <tr>
+            <th>Total Quantity</th>
+            <td>{{ form.total_quantity.value }}</td>
+        </tr>
+        <tr>
+            <th>Good Quantity</th>
+            <td>{{ form.good_quantity }}</td>
+        </tr>
+        <tr>
+            <th>Bad Quantity</th>
+            <td>{{ form.bad_quantity }}</td>
+        </tr>
+        <tr>
+            <th>Inspection Date</th>
+            <td>{{ form.inspection_date }}</td>
+        </tr>
+        <tr>
+            <th>Comments</th>
+            <td>{{ form.comments }}</td>
+        </tr>
+    </table>
+
+    <button type="submit" class="btn btn-success">Save QC Results</button>
+    <a href="{% url 'purchase:qc_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+</form>
+
+</div>
+
+{% endblock %}

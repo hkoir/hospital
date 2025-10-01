@@ -13,16 +13,23 @@ from django.utils import timezone
 from django.db import transaction
 from django.contrib import messages
 from django.core.paginator import Paginator
-
 from core.models import Doctor,Specialization
 from .models import AppointmentSlot,Appointment
 from patients.models import Patient
 from medical_records.models import MedicalRecord,Prescription
 from .forms import TimeSlotForm
 from billing.models import BillingInvoice,Payment,ConsultationBill
+from django.db.models import Q,Count,Sum
+from.models import AppointmentSlot,Appointment
+from medical_records.models import PrescribedMedicine,MedicalRecord, Prescription
+from lab_tests.models import LabTestRequest,SuggestedLabTestItem,SuggestedLabTestRequest,LabTestRequestItem
 
-from django.db.models import Q
-from.models import AppointmentSlot
+from billing.models import BillingInvoice,MedicineBill,LabTestBill,DoctorServiceLog
+from lab_tests.models import LabTestRequest,SuggestedLabTestItem,SuggestedLabTestRequest,LabTestRequestItem
+from django.db.models import Sum
+from core.models import Doctor
+from patients.models import Patient
+
 
 
 
@@ -348,9 +355,6 @@ def general_appointment(request):
 
 
 
-from billing.models import DoctorServiceLog
-
-
 def booking_confirmation_payment(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
     if appointment.status == 'Cancelled':
@@ -470,25 +474,6 @@ def booking_confirmation_payment(request, appointment_id):
     return render(request, 'billing/booking_confirmation_payment.html', context)
 
 
-
-
-
-
-
-
-
-from billing.models import BillingInvoice,MedicineBill,LabTestBill
-from django.db.models import Sum
-from medical_records.models import PrescribedMedicine
-from lab_tests.models import LabTestRequest,SuggestedLabTestItem,SuggestedLabTestRequest,LabTestRequestItem
-
-
-
-
-from billing.models import BillingInvoice,MedicineBill,LabTestBill
-from lab_tests.models import LabTestRequest,SuggestedLabTestItem,SuggestedLabTestRequest,LabTestRequestItem
-from django.db.models import Sum
-from medical_records.models import PrescribedMedicine
 
 def add_medicine_labtest_to_invoice(request, appointment_id):
     appointment = get_object_or_404(Appointment, id=appointment_id)
@@ -674,61 +659,81 @@ def get_doctors_by_specialization(request):
 
 
 
-def appointment_list(request):     
+@login_required
+def appointment_list(request):
     appointments = Appointment.objects.none()
-    doctors = Doctor.objects.all()  
-    patients = Patient.objects.all()  
+    doctors = Doctor.objects.all()
+    patients = Patient.objects.all()
     doctor_appointment_counts = []
+    today = timezone.now().date()
 
-    if request.method == 'GET':       
-        doctor_filter = request.GET.get("doctor")
-        patient_filter = request.GET.get("patient")
-        date_filter = request.GET.get("date", "").strip()
-        start_date = request.GET.get('start_date')
-        end_date = request.GET.get('end_date')
-        today = timezone.now().date()
-        
-        appointments = Appointment.objects.all()    
-    
-        if doctor_filter: 
-            appointments = appointments.filter(doctor__id=doctor_filter)  
+    user = request.user
+    role = user.role
 
-        if patient_filter:  
-            appointments = appointments.filter(patient__id=patient_filter) 
+    # Filters from GET request
+    doctor_filter = request.GET.get("doctor")
+    patient_filter = request.GET.get("patient")
+    date_filter = request.GET.get("date", "").strip()
+    start_date = request.GET.get("start_date")
+    end_date = request.GET.get("end_date")
 
-        if date_filter:
-            appointments = appointments.filter(date=date_filter)
+    # Role-based filtering
+    if role == 'doctor':
+        try:
+            doctor = user.employee.doctor
+            appointments = Appointment.objects.filter(doctor=doctor)
+        except:
+            appointments = Appointment.objects.none()
 
-        if start_date and end_date:
-            appointments = appointments.filter(date__range=[start_date, end_date])
+    elif role == 'patient':
+        try:
+            patient = Patient.objects.get(user=user)
+            appointments = Appointment.objects.filter(patient=patient)
+        except:
+            appointments = Appointment.objects.none()
 
-        if not (doctor_filter or patient_filter or date_filter or (start_date and end_date)):
-            appointments = appointments.filter(date=today)
+    else:  # staff, admin, etc.
+        appointments = Appointment.objects.all()
+        if doctor_filter:
+            appointments = appointments.filter(doctor__id=doctor_filter)
 
-        doctor_appointment_counts = (
-            appointments.values("doctor__id", "doctor__name")
-            .annotate(total_appointments=Count("id"))
-            .order_by("-total_appointments") 
+    # Apply common filters
+    if patient_filter:
+        appointments = appointments.filter(patient__id=patient_filter)
+
+    if date_filter:
+        appointments = appointments.filter(date=date_filter)
+
+    if start_date and end_date:
+        appointments = appointments.filter(date__range=[start_date, end_date])
+
+    if not (doctor_filter or patient_filter or date_filter or (start_date and end_date)):
+        appointments = appointments.filter(date=today)
+
+    doctor_appointment_counts = (
+        appointments.values("doctor__id", "doctor__name")
+        .annotate(total_appointments=Count("id"))
+        .order_by("-total_appointments")
+    )
+
+    for appointment in appointments:
+        medical_record = MedicalRecord.objects.filter(
+            doctor=appointment.doctor,
+            patient=appointment.patient
+        ).first()
+        appointment.medical_record = medical_record
+
+        appointment.prescriptions = Prescription.objects.filter(
+            medical_record=appointment.medical_record
         )
-
-        for appointment in appointments:
-            medical_record = MedicalRecord.objects.filter(
-                doctor=appointment.doctor, 
-                patient=appointment.patient
-            ).first()
-            appointment.medical_record = medical_record 
-
-            appointment_prescriptions = Prescription.objects.filter(
-                medical_record=appointment.medical_record, 
-            )
-            appointment.prescriptions = appointment_prescriptions
 
     return render(request, "appointments/appointment_list.html", {
         "appointments": appointments,
-        "doctor_appointment_counts": doctor_appointment_counts, 
+        "doctor_appointment_counts": doctor_appointment_counts,
         'today': date.today(),
         'doctors': doctors,
         'patients': patients,
+        'is_staff': role not in ['doctor', 'patient'],  # for template filter
     })
 
 

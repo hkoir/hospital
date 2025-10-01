@@ -26,7 +26,9 @@ from billing.models import DoctorServiceLog
 from core.models import Location
 from .models import BillingInvoice, MedicineBill,LabTest,DoctorServiceRate,DoctorPayment,WardBill
 from patients.models import Patient
-from inventory.models import Batch,Product
+# from inventory.models import Batch,Product
+from product.models import Product
+from purchase.models import Batch
 from .forms import ConsultationBillForm,LabTestBillForm,BillingInvoiceForm,PaymentForm,DoctorServiceRateForm
 from.forms import WardBillForm,MedicineBillForm,OTBookingForm,MiscBillForm,EmergencyVisitForm,CommonFilterForm
 
@@ -45,6 +47,19 @@ from core.models import Doctor
 from.forms import DoctorPaymentForm
 
 
+from billing.utils import get_doctor_financials
+from patients.models import PatientAdmission
+from django.utils.timezone import now
+from django.utils.timezone import localtime
+from medical_records.models import MedicalRecord
+from lab_tests.models import LabTestRequest,LabTestRequestItem
+from lab_tests.models import LabTestCatalog
+from messaging.models import Notification
+from messaging.views import create_notification
+
+
+
+
 @login_required
 def create_invoice(request, patient_id):
     patient = get_object_or_404(Patient, id=patient_id)
@@ -58,8 +73,6 @@ def create_invoice(request, patient_id):
 
 
 
-from messaging.models import Notification
-from messaging.views import create_notification
 
 @login_required
 def ipd_invoice_list(request):
@@ -195,7 +208,8 @@ def delete_invoice(request, invoice_id):
 
 
 
-from .models import Doctor
+from core.models import Doctor
+
 @login_required
 def get_consultation_fee(request):
     doctor_id = request.GET.get('doctor_id')
@@ -223,7 +237,7 @@ def add_ipd_consultation_bill(request, invoice_id):
     if patient_appointments.exists():
         latest_appointment = patient_appointments.order_by('-date').first()
         doctor = latest_appointment.doctor
-        if doctor_service_rate:
+        if doctor:
             doctor_service_rate = DoctorServiceRate.objects.filter(doctor=doctor,service_type='Consulation').first()
             doctor_fee = doctor_service_rate.rate
 
@@ -298,7 +312,11 @@ def ipd_followup_booking(request, patient_id, invoice_id):
             slot = get_object_or_404(AppointmentSlot, id=slot_id, is_booked=False)
             doctor = get_object_or_404(Doctor, id=doctor_id)
 
-            doctor_service =DoctorServiceRate.objects.filter(doctor = appointment.doctor,service_type='Consultation').first()
+            doctor_service =DoctorServiceRate.objects.filter(
+                doctor = appointment.doctor,
+                service_type='Followup-Consultation',
+                ).first()
+
             if doctor_service:
                 doctor_consultation_fee = doctor_service.rate
             else:
@@ -321,7 +339,7 @@ def ipd_followup_booking(request, patient_id, invoice_id):
                 appointment=appointment,
                 invoice=invoice,           
                 doctor=doctor,
-                consultation_fee=consultation_fee,
+                consultation_fee=doctor_consultation_fee,
                 user=request.user,
                 patient_type=invoice.patient_type,
                 consultation_date = appointment_date,
@@ -366,11 +384,6 @@ def ipd_followup_booking(request, patient_id, invoice_id):
 
 
 
-
-
-
-
-from lab_tests.models import LabTestCatalog
 def get_test_fee(request):
     lab_test_catelogue_id = request.GET.get('lab_test_catelogue_id')  # was lab_test_id
     fee = 0
@@ -383,8 +396,6 @@ def get_test_fee(request):
     return JsonResponse({'fee': fee})
 
 
-
-from lab_tests.models import LabTestRequest,LabTestRequestItem
 
 
 @login_required
@@ -584,15 +595,21 @@ def ot_booking(request, invoice_id):
     if request.method == 'POST':
         form = OTBookingForm(request.POST)
         if form.is_valid():
+            ot_bill = form.save(commit=False)
             doctor = form.cleaned_data['surgeon']
+            selected_service_type = form.cleaned_data['procedure']
+            survice_type = form.cleaned_data['service_type']
+            surgery_type = form.cleaned_data['surgery_type']
 
             doctor_service = DoctorServiceRate.objects.filter(
-                doctor=doctor, 
-                service_type='Surgery'
-            ).first()
-            service_fee = doctor_service.rate if doctor_service else 0
+                service_type=selected_service_type,
+                doctor=doctor,
+                surgery_type = surgery_type if surgery_type else None
+                ).first()
+            service_fee = doctor_service.rate if doctor_service else 0         
 
-            ot_bill = form.save(commit=False)
+           
+            ot_bill.procedure = doctor_service
             ot_bill.invoice = invoice
             try:
                 duration = ot_bill.duration_hours()
@@ -605,7 +622,8 @@ def ot_booking(request, invoice_id):
             # Log doctor service
             DoctorServiceLog.objects.create(
                 doctor=ot_bill.surgeon,
-                service_type='Surgery',
+                service_type=survice_type,
+                surgery_type=surgery_type,
                 patient=ot_bill.patient,
                 service_date=ot_bill.booked_end or timezone.now(),
                 invoice=invoice,
@@ -625,9 +643,6 @@ def ot_booking(request, invoice_id):
 
 
 
-
-
-from medical_records.models import MedicalRecord
 
 @login_required
 def emergency_visit_create(request):
@@ -710,7 +725,7 @@ def doctor_service_rate_create(request):
     return render(request, 'billing/doctor_service_rate_form.html', {'form': form})
 
 
-from billing.utils import get_doctor_financials
+
 @login_required
 def doctor_payment_summary(request, doctor_id):
     doctor = get_object_or_404(Doctor, id=doctor_id)
@@ -761,9 +776,6 @@ def add_doctor_payment(request,doctor_id):
 
 
 
-
-
-
 def generate_invoice_qr(invoice):  
     invoice_url = f"http://localhost/billing/finalize_invoice/{invoice.id}/"
 
@@ -777,10 +789,6 @@ def generate_invoice_qr(invoice):
 
 
 
-
-
-from django.utils.timezone import now
-from django.utils.timezone import localtime
 
 def calculate_billed_days(assigned_at, released_at):
     if not assigned_at:
@@ -816,8 +824,6 @@ def calculate_instant_wardbill(admission):
 
 
 
-
-from patients.models import PatientAdmission
 
 @login_required
 def finalize_invoice(request, invoice_id):    

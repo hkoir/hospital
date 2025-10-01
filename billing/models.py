@@ -1,5 +1,6 @@
 from django.db import models
-from inventory.models import Medicine,Product
+from inventory.models import Medicine
+from product.models import Product
 from lab_tests.models import LabTest,LabTestCatalog,LabTestRequestItem,SuggestedLabTestItem
 from core.models import Doctor
 from django.db.models import Sum, F, ExpressionWrapper, DecimalField,Max
@@ -398,26 +399,41 @@ class Payment(models.Model):
 
 
 
+
 class DoctorServiceRate(models.Model):
+    user= models.ForeignKey(CustomUser, on_delete=models.CASCADE,null=True,blank=True)
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE)
     service_type = models.CharField(max_length=100,null=True, blank=True, choices=[
         ('Consultation', 'Consultation'),
+        ('Followup-Consultation', 'Followup Consultation'),
         ('Surgery', 'Surgery'),
-        ('Lab Review', 'Lab Review'),
-  	('Lab Test', 'Lab Test'),    
-        ('External-Lab-Test', 'external Lab Test'),           
+        ('Lab Review', 'Lab Review'),       
+        ('Lab Test', 'Lab Test'),    
+        ('External-Lab-Test', 'external Lab Test'),    
+        ('Others', 'Others'),    
     ])
+
+    SURGERY_TYPE_CHOICES = [
+        ('Minor', 'Minor Surgery'),
+        ('Major', 'Major Surgery'),
+        ('OT-Procedure', 'OT Procedure'),
+        ('Emergency', 'Emergency Surgery'),
+       
+    ]
+    surgery_type = models.CharField(max_length=100, choices=SURGERY_TYPE_CHOICES, null=True, blank=True)
     rate = models.DecimalField(max_digits=30, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)   
     updated_at = models.DateTimeField(auto_now=True)
-    user= models.ForeignKey(CustomUser, on_delete=models.CASCADE,null=True,blank=True)
 
     class Meta:
-        unique_together = ('doctor', 'service_type')
+        unique_together = ('doctor', 'service_type', 'surgery_type')
 
     def __str__(self):
-        return f"{self.service_type} rate for {self.doctor.name}: {self.rate}"
+        if self.service_type == 'Surgery' and self.surgery_type:
+            return f"{self.service_type} ({self.surgery_type})"
+        return f"{self.service_type}"
     
+
 
 
 
@@ -468,6 +484,14 @@ class DoctorServiceLog(models.Model):
 	('Lab-Test-Report','Lab Test Report')
        
     ])
+    SURGERY_TYPE_CHOICES = [
+        ('Minor', 'Minor Surgery'),
+        ('Major', 'Major Surgery'),
+        ('OT-Procedure', 'OT Procedure'),
+        ('Emergency', 'Emergency Surgery'),
+       
+    ]
+    surgery_type = models.CharField(max_length=100, choices=SURGERY_TYPE_CHOICES, null=True, blank=True)
     patient = models.ForeignKey('patients.Patient', on_delete=models.CASCADE,null=True, blank=True)
     service_date = models.DateField()
     service_fee = models.DecimalField(max_digits=10, decimal_places=2,null=True, blank=True)

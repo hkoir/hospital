@@ -46,7 +46,12 @@ TENANT_APPS = [
     'messaging',
     'payment_gateway',
     'facilities',
-    'finance'
+    'finance',
+    'accounting',
+    'logistics',
+    'purchase',
+    'supplier',
+    'product'
  
   
     
@@ -127,7 +132,7 @@ WSGI_APPLICATION = 'hospitalcare.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': 'ecare',  # your PostgreSQL database name
+        'NAME': 'healthcare',  # your PostgreSQL database name
         'USER': 'neha',      # the user you created for PostgreSQL
         'PASSWORD': 'Arafat_123',  # the password for your PostgreSQL user
         'HOST': 'localhost',    # default for local database

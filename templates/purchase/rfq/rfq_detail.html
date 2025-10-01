@@ -1,0 +1,108 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block content %}
+<div class="container-fluid">
+    <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+         <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:rfq_list' %}" class="btn btn-sm btn-success">RFQ List</a>     
+        <a href="{% url 'purchase:supplier_quotation_list' %}" class="btn btn-sm btn-success">Supplier Quotation List</a>   
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+         <a href="{% url 'purchase:batch_list' %}" class="btn btn-sm btn-success">Batch List</a>
+    
+    </div>
+    <div class="row">   
+        <h2 class="mt-4">RFQ Details: {{ rfq.rfq_number }}</h2>
+        <!-- RFQ Info -->
+        <fieldset class="border p-3 mb-4">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h2 class="mb-0">RFQ info:</h2>
+
+                {% if rfq.status == 'sent' %}
+                    <span class="badge bg-info">RFQ approved:
+                    <a href="{% url 'purchase:create_supplier_quotation' rfq.id %}">
+                        Create Supplier Quotation
+                    </a>
+                    </span>
+                {% else %}
+                    <form id="send-rfq-form" method="post" action="{% url 'purchase:send_rfq' rfq.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-warning">Approval pending. Approve RFQ</button>
+                    </form>
+                {% endif %}
+            </div>
+
+
+            <div class="row g-3">
+                <div class=" col-6 col-md-4">
+                    <strong>Purchase Request:</strong>
+                    {{ rfq.purchase_request_order }}
+                </div>
+               <div class=" col-6 col-md-4">
+                    <strong>RFQ Number:</strong>
+                    {{ rfq.rfq_number }}
+                </div>
+                <div class=" col-6 col-md-4">
+                    <strong>Date:</strong>
+                    {{ rfq.date }}
+                </div>
+               <div class=" col-6 col-md-4">
+                    <strong>Valid Until:</strong>
+                    {{ rfq.valid_until }}
+                </div>
+                <div class=" col-6 col-md-4">
+                    <strong>Status:</strong>
+                    {{ rfq.get_status_display }}
+                </div>
+                <div class="col-md-6">
+                    <strong>Notes:</strong>
+                    <p>{{ rfq.notes }}</p>
+                </div>
+            </div>
+        </fieldset>
+
+        <!-- RFQ Items -->
+        <fieldset class="border p-3 mb-4 table-responsive">     
+            <legend class="w-auto px-2">RFQ Items</legend>                  
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in rfq.items.all %}
+                    <tr>
+                        <td>{{ item.product }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.notes }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center">No items added</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </fieldset>
+  
+    </div>
+</div>
+
+
+
+<script>
+document.getElementById('send-rfq-form').addEventListener('submit', function(e){
+    let confirmed = confirm("Are you sure you want to send this RFQ?");
+    if(!confirmed){
+        e.preventDefault(); // Stop form submission if user clicks Cancel
+    }
+});
+</script>
+
+
+{% endblock %}

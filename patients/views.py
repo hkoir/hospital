@@ -1235,7 +1235,7 @@ def discharge_patient(request, admission_id):
     admission = get_object_or_404(PatientAdmission, id=admission_id)
 
     if request.method == 'POST':
-        invoice = admission.invoice
+        invoice = admission.billing_admission
 
         with transaction.atomic():
             # Close current bed assignment

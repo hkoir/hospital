@@ -3,7 +3,7 @@ from core.models import Doctor
 from django.utils import timezone
 import uuid
 from accounts.models import CustomUser
-
+from product.models import Product,ProductType,Category
 
 
 class MedicalRecord(models.Model):
@@ -83,12 +83,12 @@ class PrescribedMedicine(models.Model):
         Prescription, on_delete=models.CASCADE, related_name='medicines'
     )
     medication_type = models.ForeignKey(
-        'inventory.ProductType', on_delete=models.CASCADE, null=True, blank=True
+        ProductType, on_delete=models.CASCADE, null=True, blank=True
     )
     medication_category = models.ForeignKey(
-        'inventory.ProductCategory', on_delete=models.CASCADE, null=True, blank=True
+        Category, on_delete=models.CASCADE, null=True, blank=True
     )
-    medication_name = models.ForeignKey('inventory.Product', on_delete=models.CASCADE)
+    medication_name = models.ForeignKey(Product, on_delete=models.CASCADE)
     dosage = models.CharField(max_length=100, default='None')
     dosage_schedule = models.CharField(
         max_length=50,

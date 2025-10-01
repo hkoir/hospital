@@ -4,26 +4,54 @@
 
 {% block content %}
 <div class="container">
-    {% if lab_visit_form.errors %}
-  <div class="alert alert-danger">
-    <strong>Form errors:</strong>
-    {{ lab_visit_form.errors }}
-  </div>
-{% endif %}
+    
+     <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+    <a href=" {% url 'inventory:pending_medicine_deliveries' %} "
+    class="btn btn-sm btn-warning">Pending Medicine delivery</a>
 
-{% if formset.non_form_errors %}
-  <div class="alert alert-danger">
-    <strong>Formset errors:</strong>
-    {{ formset.non_form_errors }}
-  </div>
-{% endif %}
+    <a href=" {% url 'inventory:inventory_transaction_view' %} "
+    class="btn btn-sm btn-warning">Add/Purchase medicine</a>
+
+        <a href=" {% url 'inventory:product_list' %} "
+    class="btn btn-sm btn-warning">Product list</a>
+
+            <a href=" {% url 'inventory:product_dashboard' %} "
+    class="btn btn-sm btn-warning">Product Dashboard</a>
+
+      <a href=" {% url 'inventory:inventory_dashboard' %} "
+    class="btn btn-sm btn-warning">Inventory dashboard</a>
+
+       <a href=" {% url 'inventory:create_category' %} "
+    class="btn btn-sm btn-primary">add category</a>
+    <a href=" {% url 'inventory:create_product' %} "
+    class="btn btn-sm btn-primary">manage Items</a>
+       <a href=" {% url 'inventory:create_batch' %} "
+    class="btn btn-sm btn-primary">manage Batch</a>
+
+    </div>
+
+    <!-- Error Handling -->
+    {% if lab_visit_form.errors %}
+    <div class="alert alert-danger">
+        <strong>Form errors:</strong>
+        {{ lab_visit_form.errors }}
+    </div>
+    {% endif %}
+
+    {% if formset.non_form_errors %}
+    <div class="alert alert-danger">
+        <strong>Formset errors:</strong>
+        {{ formset.non_form_errors }}
+    </div>
+    {% endif %}
 
     <form id="medicine-sale-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ formset.management_form }}
         <div class="row">
+            
             <!-- Medicine Sale Details -->
-            <div class="col-12 col-md-6">
+            <div class="col-12">
                 <div class="card shadow-lg border-0 mb-4">
                     <div class="card-header bg-primary text-white text-center">
                         <h4>Medicine Sale Only</h4>
@@ -31,15 +59,15 @@
                     <div class="card-body">
                         <div class="row">
                             {% for field in lab_visit_form %}
-                                <div class="col-12 col-md-6 mb-3">
-                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                                    {{ field }}
-                                    {% if field.errors %}
-                                        <div class="text-danger small mt-1">
-                                            {{ field.errors|striptags }}
-                                        </div>
-                                    {% endif %}
+                            <div class="col-12 col-md-4 mb-3">
+                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                {{ field }}
+                                {% if field.errors %}
+                                <div class="text-danger small mt-1">
+                                    {{ field.errors|striptags }}
                                 </div>
+                                {% endif %}
+                            </div>
                             {% endfor %}
                         </div>
                     </div>
@@ -47,37 +75,48 @@
             </div>
 
             <!-- Medicine Selection -->
-            <div class="col-12 col-md-6">
+            <div class="col-12">
                 <div class="card shadow-lg border-0 mb-4">
                     <div class="card-header bg-primary text-white text-center">
                         <h4>Medicines</h4>
                     </div>
                     <div class="card-body">
-                        <table class="table" id="formset_table">
-                            <thead>
-                                <tr>
-                                    <th>Medicine</th>
-                                    <th>Quantity</th>
-                                    <th>Subtotal</th>
-                                    <th>Action</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                {% for form in formset %}
+                        <div class="table-responsive">
+                            <table class="table table-bordered align-middle" id="formset_table">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Medicine</th>
+                                        <th>Batch</th>
+                                        <th>Quantity</th>
+                                        <th>Subtotal</th>
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for form in formset %}
                                     <tr class="formset_row">
                                         {{ form.id }}
-                                          <div style="display: none;">{{ form.DELETE }}</div>
+                                        {{ form.DELETE }}
+                                        <td>{{ form.medicine|add_class:'form-control' }}</td>
                                         <td>{{ form.batch|add_class:'form-control' }}</td>
                                         <td>{{ form.quantity }}</td>
                                         <td class="subtotal">0.00</td>
                                         <td>
-                                            <button type="button" class="remove-form-btn btn btn-danger btn-sm">Remove</button>
+                                            <button type="button" class="remove-form-btn btn btn-danger btn-sm">
+                                                Remove
+                                            </button>
                                         </td>
                                     </tr>
-                                {% endfor %}
-                            </tbody>
-                        </table>
-                        <button type="button" id="add-form-btn" class="btn btn-primary mt-2">Add Another Medicine</button>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+
+                        </div>
+
+                        <button type="button" id="add-form-btn" class="btn btn-primary mt-2">
+                            Add Another Medicine
+                        </button>
+                         <button type="submit" class="btn btn-success px-5">Submit</button>
 
                         <div class="mt-3">
                             <p>Total Estimated Cost: <strong id="total_cost">0.00</strong></p>
@@ -86,10 +125,7 @@
                 </div>
             </div>
 
-            <!-- Submit Button -->
-            <div class="text-center">
-                <button type="submit" class="btn btn-success px-5">Submit</button>
-            </div>
+            
         </div>
     </form>
 
@@ -98,7 +134,8 @@
         <table>
             <tr class="formset_row">
                 {{ formset.empty_form.id }}
-                <div style="display: none;">{{ formset.empty_form.DELETE }}</div>
+                {{ formset.empty_form.DELETE }}
+                <td>{{ formset.empty_form.medicine|add_class:'form-control' }}</td>
                 <td>{{ formset.empty_form.batch|add_class:'form-control' }}</td>
                 <td>{{ formset.empty_form.quantity }}</td>
                 <td class="subtotal">0.00</td>
@@ -106,6 +143,7 @@
                     <button type="button" class="remove-form-btn btn btn-danger btn-sm">Remove</button>
                 </td>
             </tr>
+
         </table>
     </div>
 </div>
@@ -158,8 +196,7 @@ document.addEventListener('DOMContentLoaded', function() {
         if (e.target && e.target.classList.contains('remove-form-btn')) {
             const row = e.target.closest('.formset_row');
             row.remove();
-            const updatedCount = formsetTable.querySelectorAll('.formset_row').length;
-            totalForms.value = updatedCount;
+            totalForms.value = formsetTable.querySelectorAll('.formset_row').length;
             updateSubtotalsAndTotal();
         }
     });

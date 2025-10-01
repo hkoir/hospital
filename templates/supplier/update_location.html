@@ -1,0 +1,85 @@
+{% extends 'base.html' %}  
+
+{% block content %}
+
+
+
+
+<div class="container-fluid main-content">
+    <div class="row">         
+            <!-- Form for adding a new category -->
+            <div class="col-12 col-md-4">
+                <div class="card shadow" style="padding:10px;background-color:aquamarine;">
+                    <div class="card-body">
+                        <h6 class="card-title text-center"><strong>Update Location</strong> </h6>
+                        <form method="post" enctype="multipart/form-data" action="" id="add_category">
+                            {% csrf_token %}
+                            {{ form.as_p }}
+                            <button type="submit" name="location_submit" class="btn btn-primary">Submit</button>
+                        </form>
+                     </div>
+                </div>           
+            </div>
+
+            <div class="col">        
+                <!-- Table for displaying existing categories -->
+                <h4>Available Locations</h4>
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th class="text-center p-2">Name</th>
+                            <th class="text-center p-2">Supplier</th>
+                            <th class="text-center p-2">Address</th>
+                            <th class="text-center p-2">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for location in page_obj%}
+                            <tr>
+                                <td class="text-center p-1">{{ location.name }}</td>
+                                <td class="text-center p-1" style="white-space: nowrap;">{{ location.supplier.name }}</td>
+                                <td class="text-center p-2" style="white-space: nowrap;">{{location.address }}</td>    
+                                <td class="text-center">                                   
+                                        <!-- Update Button Form -->
+                                        <a href="{% url 'supplier:create_location' %}" class="btn btn-primary btn-sm text-center">Add</a>
+                                        <a href="{% url 'supplier:update_location' location.id %}" class="btn btn-primary btn-sm text-center">Update</a>
+                                    
+                                        <!-- Delete Button that links to confirmation page -->
+                                        <a href="{% url 'supplier:delete_location' location.id %}" class="btn btn-danger btn-sm text-center">Delete</a>
+                                    </td>
+                               
+                                
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                             <!-- Pagination Controls -->
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+            </div>
+        
+    </div>
+</div>      
+
+
+
+
+
+
+
+{% endblock %}

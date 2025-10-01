@@ -10,7 +10,7 @@ import logging
 from django.contrib import messages
 
 from accounts.models import CustomUser
-from patients.models import Patient,Guardian
+# from patients.models import Patient,Guardian
 from core.models import Doctor
 from payment_gateway.utils import send_sms
 from core.utils import POSITION_CHOICES
@@ -20,9 +20,9 @@ from core.utils import POSITION_CHOICES
 
 class Notification(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE, related_name='student_notifications', null=True, blank=True)
+    patient = models.ForeignKey('patients.Patient', on_delete=models.CASCADE, related_name='student_notifications', null=True, blank=True)
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE, related_name='teacher_notifications', null=True, blank=True)
-    notification_type=models.CharField(max_length=20,choices=[('attendance','Attendance'),('payment-due','Payment_due'),('notice','Notice'),('general','General')], null=True, blank=True)
+    notification_type=models.CharField(max_length=100,choices=[('attendance','Attendance'),('payment-due','Payment_due'),('notice','Notice'),('general','General')], null=True, blank=True)
     message = models.CharField(max_length=255) 
     created_at = models.DateTimeField(auto_now_add=True)
     is_read = models.BooleanField(default=False)  
@@ -44,9 +44,9 @@ class Notification(models.Model):
 
 class Message(models.Model):
     user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
-    patient = models.ForeignKey(Patient, on_delete=models.CASCADE,null=True,blank=True,related_name='student_message')
+    patient = models.ForeignKey('patients.Patient', on_delete=models.CASCADE,null=True,blank=True,related_name='student_message')
     doctor = models.ForeignKey(Doctor, null=True, blank=True, on_delete=models.CASCADE, related_name='teacher_messages')
-    guardian = models.ForeignKey(Guardian, on_delete=models.CASCADE,null=True,blank=True)
+    guardian = models.ForeignKey('patients.Guardian', on_delete=models.CASCADE,null=True,blank=True)
     
     message_content = models.TextField()
     message_type = models.CharField(max_length=50, choices=[

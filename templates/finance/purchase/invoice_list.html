@@ -1,0 +1,187 @@
+{% extends 'base.html' %}  
+
+{% load custom_filters %}
+
+{% block content %}
+
+
+
+
+<div class="container-fluid main-content">
+    <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+        <a href="{% url 'logistics:sale_shipment_list' %}" class="btn btn-sm btn-success">Sale Shipment</a>
+    </div>
+    <div class="row mt-4">
+
+        <div class="col-12">     
+            <div class="container">
+                <div class="row">
+                    <div class="col-7">
+                        <form method="GET" action="">  
+                            <label for="id_purchase_invoice_id">Invoice number</label>              
+                        {{ form.purchase_invoice_id }}                
+                        <button type="submit" class="btn btn-primary">Search</button>   
+                                          
+                    </form>           
+                    </div>
+                    <div class="col-5">                  
+                        {% if invoice_number %}
+                        Search result for Invoice ID <b>:{{ invoice_number }}</b>
+                        {% else %}
+                        <span> ID does not match</span>
+                        {% endif %}  
+                    
+                    </div>
+                </div>
+            </div>
+
+        </div> 
+     
+        <hr class="mt-2">
+        <div class="col">
+
+            <h4>Invoice List</h4>
+
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr class="btn-primary text-white">
+                        <th>Invoice Number</th>
+                        <th>Purchase Order</th>
+                        <th>Amount Due</th>
+                        <th>Amount paid</th>
+                        <th>Tax Rate</th>
+                        <th>Issued Date</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                        <th>Actions</th>
+                        <th>View invoice</th>
+                        <th>View payment Doc</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in page_obj %}
+                        <tr>
+                            <td>{{ invoice.invoice_number }}</td>
+                            <td>{{ invoice.purchase_shipment.purchase_order }}</td>
+                            <td>{{ invoice.amount_due|add_commas }}</td>
+                            <td>{{ invoice.total_paid|add_commas }}</td>
+                            <td>{{ invoice.tax_rate }}%</td>
+                            <td>{{ invoice.issued_date|date:"Y-m-d H:i" }}</td>
+                            {% if invoice.is_fully_paid %}
+                            <td>Paid</td>
+                            {% else %}
+                            <td>{{ invoice.get_status_display }}</td>
+                            {% endif %}
+            
+                            {% if invoice.is_fully_paid %}
+                            <td><i class="fas fa-check" style="color:green;font-weight: bold;">Payment clear</i></td>
+                            {% else %}
+                            <td style="white-space: nowrap;">
+                                <a href="{% url 'finance:create_purchase_payment' invoice_id=invoice.id %}" class="btn btn-sm btn-primary">
+                                    Add Payment
+                                </a>
+                            </td>
+                            {% endif %}
+            
+                            <td style="white-space: nowrap;">
+                                <a href="{% url 'finance:purchase_invoice_detail' invoice.id %}" class="btn btn-sm btn-primary">
+                                    invoice details
+                                </a>
+                            </td>
+                            <td>
+                                {% if invoice.purchase_invoice_attachment.first.file.url %}
+                                    <a href="{{ invoice.purchase_invoice_attachment.first.file.url }}" target="_blank">
+                                        <img src="{{ invoice.purchase_invoice_attachment.first.file.url }}" alt="Invoice Attachment" style="max-width: 50px; max-height: 30px;">
+                                    </a>
+                                {% else %}
+                                    <span>No file</span>
+                                {% endif %}
+                            </td>
+
+                            <td>
+                                {% if invoice.purchase_payment_attachment.first.file.url %}
+                                    <a href="{{ invoice.purchase_payment_attachment.first.file.url }}" target="_blank">
+                                        <img src="{{ invoice.purchase_payment_attachment.first.file.url }}" alt="Invoice Attachment" style="max-width: 50px; max-height: 30px;">
+                                    </a>
+                                {% else %}
+                                    <span>No file</span>
+                                {% endif %}
+                            </td>
+                            
+                            
+                        </tr>
+                    {% empty %}
+                        <tr>
+                            <td colspan="9">No invoices available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+ <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+
+</div>
+
+
+
+<script>
+    $(document).ready(function() {
+        $('#id_purchase_invoice_id').select2({
+            width: '70%',
+            placeholder: 'Search invoice...',
+            allowClear: true,
+            ajax: {
+                url: "{% url 'accounts:common_search' %}",  // Ensure this URL is correct
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data.results, function(item) {
+                            return {
+                                id: item.id,
+                                text: item.text
+                            };
+                        })
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 1,
+            placeholder: 'Search for invoice number',
+            allowClear: true
+        });
+    });
+
+
+    </script>
+    
+
+{% endblock %}

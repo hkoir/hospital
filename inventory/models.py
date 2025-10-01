@@ -7,15 +7,18 @@ import uuid
 
 from medical_records.models import MedicalRecord
 from core.models import Doctor
+from django.utils.translation import gettext_lazy as _
 
-
+from product.models import Product,Category,Unit,ProductType
+from purchase.models import Batch
+from purchase.models import PurchaseOrder
 
 
 class Medicine(models.Model):
     name = models.CharField(null=True,blank=True,max_length=100)
 
 class Warehouse(models.Model):
-    user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,null=True, blank=True,related_name='warehouse_user')
+    user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,null=True, blank=True,related_name='inv_warehouse_user')
     name = models.CharField(max_length=100)
     warehouse_id = models.CharField(max_length=150, unique=True, null=True, blank=True)  
     address = models.CharField(max_length=255, blank=True, null=True)
@@ -39,7 +42,7 @@ class Warehouse(models.Model):
 
 class Location(models.Model):
     name = models.CharField(max_length=50)
-    user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,null=True, blank=True,related_name='location_user')
+    user = models.ForeignKey(CustomUser,on_delete=models.CASCADE,null=True, blank=True,related_name='inv_location_user')
     location_id = models.CharField(max_length=150, unique=True, null=True, blank=True)     
     warehouse = models.ForeignKey(Warehouse, related_name='locations', on_delete=models.CASCADE)  
     address= models.TextField(null=True,blank=True)  
@@ -58,116 +61,21 @@ class Location(models.Model):
 
 
 
-
-class ProductType(models.Model): 
-    name = models.CharField(max_length=120,null=True,blank=True)   
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-    
-    class Meta:
-            ordering = ['created_at']
-   
-    def __str__(self):
-        return self.name
-
-
-class ProductCategory(models.Model):
-    category_id = models.CharField(max_length=150, unique=True, null=True, blank=True)
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True, related_name='category_user')
-    product_type = models.ForeignKey(ProductType,on_delete=models.CASCADE,null=True, blank=True)
-    name = models.CharField(max_length=100,null=True, blank=True)   
-    description = models.TextField(blank=True, null=True)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
+class Shelf(models.Model):
+    warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE, related_name="warehouse_shelves",null=True,blank=True)
+    location = models.ForeignKey(Location, on_delete=models.CASCADE, related_name="warehouse_location_shelves",null=True,blank=True)
+    code = models.CharField(max_length=50,blank=True, null=True) 
+    description = models.CharField(max_length=255, blank=True, null=True)
+    created_at = models.DateTimeField(_("Created at"), auto_now_add=True)
+    updated_at = models.DateTimeField(_("Updated at"), auto_now=True) 
 
     class Meta:
-            ordering = ['created_at']
-
-    def save(self, *args, **kwargs):
-        if not self.category_id:
-            self.category_id = f"CAT-{uuid.uuid4().hex[:8].upper()}"
-        super().save(*args, **kwargs)
+        unique_together = ("warehouse", "code")
 
     def __str__(self):
-        return self.name
+        return f"{self.warehouse.name} - {self.code}"
 
-
-class Product(models.Model):   
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True, related_name='product_user')
-    name = models.CharField(max_length=255)
-    product_id = models.CharField(max_length=150, unique=True, null=True, blank=True)  
-    sku = models.CharField(max_length=100, unique=True)
-    product_type=models.ForeignKey(ProductType,on_delete=models.CASCADE, null=True, blank=True)
-    product_category = models.ForeignKey(ProductCategory, on_delete=models.CASCADE, related_name='category_products')  # Updated related name
-    brand = models.CharField(max_length=255, blank=True, null=True)
-    UOM = models.CharField(max_length=100,null=True,blank=True)
-    base_unit_price = models.DecimalField(max_digits=10, decimal_places=2) 
-    barcode = models.CharField(max_length=50, unique=True, blank=True, null=True)
-    Unit_weight = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True )
-    unit_dimensions = models.CharField(max_length=100, blank=True, null=True)
-    manufacture_date = models.DateField(blank=True, null=True)
-    expiry_date = models.DateField(blank=True, null=True)  
-    warranty = models.DurationField(blank=True, null=True)  
-    description = models.TextField(blank=True, null=True)
-    is_active = models.BooleanField(default=True)
-    reorder_level = models.PositiveIntegerField(default=10,null=True,blank=True)
-    lead_time = models.PositiveIntegerField(null=True,blank=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    product_image= models.ImageField(upload_to='products',null=True,blank=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-
-    def save(self, *args, **kwargs):
-        if not self.product_id:
-            self.product_id = f"PID-{uuid.uuid4().hex[:8].upper()}"
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        return self.name
-
-
-
-class Batch(models.Model):
-    NEW_PURCHASE = 'NEW'
-    EXISTING_PRODUCT = 'EXISTING'
-    
-    PRODUCT_TYPE_CHOICES = [
-        (NEW_PURCHASE, 'New Purchase'),
-        (EXISTING_PRODUCT, 'Existing Product'),
-    ]
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True, related_name='batch_user')
-    batch_number = models.CharField(max_length=50, unique=True, editable=False)   
-    product = models.ForeignKey(Product, on_delete=models.CASCADE)   
-    manufacture_date = models.DateField()
-    expiry_date = models.DateField()
-    quantity = models.PositiveIntegerField()
-    remaining_quantity = models.PositiveIntegerField(null=True, blank=True)
-    unit_price = models.DecimalField(max_digits=20, decimal_places=2)
-    sale_price = models.DecimalField(max_digits=20, decimal_places=2,null=True, blank=True)
-    created_at = models.DateField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    def save(self, *args, **kwargs): 
-        if not self.batch_number:
-            timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
-            unique_id = str(uuid.uuid4().hex)[:6]  
-            self.batch_number = f"BATCH-{timestamp}-{unique_id}"
-
-        if not self.id:
-            self.remaining_quantity = self.quantity
-
-        if self.sale_price is None or self.sale_price == 0:
-            self.sale_price = self.unit_price
-
-
-        super().save(*args, **kwargs)
-
-    def __str__(self):
-        inventory = self.batch_inventory.first()  
-        warehouse_name = inventory.warehouse.name if inventory else "No Warehouse"  
-        return f'Batch -{self.batch_number}-- {self.product} - Unit Price={self.unit_price} - Available: {self.remaining_quantity} - Warehouse: {warehouse_name}'
-
+        
 
 
 class Inventory(models.Model):
@@ -177,7 +85,7 @@ class Inventory(models.Model):
         on_delete=models.CASCADE,
         null=True,
         blank=True,
-        related_name='inventory_user'
+        related_name='inv_inventory_user'
     )
     batch = models.ForeignKey(Batch,on_delete=models.CASCADE,related_name='batch_inventory',null=True,blank=True)
     warehouse = models.ForeignKey(
@@ -222,11 +130,12 @@ class Inventory(models.Model):
 class InventoryTransaction(models.Model):  
     inventory_transaction=models.ForeignKey(Inventory,on_delete=models.CASCADE,null=True, blank=True,related_name='inventory_transaction') 
     transaction_id = models.CharField(max_length=30,null=True,blank=True)    
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True, related_name='inventory_transaction_user')
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, null=True, blank=True, related_name='inv_inventory_transaction_user')
     product = models.ForeignKey(Product, on_delete=models.CASCADE, related_name='product_inventory_transaction',null=True, blank=True)
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE, related_name='batch_inventory_transaction',null=True, blank=True)  # NEW
     warehouse = models.ForeignKey(Warehouse, on_delete=models.CASCADE,null=True, blank=True)
     location = models.ForeignKey(Location, on_delete=models.CASCADE,null=True, blank=True)
+    purchase_order = models.ForeignKey(PurchaseOrder, related_name='purchase_transactions', null=True, blank=True, on_delete=models.CASCADE)
    
     transaction_type = models.CharField(
     max_length=20,
@@ -256,10 +165,6 @@ class InventoryTransaction(models.Model):
 
     def __str__(self):       
         return f"{self.transaction_id}-{self.transaction_type}-{self.product}-{self.quantity}"
-
-
-
-
 
 
 

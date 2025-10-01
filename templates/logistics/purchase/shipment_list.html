@@ -1,0 +1,155 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+
+
+<div class="container-fluid main-content">
+   <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+       
+    </div>
+   
+    <div class="row mt-4">       
+               
+        <div class="col">     
+            <div class="container">
+                <div class="row">
+                    <div class="col-7">
+                        <form method="GET" action="{% url 'logistics:purchase_shipment_list' %}"> 
+                            <label for="id_purchase_shipment_id">Search by Shipment ID</label>               
+                             {{ form.purchase_shipment_id }}                
+                            <button type="submit" class="btn btn-primary">Search</button>                                                
+                        </form>
+                    </div>
+                    <div class="col-5">                   
+                        {% if purchase_shipment %}                    
+                        <span>Search result for Order ID: <b>{{ purchase_shipment }}</b></span> 
+                    {% else %} 
+                    <span> ID does not match</span>                
+                        {% endif %}
+                     
+                    
+                    </div>
+                </div>
+            </div>
+
+        </div> 
+     
+        <hr class="mt-2">
+                   
+            
+        
+        <div class="col">
+        <a href="{% url 'purchase:purchase_order_item' %}" class="btn btn-sm btn-primary">More shipment details</a>
+        <h4 class="mt-4">Shipment List</h4>
+        <table class="table table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>Purchase Order</th>
+                    <th>Shipment ID</th>
+                    <th>Total Amount</th>
+                    <th>Carrier</th>
+                    <th>estimated_delivery</th>
+                    <th>Current status</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for data in page_obj %}
+                    <tr>
+                        <td>{{ data.purchase_order.order_id }}</td>
+                        <td>
+                            <a href="{% url 'logistics:dispatch_item_list' data.purchase_order.id %}">{{ data.shipment_id}}</a>
+                           
+                        </td>
+                        <td>{{ data.total_amount}}</td>
+
+                        <td>{{ data.carrier }}</td>
+                        <td>{{ data.estimated_delivery }}</td>
+
+                        {% if data.is_fully_shipped %}
+                        <td>Delivered</td>
+                        {% else %}
+                        <td>{{ data.get_status_display }}</td>
+                        {% endif %}
+
+                        <td>
+                            <a href="{% url 'logistics:purchase_shipment_detail' data.id %}">Shipment details</a>
+                        </td>
+                    </tr>
+            
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+
+    </div>
+    
+ <div class="pagination">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        <span class="current">
+            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+        </span>
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+<h4 style="height:10px"></h4>
+
+</div>
+
+
+
+<script>
+    $(document).ready(function() {
+        $('#id_purchase_shipment_id').select2({
+            width: '50%',
+            placeholder: 'Search shipment...',
+            allowClear: true,
+            ajax: {
+                url: "{% url 'accounts:common_search' %}",  // Ensure this URL is correct
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return {
+                        q: params.term
+                    };
+                },
+                processResults: function(data) {
+                    return {
+                        results: $.map(data.results, function(item) {
+                            return {
+                                id: item.id,
+                                text: item.text
+                            };
+                        })
+                    };
+                },
+                cache: true
+            },
+            minimumInputLength: 1,
+            placeholder: 'Search for shipment order',
+            allowClear: true
+        });
+    });
+
+
+    </script>
+    
+
+
+{% endblock %}

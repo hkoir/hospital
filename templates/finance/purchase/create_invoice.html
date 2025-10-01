@@ -1,0 +1,30 @@
+{% extends 'base.html' %}  <!-- Ensure your page extends a common layout -->
+
+
+
+
+
+{% block content %}
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">  <!-- Adjust width as needed -->
+            <div class="card shadow-lg border-0 rounded-3">
+                <div class="card-header bg-primary text-white text-center">
+                    <h4 class="mb-0">Create Purchase Invoice</h4>
+                </div>
+                <div class="card-body p-4">
+                    <form method="post" class="mx-4">
+                        {% csrf_token %}
+                        
+                       {{ form.as_p }}
+                        
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-primary">Submit Invoice</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

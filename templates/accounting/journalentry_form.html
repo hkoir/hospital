@@ -1,0 +1,194 @@
+{% extends "../base.html" %}
+{% load static %}
+{% block title %}Accounting{% endblock %}
+{% block content %}
+
+
+
+<div class="container">
+   
+      <a href="{% url 'accounting:balance_sheet' %}"
+    class="btn btn-sm btn-primary">Balance sheet</a>
+             <a href="{% url 'accounting:balance_sheet_quarterly' %}"
+    class="btn btn-sm btn-primary">Balance sheet Quarterly</a>
+            <a href="{% url 'accounting:trial_balance' %}"
+    class="btn btn-sm btn-primary">Trial balance</a>
+      <a href="{% url 'accounting:profit_loss' %}"
+    class="btn btn-sm btn-primary">Profit & Loss</a>
+                <a href="{% url 'accounting:profit_loss_quarterly' %}"
+    class="btn btn-sm btn-primary">Profit & Loss Quarterly</a>
+
+       <a href="{% url 'accounting:journalentry_create' %}"
+    class="btn btn-sm btn-primary">Journal entry</a>
+          <a href="{% url 'accounting:journalentry_list' %}"
+    class="btn btn-sm btn-primary">Journal entry List</a>
+     <a href="{% url 'accounting:account_create' %}"
+    class="btn btn-sm btn-primary">Add account</a>
+
+        <a href="{% url 'accounting:account_list' %}"
+    class="btn btn-sm btn-primary">Account List</a>
+</div>
+
+<h2 class="my-4">🧾 New Journal Entry</h2>
+
+{# show parent-form non-field errors #}
+{% if form.non_field_errors %}
+  <div class="alert alert-danger">
+    {{ form.non_field_errors }}
+  </div>
+{% endif %}
+
+<form method="post" id="journal-form" class="needs-validation" novalidate>
+  {% csrf_token %}
+
+  <!-- Journal Header -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-body">
+      <div class="row g-3">
+        <div class="col-md-3">
+          <label class="form-label">{{ form.date.label }}</label>
+          {{ form.date }}
+          <div class="text-danger small">{{ form.date.errors }}</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">{{ form.fiscal_year.label }}</label>
+          {{ form.fiscal_year }}
+          <div class="text-danger small">{{ form.fiscal_year.errors }}</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">{{ form.description.label }}</label>
+          {{ form.description }}
+          <div class="text-danger small">{{ form.description.errors }}</div>
+        </div>
+        <div class="col-md-3">
+          <label class="form-label">{{ form.reference.label }}</label>
+          {{ form.reference }}
+          <div class="text-danger small">{{ form.reference.errors }}</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {{ formset.management_form }}
+
+  {# show formset non-form errors #}
+  {% if formset.non_form_errors %}
+    <div class="alert alert-danger">{{ formset.non_form_errors }}</div>
+  {% endif %}
+
+  <!-- Journal Lines -->
+  <div class="card shadow-sm mb-4">
+    <div class="card-header bg-light fw-bold">
+      Journal Lines
+    </div>
+    <div class="card-body p-0">
+      <div class="table-responsive">
+        <table id="journal-lines" class="table table-bordered table-sm mb-0 align-middle">
+          <thead class="table-secondary">
+            <tr>
+              <th style="width: 25%;">Account</th>
+              <th style="width: 30%;">Description</th>
+              <th class="text-end" style="width: 15%;">Debit</th>
+              <th class="text-end" style="width: 15%;">Credit</th>
+              <th style="width: 15%;">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for f in formset %}
+              <tr class="form-row">
+                <td>
+                  {{ f.account }}
+                  <div class="text-danger small">{{ f.account.errors }}</div>
+                </td>
+                <td>
+                  {{ f.description }}
+                  <div class="text-danger small">{{ f.description.errors }}</div>
+                </td>
+                <td>
+                  {{ f.debit }}
+                  <div class="text-danger small">{{ f.debit.errors }}</div>
+                </td>
+                <td>
+                  {{ f.credit }}
+                  <div class="text-danger small">{{ f.credit.errors }}</div>
+                </td>
+                <td class="text-center">
+                  {{ f.DELETE }}
+                  <button type="button" class="remove-row btn btn-outline-danger btn-sm">
+                    <i class="fas fa-trash-alt"></i> Remove
+                  </button>
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="d-flex justify-content-between">
+    <button type="button" id="add-row" class="btn btn-outline-secondary">
+      <i class="fas fa-plus"></i> Add Line
+    </button>
+    <button type="submit" class="btn btn-primary">
+      <i class="fas fa-save"></i> Save Journal Entry
+    </button>
+  </div>
+</form>
+
+<!-- Hidden empty form template -->
+<table style="display:none">
+  <tbody id="empty-form">
+    <tr class="form-row">
+      <td>{{ formset.empty_form.account }}</td>
+      <td>{{ formset.empty_form.description }}</td>
+      <td>{{ formset.empty_form.debit }}</td>
+      <td>{{ formset.empty_form.credit }}</td>
+      <td class="text-center">
+        {{ formset.empty_form.DELETE }}
+        <button type="button" class="remove-row btn btn-outline-danger btn-sm">
+          <i class="fas fa-trash-alt"></i> Remove
+        </button>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const prefix = "{{ formset.prefix }}";
+    const totalForms = document.getElementById("id_" + prefix + "-TOTAL_FORMS");
+    const tableBody = document.querySelector("#journal-lines tbody");
+    const emptyRowTemplate = document.querySelector("#empty-form").innerHTML;
+    const addBtn = document.getElementById("add-row");
+
+    addBtn.addEventListener("click", function () {
+        const index = parseInt(totalForms.value, 10);
+        const newRowHtml = emptyRowTemplate.replace(/__prefix__/g, index);
+        tableBody.insertAdjacentHTML("beforeend", newRowHtml);
+        totalForms.value = index + 1;
+    });
+
+    tableBody.addEventListener("click", function (e) {
+        if (e.target && e.target.classList.contains("remove-row")) {
+            const tr = e.target.closest("tr");
+            const delInput = tr.querySelector("input[name$='-DELETE']");
+            if (delInput) {
+                if (delInput.type === "checkbox") {
+                    delInput.checked = true;
+                } else {
+                    delInput.value = "on";
+                }
+                tr.style.display = "none";
+            } else {
+                tr.remove();
+                totalForms.value = parseInt(totalForms.value, 10) - 1;
+            }
+        }
+    });
+});
+</script>
+
+{% endblock %}

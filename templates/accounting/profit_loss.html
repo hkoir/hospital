@@ -1,0 +1,133 @@
+{% extends "../base.html" %}
+{% load custom_filters %}
+{% block title %}Profit & Loss Statement{% endblock %}
+
+{% block content %}
+
+<style>
+.level-0 { padding-left: 0px; }
+.level-1 { padding-left: 20px; }
+.level-2 { padding-left: 40px; }
+.level-3 { padding-left: 60px; }
+/* Add more levels if needed */
+</style>
+<div class="container mt-4">
+   
+      <a href="{% url 'accounting:balance_sheet' %}"
+    class="btn btn-sm btn-primary">Balance sheet</a>
+             <a href="{% url 'accounting:balance_sheet_quarterly' %}"
+    class="btn btn-sm btn-primary">Balance sheet Quarterly</a>
+            <a href="{% url 'accounting:trial_balance' %}"
+    class="btn btn-sm btn-primary">Trial balance</a>
+      <a href="{% url 'accounting:profit_loss' %}"
+    class="btn btn-sm btn-primary">Profit & Loss</a>
+                <a href="{% url 'accounting:profit_loss_quarterly' %}"
+    class="btn btn-sm btn-primary">Profit & Loss Quarterly</a>
+
+       <a href="{% url 'accounting:journalentry_create' %}"
+    class="btn btn-sm btn-primary">Journal entry</a>
+          <a href="{% url 'accounting:journalentry_list' %}"
+    class="btn btn-sm btn-primary">Journal entry List</a>
+     <a href="{% url 'accounting:account_create' %}"
+    class="btn btn-sm btn-primary">Add account</a>
+
+        <a href="{% url 'accounting:account_list' %}"
+    class="btn btn-sm btn-primary">Account List</a>
+
+    <div class="row">
+        <div class="table-responsive">
+        <h2 class="my-4">Profit & Loss Statement</h2>         
+       <table class="table table-bordered table-striped table-sm">
+    <thead class="table-dark">
+        <tr>
+            <th>Account code</th>
+            <th>Account</th>
+            {% for fy in report.fiscal_years %}
+                <th class="text-end">{{ fy.year_start.year }}-{{ fy.year_end.year }}</th>
+            {% endfor %}
+        </tr>
+    </thead>
+    <tbody>
+
+        <!-- Income Section -->
+        <tr class="table-secondary">
+            <td colspan="{{ report.fiscal_years|length|add:'2' }}"><strong>Income</strong></td>
+        </tr>
+        {% for node in report.income %}
+            {% include "accounting/account_node_pl.html" with node=node prefix="income" level=0 report=report %}
+        {% endfor %}
+
+        <!-- Total Income -->
+        <tr class="fw-bold table-dark">
+            <td colspan="2" class="text-end">Total Income</td>
+            {% for fy in report.fiscal_years %}
+                <td class="text-end">{{ report.total_income|dict_get:fy.id|floatformat:2 }}</td>
+            {% endfor %}
+        </tr>
+
+        <!-- Expenses Section -->
+        <tr class="table-secondary">
+            <td colspan="{{ report.fiscal_years|length|add:'2' }}"><strong>Expenses</strong></td>
+        </tr>
+        {% for node in report.expenses %}
+            {% include "accounting/account_node_pl.html" with node=node prefix="expense" level=0 report=report %}
+        {% endfor %}
+
+        <!-- Total Expenses -->
+        <tr class="fw-bold table-dark">
+            <td colspan="2" class="text-end">Total Expenses</td>
+            {% for fy in report.fiscal_years %}
+                <td class="text-end">{{ report.total_expenses|dict_get:fy.id|floatformat:2 }}</td>
+            {% endfor %}
+        </tr>
+
+        <!-- Net Profit Before Tax -->
+        <tr class="fw-bold table-success">
+            <td colspan="2" class="text-end">Net Profit Before Tax</td>
+            {% for fy in report.fiscal_years %}
+                <td class="text-end">{{ report.net_profit_before_tax|dict_get:fy.id|floatformat:2 }}</td>
+            {% endfor %}
+        </tr>
+
+        <!-- Income Tax Expense -->
+        <tr class="fw-bold table-warning">
+            <td colspan="2" class="text-end">Income Tax Expense</td>
+            {% for fy in report.fiscal_years %}
+                <td class="text-end">{{ report.taxes|dict_get:fy.id|floatformat:2 }}</td>
+            {% endfor %}
+        </tr>
+
+        <!-- Net Profit After Tax -->
+        <tr class="fw-bold table-success">
+            <td colspan="2" class="text-end">Net Profit After Tax</td>
+            {% for fy in report.fiscal_years %}
+                <td class="text-end">{{ report.net_profit_after_tax|dict_get:fy.id|floatformat:2 }}</td>
+            {% endfor %}
+        </tr>
+
+    </tbody>
+</table>
+
+          </div>
+        </div>
+</div>
+
+
+
+
+
+<script>
+    // Toggle chevron icons
+    document.addEventListener("DOMContentLoaded", function () {
+        document.querySelectorAll(".parent-row").forEach(function (row) {
+            row.addEventListener("click", function () {
+                let icon = row.querySelector(".toggle-icon");
+                if (icon) {
+                    icon.classList.toggle("fa-chevron-right");
+                    icon.classList.toggle("fa-chevron-down");
+                }
+            });
+        });
+    });
+</script>
+{% endblock %}

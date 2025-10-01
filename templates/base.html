@@ -49,8 +49,13 @@
 
 {% endblock %}
 
+
 <style>
 
+
+#mainNav, #socialNav{
+    transition: transform 0.3s ease, top 0.3s ease;
+}
 
     
 /* Import Google Fonts */
@@ -74,10 +79,6 @@
     font-family: inherit !important; /* Make icons follow the text font */
 }
 
-/* Apply font-family to dropdown items */
-.navbar .dropdown-menu .dropdown-item {
-    font-family: "Arial", sans-serif !important; /* Set your desired font */
-}
 
 /* Ensure icons use FontAwesome's font */
 .navbar .dropdown-menu .dropdown-item i {
@@ -85,23 +86,11 @@
     font-weight: 900; /* Ensures solid icons show correctly */
 }
 
-
-.navbar-collapse {
-    background-color: #16213e;  /* or #2c3e50 if you prefer the dropdown shade */
-}
-
-.navbar-collapse .nav-link {
-    color: #ffffff;  /* ensure menu links are readable on dark background */
-}
-
-
-
-
 .dropdown_caret_color{
     color:white
 }
 
-.nav-bar i{
+.nav-bar li{
     color:#0dcaf0
 }
 .navbar li, .navbar a, .navbar ul{
@@ -116,7 +105,7 @@ ul .dropdown-item > i{
 li a {
     line-height: 1.3rem;
     margin: 0 !important;
-    padding: 4px 15px !important; /* Adjust as needed */
+    padding: 4px 10px !important; /* Adjust as needed */
 }
 
 .menu-color{
@@ -126,18 +115,6 @@ li a {
 
     
 
-/* Ensure the main dropdown opens on hover */
-.nav-item.dropdown:hover > .dropdown-menu {
-    display: block;
-    background-color: #2d2d2d; /* Darker gray */
-    color: #ffffff; 
-}
-
-
-
-.navbar-collapse {
-    background-color: #16213e; /* match your navbar */
-}
 
 
 /* Style for the main dropdown */
@@ -150,7 +127,7 @@ li a {
 
 /* Style for dropdown items */
 .navbar .dropdown-menu .dropdown-item {
-    color: white !important; 
+    color: yellow !important; 
     padding: 10px 20px;
     font-size: 15px;
     font-weight: 500;
@@ -224,6 +201,171 @@ li a {
 }
 
 
+.dropdown-submenu > .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -1px;
+}
+
+.dropdown-submenu-left > .dropdown-menu {
+    left: auto;
+    right: 100%; /* Open to the left */
+}
+
+
+
+.navbar-nav .nav-item {
+    margin-right: 0px; 
+}
+
+.navbar-nav .nav-link {
+    padding-left: 0px;
+    padding-right: 0px;
+}
+
+
+
+
+/* Handle submenu positioning */
+.dropdown-submenu {
+    position: relative;
+}
+
+.dropdown-submenu > .dropdown-menu {
+    top: 0;
+    left: 100%;
+    margin-top: -1px;
+}
+
+/* On small screens, keep submenus inside the screen */
+@media (max-width: 768px) {
+    .dropdown-submenu > .dropdown-menu {
+        left: auto;
+        right: 100%;
+    }
+
+    /* Or force submenus to drop below instead of to the right */
+    .dropdown-submenu > .dropdown-menu {
+        position: relative;
+        left: 0;
+        top: 100%;
+        margin-top: 0.2rem;
+        box-shadow: none;
+    }
+}
+
+
+
+
+
+
+
+
+.custom-sidebar {
+    width: 280px;         /* Default for desktop */
+    max-width: 80vw;      /* Limit width on small screens */
+    min-width: 220px;     /* Don't shrink too small */
+    background-color: #0f2235; /* dark navy blue */
+    color: #e9ecef;
+    border-right: 1px solid #1a2d45;
+}
+
+@media (max-width: 576px) {
+    .custom-sidebar {
+        width: 50vw;      /* Responsive width on mobile */
+    }
+}
+
+.custom-sidebar .dropdown-menu {
+    min-width: 250px !important;
+    width: auto !important;
+    white-space: normal;
+
+    background-color: #2c3e50;
+    border: none;
+    border-radius: 8px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    color: white; /* This sets text color for the dropdown container */
+}
+
+/* Specifically target the links inside the submenu */
+.custom-sidebar .dropdown-menu .dropdown-item {
+    color: white;           /* White text */
+}
+
+.custom-sidebar .dropdown-menu .dropdown-item:hover,
+.custom-sidebar .dropdown-menu .dropdown-item:focus {
+    background-color: #34495e;  /* Slightly lighter background on hover/focus */
+    color: white;
+}
+
+
+.nav-link {
+  color: #adb5bd; /* muted text */
+}
+
+.nav-link:hover,
+.nav-link.active {
+  background-color: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+}
+
+.nav-link .text-dark {
+  color: #e9ecef !important;
+}
+
+
+
+.cs-logo {
+  display: block;       /* Removes inline text baseline space */
+  margin: 0 auto;       /* Centers the SVG */
+}
+
+.navbar-brand svg {
+    width: 280px;    /* A fixed width for large screens */
+    max-width: 100%; /* Will not exceed container width */
+    height: auto;
+}
+
+/* Medium screens */
+@media (max-width: 992px) {
+    .navbar-brand svg {
+        width: 250px; /* Slightly smaller */
+    }
+}
+
+/* Small screens */
+@media (max-width: 576px) {
+    .navbar-brand svg {
+        width: 200px;
+    }
+    .navbar-brand svg .cs-bn-text {
+        fill: #fff !important;
+        font-size: 36px;
+    }
+}
+
+
+
+@media (max-width: 768px) {
+    .navbar-brand svg {
+        max-width: 250px;
+    }
+}
+
+
+.navbar-brand {
+    flex: 1 0 auto;
+    overflow: hidden;
+}
+.navbar-brand {
+    padding-right: 0.5rem;
+    padding-left: 0.5rem;
+}
+
+.navbar-brand svg .cs-bn-text { 
+    fill: #fff !important;
+}
 
 
 </style>
@@ -235,55 +377,97 @@ li a {
 <body>
 
 
-<!-- Social Links Navbar -->
 <nav class="navbar navbar-dark social-nav" id="socialNav">
     <div class="container-fluid d-flex justify-content-between align-items-center">
-        <span class="navbar-text">Social Links | Contact Us | Follow Us</span>
-        <form class="d-flex ms-2" method="GET" action="{% url 'accounts:search_all' %}">
-            <select id="id_search" class="form-control" name="q">
-                <option value="">Search...</option>
+        <!-- Left Section -->
+        <div class="d-flex align-items-center d-none d-md-block">
+            <span class="navbar-text ">
+                Social Links | Contact Us | Follow Us
+            </span>
+        </div>
+
+        <!-- Middle Section (Search Form) -->
+        <div class="flex-grow-1 d-none d-md-flex justify-content-center">
+            <form class="d-flex" method="GET" action="{% url 'accounts:search_all' %}">
+                <select id="id_search" class="form-control select2 me-2" name="q">
+                    <option value="">Search...</option>
+                </select>
+                <button class="btn btn-info" type="submit">Search</button>
+            </form>
+        </div>
+
+        <!-- Right Section (Language + Icons) -->
+        <div class="d-flex align-items-center">
+             <form action="" method="post" id="language-form" class="d-flex align-items-center gap-2">
+            {% csrf_token %}
+            <label for="language-select" class="fw-bold ms-3">🌐&nbsp;Language</label>
+            <select name="language" class="form-control" style="max-width:150px; width:100px" id="language-select">
+              
+                <option value="{{ lang.0 }}"{% if lang.0 == LANGUAGE_CODE %} selected{% endif %}
+                style="width:50px">
+                    {{ lang.1 }}
+                </option>
+              
             </select>
-            <button class="btn btn-info" type="submit">Search</button>
         </form>
-        <div class="social-icons">
-            <a href="https://www.facebook.com" target="_blank" class="text-light me-3">
-                <i class="fab fa-facebook-f"></i>
-            </a>
-            <a href="https://www.twitter.com" target="_blank" class="text-light me-3">
-                <i class="fab fa-twitter"></i>
-            </a>
-            <a href="https://www.linkedin.com" target="_blank" class="text-light">
-                <i class="fab fa-linkedin-in"></i>
-            </a>
-            <a href="mailto:contact@yourcompany.com" class="text-light ms-3">
-                <i class="fas fa-envelope"></i> Email Us
-            </a>
+
+            <div class="social-icons d-flex ms-3">
+                <a href="https://www.facebook.com" target="_blank" class="text-light me-2">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="https://www.twitter.com" target="_blank" class="text-light me-2">
+                    <i class="fab fa-twitter"></i>
+                </a>
+                <a href="https://www.linkedin.com" target="_blank" class="text-light me-2">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="mailto:contact@yourcompany.com" class="text-light">
+                    <i class="fas fa-envelope"></i> 
+                </a>
+            </div>
         </div>
     </div>
 </nav>
 
 
+
 <!-- Main Navbar -->
 <nav class="navbar navbar-expand-lg main-nav" id="mainNav">
     <div class="container-fluid">
-        <a class="navbar-brand" href="{% url 'core:dashboard' %}">eCare</a>
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+
+	 <!-- Custom Hamburger Button for side bar -->
+        <button class="btn float-end border border-primary text-primary rounded m-2"
+                style="background-color: white;"
+                data-bs-toggle="offcanvas"
+                data-bs-target="#offcanvas"
+                role="button"
+                aria-label="Toggle Sidebar">
+            &#9776; <!-- Unicode hamburger icon -->
+        </button>
+  
+        <a class="navbar-brand d-flex align-items-center" href="{% url 'core:dashboard' %}">
+             {% include "partials/medisetu.svg" %}
+        </a>
+
+      
+        <button class="navbar-toggler toggle-button" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span class="navbar-toggler-icon"></span>
         </button>
-        <div class="collapse navbar-collapse" id="navbarNav">
+        <div class="collapse navbar-collapse toggle-button" id="navbarNav">
             <ul class="navbar-nav">
                 <!-- notification menue -->
                
                     {% if schema_name != 'public' %}
                     {% if request.user.is_authenticated %}
-                        <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+
+                      <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdownNotification" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 <i class="fas fa-bell {% if unread_notifications|length > 0 %}new-notification{% endif %}"></i>
                                 {% if unread_notifications|length > 0 %}
                                     <span class="badge bg-danger">{{ unread_notifications|length }}</span>
                                 {% endif %}
                             </a>
-                            <ul class="dropdown-menu notification-dropdown" aria-labelledby="navbarDropdown">
+                            <ul class="dropdown-menu notification-dropdown" aria-labelledby="navbarDropdownNotification">
                                 <div class="notification-scroll">
                                     {% for notification in unread_notifications %}
                                         <li class="notification {% if not notification.is_read %}unread{% endif %}">
@@ -295,19 +479,17 @@ li a {
                                         <li><a class="dropdown-item" href="#">No new notifications</a></li>
                                     {% endfor %}
                                 </div>
-                            </li>                       
-                       
-                            </ul>
+                                </ul>
+                            </li>  
+
 
                         {% else %}
                         <li class="nav-item">
                             <a class="nav-link" href="{% url 'accounts:login' %}">Log in</a>
                         </li>
                         {% endif %}
-                        {% endif %}
-                            
-                            
-               
+                        {% endif %}                          
+                                           
                 <!-- notification end -->
 
                 <li class="nav-item dropdown">
@@ -375,26 +557,8 @@ li a {
                       
                        
                     </ul>         
-                </li>
-          
-                <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle dropdown_caret_color"href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                        <i class=" fas fa-user-cog text-info"></i>  &nbsp;<span style="color:gray">Medicine</span>            
-                    </a>                                       
-                      
-                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown" style="max-height: 400px; overflow-y: auto;">
-                        <li><a class="dropdown-item" href="{% url 'inventory:product_list' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Product List </a></li> 
-                        <li><a class="dropdown-item" href="{% url 'inventory:create_category' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Create Category </a></li> 
-                        <li><a class="dropdown-item" href="{% url 'inventory:create_product' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Create Product </a></li>                         
-                        <li><a class="dropdown-item" href="{% url 'inventory:create_batch' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Create Batch product </a></li>    
-                        <li><a class="dropdown-item" href="{% url 'inventory:inventory_transaction_view' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Add stock </a></li>    
-                         <li><a class="dropdown-item" href="{% url 'inventory:create_medicine_sale_only' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Sale Medicine </a></li>
-			 <li><a class="dropdown-item" href="{% url 'inventory:inventory_dashboard' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;View stock </a></li>
-                        <li><a class="dropdown-item" href="{% url 'inventory:pending_medicine_deliveries' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;medcine delivery </a></li>
-                                              
-                    </ul>         
-                </li> 
-
+                </li>         
+                
 
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle dropdown_caret_color"href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
@@ -520,6 +684,127 @@ li a {
 </nav>
      
    
+
+
+<!-- Side bar menu -->
+<div class="offcanvas offcanvas-start custom-sidebar" id="offcanvas" tabindex="-1" data-bs-keyboard="true" data-bs-backdrop="true">
+ <div class="text-center mb-3" style="margin-top:20px;margin-bottom: 20px;">
+    {% include "partials/medisetu.svg" %}
+    </div>
+        <div class="offcanvas-header">           
+            <h6 class="offcanvas-title d-none d-sm-block" id="offcanvas">Menu</h6>
+            <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+
+        <div class="offcanvas-body px-0">
+            <ul class="nav nav-pills flex-column mb-sm-auto mb-0 align-items-start" id="menu">
+                <li class="nav-item"><a href="{% url 'clients:tenant_expire_check' %}" class="nav-link text-truncate"><i class="fs-5 bi-house text-primary"></i><span class="ms-1  text-dark">Home</span></a></li>
+                <li><a href="#submenu1" data-bs-toggle="collapse" class="nav-link text-truncate"><i class="fs-5 bi-speedometer2 text-primary"></i><span class="ms-1  text-dark">Dashboard</span> </a></li>
+                                
+                
+                <li class="dropdown"><a href="#" class="nav-link dropdown-toggle  text-truncate" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false"> 
+                    <i class="fas fa-users text-danger"></i><span class="ms-1 text-success">Core HR</span> </a>
+                    <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdown">
+                          {% if request.user.is_staff %}
+                         <li><hr class="dropdown-divider"style="background-color:gray;"></li> 
+                                <li><a class="dropdown-item" href="{% url 'core:manage_department' %}"><i class="fas fa-user text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Create Department</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:create_position' %}"><i class="fas fa-user text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Create Position</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:create_job_requirement' %}"><i class="fas fa-user-text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Create job requirement</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:create_job_description' %}"><i class="fas fa-user text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Create job_description</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:create_company' %}"><i class="fas fa-user text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Create Company</a></li>
+
+    
+                                <li><hr class="dropdown-divider"style="background-color:gray;"></li> 
+                                <li><hr class="dropdown-divider"style="background-color:gray;"></li>  
+                                
+                                <li><a class="dropdown-item" href="{% url 'core:create_company_policy' %}"><i class="fas fa-user text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Create Company Level Policy</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:create_festival' %}"><i class="fas fa-user text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Create Festival bonus calendar</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:create_performance_bonus' %}"><i class="fas fa-user text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Create Performance Bonus calendar</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:create_salary_structure' %}"><i class="fas fa-user text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Create Salary structure</a></li>
+                                <li><hr class="dropdown-divider"style="background-color:gray;"></li> 
+                                <li><hr class="dropdown-divider"style="background-color:gray;"></li> 
+                                <li><a class="dropdown-item" href="{% url 'core:manage_employee' %}"><i class="fas fa-user text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Employee enrollment</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:employee_list' %}"><i class="fas fa-users text-info"></i><i class="fas fa-tasks text-info"></i>&nbsp;Employee List</a></li>
+                                <li><a class="dropdown-item" href="{% url 'core:view_employee' %}"><i class="fas fa-user text-info"></i><i class="fas fa-credit-card text-info"></i>&nbsp;Employee VCard</a></li>
+    
+                                <li><hr class="dropdown-divider"style="background-color:gray;"></li> 
+                                <li><hr class="dropdown-divider"style="background-color:gray;"></li> 
+                                <li><a class="dropdown-item" href="{% url 'accounts:assign_permissions' %}"><i class="fas fa-user-cog text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;User Permission</a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:assign_user_to_group' %}"><i class="fas fa-user-cog text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Assign user to group</a></li>
+                                <li><a class="dropdown-item" href="{% url 'accounts:assign_permissions_to_group' %}"><i class="fas fa-user-cog text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Assign Permission to Group</a></li>
+                                       
+                                <li><a class="dropdown-item" href="{% url 'core:create_salary' %}"><i class="fas fa-plus-circle text-info"></i>&nbsp;Create salary sheet</a></li>                         
+                                <li><a class="dropdown-item" href=""><i class="fas fa-eye text-info"></i>&nbsp;View attendance</a></li>       
+                                <li><hr class="dropdown-divider"style="background-color:gray;"></li> 
+                                <li><hr class="dropdown-divider"style="background-color:gray;"></li>    
+                          {% endif %}       
+                    </ul>
+                </li>
+
+                <li class="dropdown"><a href="#" class="nav-link dropdown-toggle  text-truncate" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false"> 
+                    <i class="fas fa-users text-success"></i><span class="ms-1 text-success">Leave Management</span> </a>
+                    <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdown">
+                          {% if request.user.is_staff %}
+                          <li><hr class="dropdown-divider"style="background-color:gray;"></li> 
+                                <li><hr class="dropdown-divider"style="background-color:gray;"></li> 
+                                <li><a class="dropdown-item" href="{% url 'leavemanagement:leave_dashboard' %}"><i class="fas fa-user"></i><i class="fas fa-plus-circle"></i>&nbsp;Leave dashboard</a></li>  
+                                <li><a class="dropdown-item" href="{% url 'leavemanagement:create_attendance_policy' %}"><i class="fas fa-user"></i><i class="fas fa-plus-circle"></i>&nbsp;Create attendance policy</a></li>                                                                 
+                                <li><a class="dropdown-item" href="{% url 'leavemanagement:create_leave_type' %}"><i class="fas fa-user"></i><i class="fas fa-plus-circle"></i>&nbsp;Create Leave</a></li>                               
+                                <li><a class="dropdown-item" href="{% url 'leavemanagement:apply_leave' %}"><i class="fas fa-user"></i><i class="fas fa-plus-circle"></i>&nbsp;Apply_leave</a></li>
+                                <li><a class="dropdown-item" href="{% url 'leavemanagement:leave_history' %}"><i class="fas fa-user"></i><i class="fas fa-plus-circle"></i>&nbsp;Leave history</a></li>
+                                <li><a class="dropdown-item" href="{% url 'leavemanagement:pending_leave_list' %}"><i class="fas fa-user"></i><i class="fas fa-plus-circle"></i>&nbsp;Pending Leave</a></li>
+                                <li><a class="dropdown-item" href="{% url 'leavemanagement:carry_forward_leave' %}"><i class="fas fa-user"></i><i class="fas fa-plus-circle"></i>&nbsp;Carry forward Leave</a></li>
+                                <li><a class="dropdown-item" href="{% url 'leavemanagement:leave_summary' %}"><i class="fas fa-user"></i><i class="fas fa-plus-circle"></i>&nbsp;Leave Summary</a></li>
+                                <li><a class="dropdown-item" href="{% url 'leavemanagement:check_and_deduct_late_leaves' %}"><i class="fas fa-user"></i><i class="fas fa-plus-circle"></i>&nbsp;Adjust late in</a></li>
+                               
+                                <li><hr class="dropdown-divider"style="background-color:gray;"></li> 
+                                <li><hr class="dropdown-divider"style="background-color:gray;"></li>    
+                          {% endif %}       
+                    </ul>
+                </li>
+
+                
+              <li class="nav-item dropdown">
+                    <a class="nav-link dropdown-toggle dropdown_caret_color"href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <i class=" fas fa-user-cog text-info"></i>  &nbsp;<span class="text-success">Medicine</span>            
+                    </a>                                       
+                      
+                    <ul class="dropdown-menu" aria-labelledby="navbarDropdown" style="max-height: 400px; overflow-y: auto;">
+                        <li><a class="dropdown-item" href="{% url 'inventory:product_list' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Product List </a></li> 
+                        <li><a class="dropdown-item" href="{% url 'inventory:create_category' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Create Category </a></li> 
+                        <li><a class="dropdown-item" href="{% url 'inventory:create_product' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Create Product </a></li>                         
+                        <li><a class="dropdown-item" href="{% url 'inventory:create_batch' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Create Batch product </a></li>    
+                        <li><a class="dropdown-item" href="{% url 'inventory:inventory_transaction_view' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Add stock </a></li>    
+                         <li><a class="dropdown-item" href="{% url 'inventory:create_medicine_sale_only' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Sale Medicine </a></li>
+			            <li><a class="dropdown-item" href="{% url 'inventory:inventory_dashboard' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;View stock </a></li>
+                        <li><a class="dropdown-item" href="{% url 'inventory:pending_medicine_deliveries' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;medcine delivery </a></li>
+                                              
+                    </ul>         
+                </li> 
+                
+  		        <li class="dropdown"><a href="#" class="nav-link dropdown-toggle  text-truncate" id="dropdown" data-bs-toggle="dropdown" aria-expanded="false"> 
+                    <i class="fas fa-coins text-success"></i><span class="ms-1 text-success">Purchase</span> </a>
+                    <ul class="dropdown-menu text-small shadow" aria-labelledby="dropdown">
+                        <li><a class="dropdown-item" href="{% url 'purchase:create_purchase_request' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Create Purchase Request </a></li>
+                        <li><a class="dropdown-item" href="{% url 'purchase:purchase_request_order_list' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Purchase request order list </a></li> 
+                        <li><a class="dropdown-item" href="{% url 'purchase:rfq_list' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;RFQ List </a></li>
+                        <li><a class="dropdown-item" href="{% url 'purchase:supplier_quotation_list' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Supplier Quotation </a></li>
+                        <li><a class="dropdown-item" href="{% url 'purchase:purchase_order_list' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Purchase Order list </a></li> 
+                         <li><a class="dropdown-item" href="{% url 'inventory:product_list' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Product List </a></li>                         
+                        <li><a class="dropdown-item" href="{% url 'purchase:qc_dashboard' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;QC dashboard</a></li>                        
+                        <li><a class="dropdown-item" href="{% url 'purchase:create_batch' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Create Batch</a></li>   
+			                                                     
+                           
+                    </ul>
+                </li>
+
+                <li><a href="#" class="nav-link text-truncate"> <i class="fs-5 bi-grid"></i><span class="ms-1  text-success">Patients</span></a> </li>
+                <li><a href="#" class="nav-link text-truncate"><i class="fs-5 bi-people"></i><span class="ms-1  text-primary">Doctors</span> </a></li>
+            </ul>
+     </div>
+ </div>
+
+
 
     <div class="container-fluid">    
         {% block content %}

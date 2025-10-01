@@ -1,0 +1,35 @@
+{% extends 'base.html' %}  
+
+{% block content %}
+
+
+
+
+<div class="container-fluid main-content">
+    <div class="row"> 
+        <div class="col-12 col-md-2"></div>
+            <div class="col-12 col-md-8">
+                <h4 class="text-center">Are you sure you want to delete customer location:<span style="color:red"> {{ location.name }}?</span></h4>       
+                <div class="card shadow-lg" style="padding:10px;background-color:azure;">
+                    <div class="card-body">
+                        <h2>Confirm Deletion</h2>
+                            <p>Are you sure you want to delete the location: {{ location.name }}?</p>
+
+                            <form method="POST">
+                                {% csrf_token %}
+                                <button type="submit" class="btn btn-danger">Confirm Delete</button>
+                            </form>
+
+                            <a href="{% url 'customer:create_location' %}" class="btn btn-secondary">Cancel</a>
+
+                     </div>
+                </div>           
+            </div>
+            <div class="col-12 col-md-2"></div>
+    </div>
+</div>
+
+
+
+
+ {% endblock %}

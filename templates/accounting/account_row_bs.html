@@ -1,0 +1,32 @@
+{% load custom_filters %}
+<tr class="parent-row">
+  <td>{{ node.account.code }}</td>
+  <td class="level-{{ node.level|default:0 }}">
+    {% if node.children %}
+      <i class="fas fa-chevron-right me-1 toggle-icon"
+         style="cursor:pointer;"
+         data-bs-toggle="collapse"
+         data-bs-target="#children-{{ node.account.id }}"></i>
+    {% endif %}
+    {{ node.account.name }}
+  </td>
+  {% for fy in fiscal_years %}
+    <td class="text-end">{{ node.total_balances|dict_get:fy.id|floatformat:2 }}</td>
+  {% endfor %}
+</tr>
+
+{% if node.children %}
+<tr>
+  <td colspan="{{ fiscal_years|length|add:'2' }}" class="p-0">
+    <div class="collapse" id="children-{{ node.account.id }}">
+      <table class="table mb-0">
+        <tbody>
+          {% for child in node.children %}
+            {% include "accounting/account_row_bs.html" with node=child fiscal_years=fiscal_years %}
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </td>
+</tr>
+{% endif %}

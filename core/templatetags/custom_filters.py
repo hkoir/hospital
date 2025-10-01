@@ -5,6 +5,51 @@ import ast
 import os
 from num2words import num2words
 
+
+
+
+@register.filter
+def get_balance(balances, key):
+    """Safe get from balances dict"""
+    if not isinstance(balances, dict):
+        return 0
+    return balances.get(key, 0)
+
+
+
+@register.filter
+def ait_per_item(item, sale=None):
+    """Calculate AIT as 10% of the line revenue (ignores proportional allocation)"""
+    total = item.quantity * item.unit_price
+    return (total * Decimal("0.10")).quantize(Decimal("0.01"))
+
+@register.filter
+def concat(a, b):
+    """Concatenate two values as strings"""
+    return f"{a}_{b}"
+
+
+@register.filter
+def profit(item):
+    return (item.unit_price - item.batch.purchase_price) * item.quantity
+
+@register.filter
+def dict_get(d, key):
+    return d.get(key, '')
+
+from django import template
+from django.contrib.contenttypes.models import ContentType
+
+
+@register.filter
+def get_item(dictionary, key):
+    return dictionary.get(key) if dictionary else None
+
+
+
+
+
+
 @register.filter
 def multiply(value, arg):
     try:

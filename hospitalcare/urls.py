@@ -25,7 +25,12 @@ urlpatterns = [
 
     path('messaging/',include('messaging.urls',namespace='messaging')),  
     path('facilities/',include('facilities.urls',namespace='facilities')),  
-     path('finance/',include('finance.urls',namespace='finance')), 
+    path('finance/',include('finance.urls',namespace='finance')), 
+    path('accounting/',include('accounting.urls',namespace='accounting')),  
+    path('purchase/',include('purchase.urls',namespace='purchase')),  
+    path('logistics/',include('logistics.urls',namespace='logistics')),  
+    path('supplier/',include('supplier.urls',namespace='supplier')),  
+    path('product/',include('product.urls',namespace='product')),  
    
     
 ]

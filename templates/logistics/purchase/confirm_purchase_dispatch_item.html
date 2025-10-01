@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+
+
+<div class="container main-content">
+   <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+       
+    </div>
+   
+    <h4 class="text-center mt-4">Confirm Dispatch Order</h4>
+   
+    <p><strong>Supplier:</strong>{{ supplier.name }}</p>
+    {% if dbasket %}
+    <table class="table table-striped">
+         <h4>Items to be dispatched</h4>
+        <thead>
+            <tr>
+               <th>Product</th>
+                <th style="white-space: nowrap;">Quantity</th>
+                <th>Dispatch Date</th>
+                <th>Estimated Delivery Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in dbasket %}
+            <tr>
+               <td style="white-space: nowrap;">{{ item.name }}</td>
+                <td style="white-space: nowrap;">{{ item.quantity }}</td>
+                <td style="white-space: nowrap;">{{ item.dispatch_date }}</td>
+                <td style="white-space: nowrap;">{{ item.delivery_date }}</td>
+                
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <form method="post">
+        {% csrf_token %}
+        <button type="submit" class="btn btn-success">Confirm Dispatch Order</button>
+    </form>
+    {% else %}
+    <p>No items in the basket to confirm purchase.</p>
+    {% endif %}
+</div>
+
+
+
+
+{% endblock %}

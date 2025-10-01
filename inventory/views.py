@@ -10,7 +10,10 @@ from django.core.paginator import Paginator
 from django.http import JsonResponse
 
 from .models import Inventory
-from inventory.models import Batch,Product,ProductCategory
+# from inventory.models import Batch,Product,ProductCategory
+from product.models import Product,Category
+from purchase.models import Batch
+
 from.forms import BatchForm,AddProductForm,AddCategoryForm,CommonFilterForm
 from.forms import ProductSearchForm,InventoryTransactionForm
 
@@ -69,7 +72,7 @@ def manage_category(request, id=None):
         messages.success(request, message_text)
         return redirect('inventory:create_category')
 
-    datas = ProductCategory.objects.all().order_by('-created_at')
+    datas = Category.objects.all().order_by('-created_at')
     paginator = Paginator(datas, 5)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
@@ -85,7 +88,7 @@ def manage_category(request, id=None):
 
 @login_required
 def delete_category(request, id):
-    instance = get_object_or_404(ProductCategory, id=id)
+    instance = get_object_or_404(Category, id=id)
     if request.method == 'POST':
         instance.delete()
         messages.success(request, "Deleted successfully!")
@@ -447,7 +450,183 @@ def deliver_invoice_medicines(request, invoice_id):
     return redirect('inventory:pending_medicine_deliveries')
 
 
+######################################################################
+
+from.models import Warehouse,Location
+from.forms import AddWarehouseForm,AddLocationForm,QualityControlCompletionForm
+from .utils import get_warehouse_stock,calculate_stock_value,calculate_stock_value2
+from .utils import update_purchase_order,update_purchase_request_order,update_shipment_status 
+
+@login_required
+def manage_warehouse(request, id=None):  
+    instance = get_object_or_404(Warehouse, id=id) if id else None
+    message_text = "updated successfully!" if id else "added successfully!"
+    form = AddWarehouseForm(request.POST or None, instance=instance)
+
+    if request.method == 'POST' and form.is_valid():
+        form_instance=form.save(commit=False)
+        form_instance.user=request.user
+        form_instance.save()
+        messages.success(request, message_text)
+        return redirect('inventory:create_warehouse')
+
+    datas = Warehouse.objects.all().order_by('-created_at')
+    paginator = Paginator(datas, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'inventory/manage_inventory/manage_warehouse.html', {
+        'form': form,
+        'instance': instance,
+        'datas': datas,
+        'page_obj': page_obj
+    })
+
+@login_required
+def delete_warehouse(request, id):
+    instance = get_object_or_404(Warehouse, id=id)
+    if request.method == 'POST':
+        instance.delete()
+        messages.success(request, "Deleted successfully!")
+        return redirect('inventory:create_warehouse')
+
+    messages.warning(request, "Invalid delete request!")
+    return redirect('inventory:create_warehouse')
+
+
+
+@login_required
+def manage_location(request, id=None):   
+
+    instance = get_object_or_404(Location, id=id) if id else None
+    message_text = "updated successfully!" if id else "added successfully!"
+    form = AddLocationForm(request.POST or None, instance=instance)
+
+    if request.method == 'POST' and form.is_valid():
+        form_instance = form.save(commit=False)
+        form_instance.user=request.user
+        form_instance.save()
+        messages.success(request, message_text)
+        return redirect('inventory:create_location')
+
+    datas = Location.objects.all().order_by('-created_at')
+    paginator = Paginator(datas, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'inventory/manage_inventory/manage_location.html', {
+        'form': form,
+        'instance': instance,
+        'datas': datas,
+        'page_obj': page_obj
+    })
+
+
+@login_required
+def delete_location(request, id):
+    instance = get_object_or_404(Location, id=id)
+    if request.method == 'POST':
+        instance.delete()
+        messages.success(request, "Deleted successfully!")
+        return redirect('inventory:create_location')
+
+    messages.warning(request, "Invalid delete request!")
+    return redirect('inventory:create_location')
+
+
+@login_required
+def get_locations(request):
+    warehouse_id = request.GET.get('warehouse_id')
+    locations = Location.objects.filter(warehouse_id=warehouse_id)
+
+    options = '<option value="">Select Location</option>'  
+    for location in locations:
+        options += f'<option value="{location.id}">{location.name}</option>'
+    return JsonResponse(options, safe=False)
 
 
 
 
+
+@login_required
+def complete_quality_control(request, qc_id):
+    quality_control = get_object_or_404(QualityControl, id=qc_id)    
+    good_quantity = quality_control.good_quantity
+    purchase_dispatch_item = quality_control.purchase_dispatch_item
+    purchase_shipment = purchase_dispatch_item.purchase_shipment
+    purchase_order = purchase_shipment.purchase_order
+    purchase_request_order = purchase_order.purchase_request_order
+    purchase_order_item = purchase_dispatch_item.dispatch_item
+    batch_fetch = purchase_order_item.batch
+  
+    if request.method == 'POST':
+        selected_warehouse_id = request.POST.get('warehouse')
+        selected_warehouse = Warehouse.objects.get(id=selected_warehouse_id) if selected_warehouse_id else None
+
+        form = QualityControlCompletionForm(request.POST, warehouse=selected_warehouse)
+        if form.is_valid():
+            warehouse = form.cleaned_data['warehouse']
+            location = form.cleaned_data['location']
+           
+            try:
+                with transaction.atomic():
+
+                    inventory_transaction = InventoryTransaction.objects.create(
+                        user=request.user,
+                        warehouse=warehouse,
+                        location=location,
+                        product=quality_control.product,
+                        batch = batch_fetch,
+                        transaction_type='INBOUND',
+                        quantity=good_quantity,
+                        purchase_order=purchase_dispatch_item.dispatch_item.purchase_order
+                    )
+
+                    inventory, created = Inventory.objects.get_or_create(
+                        warehouse=warehouse,
+                        location=location,
+                        product=quality_control.product,
+                        batch = batch_fetch,
+                        user=request.user,
+                        defaults={
+                            'quantity': good_quantity 
+                        }
+                    )
+        
+                    if not created:
+                        inventory.quantity += good_quantity
+                        inventory.save()
+                        messages.success(request, "Inventory updated successfully.")
+                    else:
+                        messages.success(request, "Inventory created successfully.")
+
+                    inventory_transaction.inventory = inventory
+                    inventory_transaction.save()
+                    messages.success(request, "Inventory and inventory_transaction linking created successfully.")
+                    
+
+            except Exception as e: 
+                logger.error("Error creating delivery: %s", e)
+                messages.error(request, f"An error occurred {str(e)}")
+                return redirect('purchase:qc_dashboard')
+                 
+            purchase_dispatch_item.status = 'DELIVERED'
+            purchase_dispatch_item.save()   
+
+            update_purchase_order(purchase_order.id)      
+            update_shipment_status(purchase_shipment.id)
+            update_purchase_request_order(purchase_request_order.id)  
+            purchase_shipment.update_shipment_status()
+       
+            messages.success(request, "Quality control completed and product added to inventory.")
+            return redirect('purchase:qc_dashboard')
+        else:      
+            print(form.errors)    
+            messages.error(request, "Failed to update inventory. Form is not valid.")
+  
+
+    form = QualityControlCompletionForm(initial={'batch':batch_fetch})
+    return render(request, 'inventory/complete_quality_control.html', {
+        'form': form,
+        'quality_control': quality_control,
+    })

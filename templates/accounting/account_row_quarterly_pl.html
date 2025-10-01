@@ -1,0 +1,46 @@
+{% load custom_filters %}
+
+<style>
+.level-0 { padding-left: 0px; }
+.level-1 { padding-left: 20px; }
+.level-2 { padding-left: 40px; }
+.level-3 { padding-left: 60px; }
+/* Add more levels if needed */
+</style>
+
+<tr 
+    {% if node.parent_id %} 
+        class="collapse child-of-{{ node.parent_id }}" 
+    {% endif %}
+>
+    <!-- Serial / Code -->
+    <td>{{ node.account.code }}</td>
+
+    <!-- Account Name with indentation for children -->
+    <td class="account-name level-{{ node.level|default:0 }}">
+        {% if node.children %}
+            <i class="fas fa-chevron-right me-1 toggle-icon"
+               style="cursor:pointer;"
+               data-bs-toggle="collapse"
+               data-bs-target=".child-of-{{ node.account.id }}"></i>
+        {% endif %}
+        {{ node.account.name }}
+    </td>
+
+    <!-- Balances per quarter -->
+    {% for fy in fiscal_years %}
+        {% for q in quarters %}
+            {% with key=fy.id|stringformat:"s"|add:"_"|add:q %}
+                <td class="text-end">{{ node.balances|dict_get:key|floatformat:2 }}</td>
+            {% endwith %}
+        {% endfor %}
+    {% endfor %}
+</tr>
+
+{% if node.children %}
+    {% for child in node.children %}
+        {% with node=child %}
+            {% include "accounting/account_row_quarterly_pl.html" with node=child fiscal_years=fiscal_years quarters=quarters %}
+        {% endwith %}
+    {% endfor %}
+{% endif %}

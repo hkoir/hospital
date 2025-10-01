@@ -100,6 +100,7 @@ class OTBooking(models.Model):
     booked_start = models.DateTimeField(null=True,blank=True)
     booked_end = models.DateTimeField(null=True,blank=True)
     procedure = models.ForeignKey(DoctorServiceRate, on_delete=models.SET_NULL, null=True, blank=True)
+    surgery_type = models.CharField(max_length=100, choices=DoctorServiceRate.SURGERY_TYPE_CHOICES, blank=True, null=True)
     patient_type =  models.CharField(max_length=50,choices=[('IPD','Inpatient'),('OPD','OutPatient'),('Emergency','Emergency')],null=True,blank=True)
     notes = models.TextField(blank=True)
     total_charge = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)

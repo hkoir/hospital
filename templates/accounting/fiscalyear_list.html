@@ -1,0 +1,37 @@
+{% extends "../base.html" %}
+{% load static %}
+{% block title %}Accounting{%endblock %}
+{% block content %}
+<div class="container">
+     
+      <a href="{% url 'accounting:balance_sheet' %}"
+    class="btn btn-sm btn-primary">Balance sheet</a>
+             <a href="{% url 'accounting:balance_sheet_quarterly' %}"
+    class="btn btn-sm btn-primary">Balance sheet Quarterly</a>
+            <a href="{% url 'accounting:trial_balance' %}"
+    class="btn btn-sm btn-primary">Trial balance</a>
+      <a href="{% url 'accounting:profit_loss' %}"
+    class="btn btn-sm btn-primary">Profit & Loss</a>
+                <a href="{% url 'accounting:profit_loss_quarterly' %}"
+    class="btn btn-sm btn-primary">Profit & Loss Quarterly</a>
+
+       <a href="{% url 'accounting:journalentry_create' %}"
+    class="btn btn-sm btn-primary">Journal entry</a>
+          <a href="{% url 'accounting:journalentry_list' %}"
+    class="btn btn-sm btn-primary">Journal entry List</a>
+     <a href="{% url 'accounting:account_create' %}"
+    class="btn btn-sm btn-primary">Add account</a>
+
+        <a href="{% url 'accounting:account_list' %}"
+    class="btn btn-sm btn-primary">Account List</a>
+</div>
+
+
+<h2>Fiscal Years</h2>
+<a href="{% url 'accounting:fiscalyear_create' %}">+ Add Fiscal Year</a>
+<ul>
+  {% for fy in years %}
+    <li>{{ fy }} {% if fy.is_active %}(Active){% endif %}</li>
+  {% endfor %}
+</ul>
+{% endblock %}

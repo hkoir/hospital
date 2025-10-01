@@ -6,32 +6,74 @@
 
 
 <div class="container-fluid main-content">
+    
+     <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+    <a href=" {% url 'inventory:pending_medicine_deliveries' %} "
+    class="btn btn-sm btn-warning">Pending Medicine delivery</a>
+
+    <a href=" {% url 'inventory:inventory_transaction_view' %} "
+    class="btn btn-sm btn-warning">Add/Purchase medicine</a>
+
+        <a href=" {% url 'inventory:product_list' %} "
+    class="btn btn-sm btn-warning">Product list</a>
+
+            <a href=" {% url 'inventory:product_dashboard' %} "
+    class="btn btn-sm btn-warning">Product Dashboard</a>
+
+      <a href=" {% url 'inventory:inventory_dashboard' %} "
+    class="btn btn-sm btn-warning">Inventory dashboard</a>
+
+       <a href=" {% url 'inventory:create_category' %} "
+    class="btn btn-sm btn-primary">add category</a>
+    <a href=" {% url 'inventory:create_product' %} "
+    class="btn btn-sm btn-primary">manage Items</a>
+       <a href=" {% url 'inventory:create_batch' %} "
+    class="btn btn-sm btn-primary">manage Batch</a>
+
+    </div>
+
     <div class="row">        
 
-        <div class="col-12 col-md-4">
+        <div class="col-12">
             <div class="card shadow-lg" style="background-color: aliceblue;">
                 <!-- Card Header -->
                 <div class="card-header bg-primary text-white text-center">
-                    <h3 class="mb-0"> {% if instance %} Update Product {% else %} Add Product {% endif %}</h3>
+                    <h3 class="mb-0">{% if instance %} Update Product {% else %} Add Product {% endif %}</h3>
                 </div> 
+
                 <div class="card-body">                       
-                    <form method="post" enctype="multipart/form-data" action="" id="add_customer">
+                    <form method="post" enctype="multipart/form-data" id="add_customer">
                         {% csrf_token %}
 
-			  {% for field in form %}
-                        <label for="{{ field.id_for_label }}" class="form-label me-2" style="width: 150px;">
-                            {{ field.label }}
-                        </label>
-                        {{ field|add_class:"form-control" }}
-                    {% endfor %}
-                        <div class="d-grid">
-                            <button type="submit" name="customer_submit"value="customer_submit" class="btn btn-primary btn-lg"> {% if instance %} Update {% else %} Add {% endif %}</button>
+                        <div class="row g-3">
+                            {% for field in form %}
+                                <div class="col-6 col-md-2">
+                                    <div class="mb-3">
+                                        <label for="{{ field.id_for_label }}" class="form-label">
+                                            {{ field.label }}
+                                        </label>
+                                        {{ field|add_class:"form-control" }}
+                                        {% if field.errors %}
+                                            <div class="text-danger small">
+                                                {{ field.errors }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+
+                        <div class="d-grid mt-3">
+                            <button type="submit" name="customer_submit" value="customer_submit" class="btn btn-primary btn-lg">
+                                {% if instance %} Update {% else %} Add {% endif %}
+                            </button>
                         </div>
                     </form>
-                 </div>
+                </div>
             </div>           
         </div>
-        <div class="col-12 col-md-8 table-responsive">
+
+        <div class="col-12 table-responsive">
             <table class="table table-hover">
                 <thead class="table-dark">
                     <tr>

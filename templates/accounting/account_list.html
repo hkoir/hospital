@@ -1,0 +1,86 @@
+{% extends "../base.html" %}
+{% load static %}
+
+{% block title %}Accounts{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+      
+      <a href="{% url 'accounting:balance_sheet' %}"
+    class="btn btn-sm btn-primary">Balance sheet</a>
+             <a href="{% url 'accounting:balance_sheet_quarterly' %}"
+    class="btn btn-sm btn-primary">Balance sheet Quarterly</a>
+            <a href="{% url 'accounting:trial_balance' %}"
+    class="btn btn-sm btn-primary">Trial balance</a>
+      <a href="{% url 'accounting:profit_loss' %}"
+    class="btn btn-sm btn-primary">Profit & Loss</a>
+                <a href="{% url 'accounting:profit_loss_quarterly' %}"
+    class="btn btn-sm btn-primary">Profit & Loss Quarterly</a>
+
+       <a href="{% url 'accounting:journalentry_create' %}"
+    class="btn btn-sm btn-primary">Journal entry</a>
+          <a href="{% url 'accounting:journalentry_list' %}"
+    class="btn btn-sm btn-primary">Journal entry List</a>
+     <a href="{% url 'accounting:account_create' %}"
+    class="btn btn-sm btn-primary">Add account</a>
+
+        <a href="{% url 'accounting:account_list' %}"
+    class="btn btn-sm btn-primary">Account List</a>
+
+  <!-- Header -->
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="fw-bold mb-0">Accounts</h2>
+    <a href="{% url 'accounting:account_create' %}" class="btn btn-success shadow-sm">
+      <i class="fas fa-plus me-1"></i> Add Account
+    </a>
+  </div>
+
+  <!-- Accounts Table -->
+  <div class="card shadow-sm border-0">
+    <div class="card-body p-0">
+      <div class="table-responsive">
+      <table class="table table-hover mb-0">
+        <thead class="table-light">
+          <tr>
+            <th scope="col">#</th>
+            <th scope="col">Code</th>
+            <th scope="col">Name</th>
+            <th scope="col">Type</th>
+            <th scope="col" class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for acc in accounts %}
+          <tr>
+            <td>{{ forloop.counter }}</td>
+            <td>{{ acc.code }}</td>
+            <td>{{ acc.name }}</td>
+            <td>
+              <span class="badge bg-info text-dark">{{ acc.type }}</span>
+            </td>
+            <td class="text-end">
+              <a href=" class="btn btn-sm btn-outline-primary me-1">
+                <i class="fas fa-edit"></i>
+              </a>
+              <a href="" 
+                 class="btn btn-sm btn-outline-danger"
+                 onclick="return confirm('Are you sure you want to delete this account?');">
+                <i class="fas fa-trash"></i>
+              </a>
+            </td>
+          </tr>
+          {% empty %}
+          <tr>
+            <td colspan="5" class="text-center text-muted py-3">
+              No accounts available.
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

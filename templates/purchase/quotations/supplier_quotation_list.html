@@ -1,0 +1,70 @@
+{% extends 'base.html' %}
+{% block content %}
+
+<div class="container-fluid">  
+
+    <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+         <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:rfq_list' %}" class="btn btn-sm btn-success">RFQ List</a>     
+        <a href="{% url 'purchase:supplier_quotation_list' %}" class="btn btn-sm btn-success">Supplier Quotation List</a>   
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+         <a href="{% url 'purchase:batch_list' %}" class="btn btn-sm btn-success">Batch List</a>
+    
+    </div>
+      <div class="row">
+        <h2>Supplier Quotations</h2>
+        <div class="col table-responsive">  
+            <table class="table table-striped table-bordered">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Quotation Number</th>
+                        <th>Supplier</th>
+                        <th>Date</th>
+                        <th>Valid Until</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for quotation in quotations %}
+                    <tr>
+                        <td>{{ quotation.quotation_number }}</td>
+                        <td>{{ quotation.supplier }}</td>
+                        <td>{{ quotation.date }}</td>
+                        <td>{{ quotation.valid_until }}</td>
+                        <td>{{ quotation.get_status_display }}</td>
+                        <td>
+                            <a href="{% url 'purchase:supplier_quotation_detail' quotation.pk %}" class="btn btn-info btn-sm">View</a>
+                                {% if quotation.status == "draft" %}
+                                <a href="{% url 'purchase:send_supplier_quotation' quotation.pk %}" class="btn btn-warning btn-sm">Send</a>
+                            {% endif %}
+
+                            {% if quotation.status in "draft sent" %}
+                                <a href="{% url 'purchase:approve_supplier_quotation' quotation.pk %}" class="btn btn-success btn-sm">Approve</a>
+                                <a href="{% url 'purchase:reject_supplier_quotation' quotation.pk %}" class="btn btn-danger btn-sm">Reject</a>
+                            {% endif %}
+
+                        </td>
+                        
+
+
+
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center">No supplier quotations found.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+                 
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}

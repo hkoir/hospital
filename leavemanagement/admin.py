@@ -1,6 +1,6 @@
 from django.contrib import admin
 from.models import EmployeeLeaveBalance,LeaveApplication,Shift,RosterSchedule,AttendanceModel
-from.models import LatePolicy
+from.models import LatePolicy,LeaveType
 
 admin.site.register(AttendanceModel)
 
@@ -11,3 +11,4 @@ admin.site.register(LeaveApplication)
 admin.site.register(Shift)
 admin.site.register(RosterSchedule)
 admin.site.register(LatePolicy)
+admin.site.register(LeaveType)

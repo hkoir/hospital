@@ -1,0 +1,94 @@
+{% extends "../base.html" %}
+{% load custom_filters %}
+{% block title %}Corporate Balance Sheet{% endblock %}
+
+{% block content %}
+<div class="container mt-4">  
+    
+      <a href="{% url 'accounting:balance_sheet' %}"
+    class="btn btn-sm btn-primary">Balance sheet</a>
+             <a href="{% url 'accounting:balance_sheet_quarterly' %}"
+    class="btn btn-sm btn-primary">Balance sheet Quarterly</a>
+            <a href="{% url 'accounting:trial_balance' %}"
+    class="btn btn-sm btn-primary">Trial balance</a>
+      <a href="{% url 'accounting:profit_loss' %}"
+    class="btn btn-sm btn-primary">Profit & Loss</a>
+                <a href="{% url 'accounting:profit_loss_quarterly' %}"
+    class="btn btn-sm btn-primary">Profit & Loss Quarterly</a>
+
+       <a href="{% url 'accounting:journalentry_create' %}"
+    class="btn btn-sm btn-primary">Journal entry</a>
+          <a href="{% url 'accounting:journalentry_list' %}"
+    class="btn btn-sm btn-primary">Journal entry List</a>
+     <a href="{% url 'accounting:account_create' %}"
+    class="btn btn-sm btn-primary">Add account</a>
+
+        <a href="{% url 'accounting:account_list' %}"
+    class="btn btn-sm btn-primary">Account List</a>
+
+
+{% load custom_filters %}
+<h2 class="my-4">Balance Sheet</h2>
+<div class="row">
+  <div class="table-responsive">
+    <table class="table table-bordered table-striped table-sm">
+      <thead class="table-dark">
+        <tr>
+          <th>Account code</th>
+          <th>Account</th>
+          {% for fy in fiscal_years %}
+            <th class="text-end">{{ fy.year_start.year }}-{{ fy.year_end.year }}</th>
+          {% endfor %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for node in report_tree %}
+          {% include "accounting/account_row_bs.html" with node=node fiscal_years=fiscal_years %}
+        {% endfor %}
+
+        <!-- Totals -->
+        <tr class="fw-bold table-dark">
+          <td colspan="2" class="text-end">Total Assets</td>
+          {% for fy in fiscal_years %}
+            <td class="text-end">{{ total_assets|dict_get:fy.id|floatformat:2 }}</td>
+          {% endfor %}
+        </tr>
+
+        <tr class="fw-bold table-dark">
+          <td colspan="2" class="text-end">Total Liabilities</td>
+          {% for fy in fiscal_years %}
+            <td class="text-end">{{ total_liabilities|dict_get:fy.id|floatformat:2 }}</td>
+          {% endfor %}
+        </tr>
+
+        <tr class="fw-bold table-success">
+          <td colspan="2" class="text-end">Net Profit / Retained Earnings</td>
+          {% for fy in fiscal_years %}
+            <td class="text-end">{{ net_profit|dict_get:fy.id|floatformat:2 }}</td>
+          {% endfor %}
+        </tr>
+
+        <tr class="fw-bold table-dark">
+          <td colspan="2" class="text-end">Total Liabilities & Equity</td>
+          {% for fy in fiscal_years %}
+            <td class="text-end">{{ total_liabilities_equity|dict_get:fy.id|floatformat:2 }}</td>
+          {% endfor %}
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<script>
+  // Toggle collapse chevrons
+  document.addEventListener("DOMContentLoaded", function () {
+    document.querySelectorAll(".parent-row .toggle-icon").forEach(function (icon) {
+      icon.addEventListener("click", function () {
+        this.classList.toggle("fa-chevron-right");
+        this.classList.toggle("fa-chevron-down");
+      });
+    });
+  });
+</script>
+
+{% endblock %}

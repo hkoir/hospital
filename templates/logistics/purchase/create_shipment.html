@@ -1,0 +1,59 @@
+{% extends 'base.html' %}
+{% load custom_filters %}
+{% block content %}
+
+
+<div class="container my-5">
+   <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+        
+    </div>
+   
+
+  <div class="card shadow-lg mt-4">
+    <div class="card-header bg-primary text-white text-center">
+      <h3>Create Shipment for PO number: {{ purchase_order }}</h3>
+    </div>
+    <div class="card-body">
+      <form method="post" novalidate>
+        {% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6">
+            {{ form.carrier.label_tag }}
+            {{ form.carrier|add_class:"form-control" }}
+            {% if form.carrier.errors %}
+              <div class="text-danger">{{ form.carrier.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-6">
+            {{ form.tracking_number.label_tag }}
+            {{ form.tracking_number|add_class:"form-control" }}
+            {% if form.tracking_number.errors %}
+              <div class="text-danger">{{ form.tracking_number.errors.0 }}</div>
+            {% endif %}
+          </div>
+          <div class="col-md-6">
+            {{ form.estimated_delivery.label_tag }}
+            {{ form.estimated_delivery|add_class:"form-control" }}
+          </div>
+          <div class="col-md-6">
+            {{ form.total_amount.label_tag }}
+            {{ form.total_amount|add_class:"form-control" }}
+          </div>
+          <div class="col-md-12">
+            {{ form.status.label_tag }}
+            {{ form.status|add_class:"form-select" }}
+          </div>
+        </div>
+        <div class="d-grid mt-4">
+          <button type="submit" class="btn btn-primary btn-lg">Create Shipment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

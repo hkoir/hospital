@@ -1,0 +1,152 @@
+{% extends "base_print.html" %}
+{% load static %}
+
+{% block content %}
+<style>
+    @media print {
+        body {
+            margin: 0;
+            padding: 0;
+        }
+        .label {
+            page-break-inside: avoid;
+        }
+        .print-btn {
+            display: none;
+        }
+    }
+
+    .labels-container {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        justify-content: center;
+    }
+
+    .label {
+        border: 1px solid #ddd;
+        border-radius: 6px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        padding: 8px;
+        width: 190px;
+        height: 160px;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        background: #fff;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        text-align: center;
+    }
+
+    .label-header {
+        font-weight: bold;
+        font-size: 13px;
+        margin-bottom: 4px;
+    }
+
+.label-body {
+    display: flex;
+    justify-content: center;   /* center the items horizontally */
+    align-items: center;
+    gap: 10px;                 /* space between barcode and QR code */
+    margin-bottom: 6px;
+    padding: 0 8px;            /* add horizontal padding inside label */
+}
+
+    .label-body img {
+        object-fit: contain;
+    }
+
+    .barcode {
+        width: 120px;
+        height: 40px;
+    }
+
+    .qrcode {
+        width: 50px;
+        height: 50px;
+        border: 1px solid #ccc;
+        padding: 2px;
+        background: white;
+    }
+
+    .label-footer {
+        font-size: 11px;
+        margin-top: 2px;
+    }
+
+    .print-btn {
+        margin: 20px;
+        padding: 10px 20px;
+        background: #007bff;
+        color: #fff;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .quantity-form {
+        margin: 20px 0;
+        text-align: center;
+    }
+    .quantity-form input {
+        width: 80px;
+        margin-left: 10px;
+        margin-right: 10px;
+    }
+</style>
+
+ 
+     
+
+<div class="quantity-form">
+    <form method="post">
+        {% csrf_token %}
+        <label for="quantity">Number of labels to print:</label>
+        <input type="number" id="quantity" name="quantity" min="1" max="{{ max_quantity }}" value="{{ units|length }}">
+        <button type="submit" class="btn btn-primary btn-sm">Update</button>
+    </form>
+</div>
+
+{% if units %}
+<div class="labels-container">
+    {% for unit in units %}
+    <div class="label">
+        <div class="label-header">{{ batch.product.name|default:"Product" }}</div>
+        <div class="label-body">
+            {% if batch.barcode_image %}
+                <img src="{{ batch.barcode_image.url }}" alt="Barcode" class="barcode">
+            {% else %}
+                <span class="text-danger">No Barcode</span>
+            {% endif %}
+
+            {% if batch.qr_code_image %}
+                <img src="{{ batch.qr_code_image.url }}" alt="QR Code" class="qrcode">
+            {% else %}
+                <span class="text-danger">No QR Code</span>
+            {% endif %}
+        </div>
+        <div class="label-footer">
+            Serial: {{ unit.serial_number }}<br>
+            Exp: {{ unit.expiry_date|date:"M d, Y" }}
+        </div>
+    </div>
+    {% endfor %}
+</div>
+
+<div class="text-center mt-4">
+    <button onclick="window.print()" class="print-btn">Print Labels</button>
+    <a href="{% url 'purchase:batch_list' %}" class="btn btn-sm btn-success">Batch List</a>  
+</div>
+{% else %}
+<div class="text-center my-4">
+    <h2>No barcode/QR code has been generated for this batch.</h2>
+    <p>You can generate them manually now.</p>
+    <a href="{% url 'purchase:generate_batch_codes' batch.id %}" class="btn btn-success">
+        Generate Barcodes & QR Codes
+    </a>
+</div>
+{% endif %}
+
+{% endblock %}

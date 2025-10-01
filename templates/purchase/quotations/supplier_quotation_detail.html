@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+
+<div class="container mt-4">
+    <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+         <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:rfq_list' %}" class="btn btn-sm btn-success">RFQ List</a>     
+        <a href="{% url 'purchase:supplier_quotation_list' %}" class="btn btn-sm btn-success">Supplier Quotation List</a>   
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+         <a href="{% url 'purchase:batch_list' %}" class="btn btn-sm btn-success">Batch List</a>
+    
+    </div>
+
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2>Supplier Quotation #{{ quotation.quotation_number }}</h2>
+        {% if request.user.is_staff %}
+        <a href="{% url 'purchase:convert_supplier_quotation' quotation.id %}"
+           class="btn btn-primary"
+           onclick="return confirm('Convert this quotation to a Purchase Order?')">
+            Convert to Purchase Order
+        </a>
+        {% endif %}
+    </div>
+
+    <div class="card mb-3">
+        <div class="card-body">
+            <p>
+            <strong>Supplier:</strong> {{ quotation.supplier.name }}<br>
+            <strong>Quotation Date:</strong> {{ quotation.date }}<br>
+            <strong>Valid Until:</strong> {{ quotation.valid_until }}<br>
+            <strong>Total Amount:</strong> {{ quotation.total_amount|add_commas }}<br>
+            <strong>Status:</strong> {{ quotation.status }}<br>
+            <strong>Remarks:</strong> {{ quotation.notes|default:"-" }}
+            </p>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">Quotation Items</div>
+        <div class="card-body p-0">
+            <table class="table table-bordered mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th>Product</th>
+                        <th>Quantity</th>
+                        <th>Unit Price</th>
+                         <th>VAT rate</th>
+                        <th>VAT status</th>
+                        <th>AIT status</th>                     
+                        <th>Line Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in quotation.purchase_quotation_items.all %}
+                    <tr>
+                        <td>{{ item.product.name }}</td>
+                        <td>{{ item.quantity }}</td>
+                        <td>{{ item.unit_price }}</td>
+                        <td>{{ item.vat_percentage}}&nbsp;%</td>
+                        <td>{{ item.vat_status }}</td>
+                        <td>{{ item.ait_status }}</td>
+                        <td>{{ item.quantity|floatformat:2|default:0|multiply:item.unit_price|add_commas }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center text-muted">No items</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+</div>
+{% endblock %}

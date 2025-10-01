@@ -1,0 +1,184 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+
+
+<div class="container-fluid main-content">
+    <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+         <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:rfq_list' %}" class="btn btn-sm btn-success">RFQ List</a>     
+        <a href="{% url 'purchase:supplier_quotation_list' %}" class="btn btn-sm btn-success">Supplier Quotation List</a>   
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+         <a href="{% url 'purchase:batch_list' %}" class="btn btn-sm btn-success">Batch List</a>
+    
+    </div>
+   
+
+    <div class="row mt-4">
+       <div class="col-12">
+    <div class="card shadow-lg" style="background-color: aliceblue;">
+        <!-- Card Header -->
+        <div class="card-header bg-primary text-white text-center">
+            <h3 class="mb-0">{% if instance %} Update Batch {% else %} Create Batch {% endif %}</h3>
+        </div>
+
+        <form method="POST" enctype="multipart/form-data" class="p-4">
+            {% csrf_token %}
+            
+            <div class="row">
+                {% for field in form %}
+                    <div class="col-6 col-md-3">
+                        {{ field.label_tag }}
+                        {{ field|add_class:"form-control" }}
+                        {% if field.help_text %}
+                            <small class="form-text text-muted">{{ field.help_text }}</small>
+                        {% endif %}
+                        {% for error in field.errors %}
+                            <div class="text-danger">{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endfor %}
+            </div>
+
+            <div class="d-grid mt-4">
+                <button type="submit" class="btn btn-primary">
+                    {% if instance %} Update {% else %} Create{% endif %}
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+        <div class="col-12 table-responsive">
+            <table class="table table-hover">
+                <thead class="table-dark">
+                    <tr>
+                        <th class="text-center p-2">Batch Number</th>
+                        <th class="text-center p-2">Product</th>   
+                        <th>Product Type</th>                    
+                        <th class="text-center p-2">Manufacturing Date</th>
+
+                        <th class="text-center p-2">Expire date</th>
+                        <th class="text-center p-2">Quantity</th>
+                        <th class="text-center p-2">unit price</th>                       
+                        <th class="text-center p-2">remaining quantity</th>
+
+                        <th class="text-center p-2">Action</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for data in page_obj %}
+                        <tr>
+
+                           
+                            <td class="text-center p-2" style="white-space: nowrap;">{{data.batch_number}}</td>                            
+                            <td class="text-center p-2" style="white-space: nowrap;">{{data.product}}</td>
+                            <td>{{ data.product_type }}</td>
+                            <td class="text-center p-2" style="white-space: nowrap;">{{data.manufacture_date}}</td>
+
+                            <td class="text-center p-2" style="white-space: nowrap;">{{data.expiry_date}}</td>                            
+                            <td class="text-center p-2" style="white-space: nowrap;">{{data.quantity}}</td>
+                            <td class="text-center p-2" style="white-space: nowrap;">{{data.unit_price}}</td>
+                            <td class="text-center p-2" style="white-space: nowrap;">{{data.remaining_quantity}}</td>
+                           
+                           
+                            <td class="text-center">
+                                <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-info">Add</a>
+                                <a href="{% url 'purchase:update_batch' data.id %}" class="btn btn-sm btn-info">Edit</a>
+                               
+                                <a href="#" 
+                                    class="btn btn-danger btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#deleteModal" 
+                                    data-id="{{ data.id }}" 
+                                    data-name="{{ data.batch_number }}">
+                                        Delete
+                                    </a>
+
+                                    <a href="{% url 'product:print_unit_labels' data.id %}">Print unit labels</a>
+                               
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="5" class="text-center">No records available.</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                
+            </table>
+                    
+            <!-- Pagination Controls -->
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+
+
+             <!-- Delete Confirmation Modal -->
+             <div class="modal fade" id="deleteModal" tabindex="-1" aria-labelledby="deleteModalLabel" aria-hidden="true">
+                <div class="modal-dialog">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="deleteModalLabel">Confirm Delete</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body">
+                            Are you sure you want to delete the transport record: <strong id="modal-entity-name"></strong>?
+                        </div>
+                        <div class="modal-footer">
+                            <form method="post" id="delete-form">
+                                {% csrf_token %}
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                <button type="submit" class="btn btn-danger">Yes, Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <h4 style="height:10px"></h4>
+    
+</div>
+
+
+
+<script>
+    const deleteModal = document.getElementById('deleteModal');
+    deleteModal.addEventListener('show.bs.modal', function (event) {
+        const button = event.relatedTarget; 
+        const entityId = button.getAttribute('data-id');
+        const entityName = button.getAttribute('data-name');
+
+          const modalEntityName = deleteModal.querySelector('#modal-entity-name');
+        modalEntityName.textContent = entityName;
+  
+        const deleteForm = deleteModal.querySelector('#delete-form');
+        deleteForm.action = `/purchase/delete_batch/${entityId}/`;
+    });
+</script>
+
+
+
+
+{% endblock %}

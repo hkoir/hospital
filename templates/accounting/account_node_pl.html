@@ -1,0 +1,43 @@
+{% load custom_filters %}
+<tr>
+    <!-- Account Code -->
+    <td>{{ node.account.code }}</td>
+
+    <!-- Account Name with collapsible toggle -->
+    <td class="level-{{ node.level|default:0 }}">
+        {% if node.children %}
+            <i class="fas fa-chevron-right me-1 toggle-icon"
+               style="cursor:pointer;"
+               data-bs-toggle="collapse"
+               data-bs-target="#children-{{ node.account.id }}"></i>
+        {% endif %}
+        <a href="{% url 'accounting:ledger' node.account.id %}" style="text-decoration:none;">
+            {{ node.account.name }}
+        </a>
+    </td>
+
+    <!-- Show total balance for parent, direct balance for children -->
+    {% for fy in report.fiscal_years %}
+        {% if node.children %}
+            <td class="text-end">{{ node.total_balances|dict_get:fy.id|floatformat:2 }}</td>
+        {% else %}
+            <td class="text-end">{{ node.balances|dict_get:fy.id|floatformat:2 }}</td>
+        {% endif %}
+    {% endfor %}
+</tr>
+
+{% if node.children %}
+<tr>
+    <td colspan="{{ report.fiscal_years|length|add:'2' }}" class="p-0">
+        <div class="collapse" id="children-{{ node.account.id }}">
+            <table class="table mb-0">
+                <tbody>
+                    {% for child in node.children %}
+                        {% include "accounting/account_node_pl.html" with node=child prefix=prefix report=report %}
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </td>
+</tr>
+{% endif %}

@@ -1,0 +1,165 @@
+{% extends 'base.html' %}  
+{% load custom_filters %} 
+{% block content %}
+
+
+
+
+
+
+<div class="container-fluid main-content">
+    <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-success">Request Order List</a>
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-success">Purchase Order List</a>
+        <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-success">Request for Purchase</a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-success">Create Batch</a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-success">Purchase Shipment</a>
+        
+    </div>
+   
+
+    <div class="row mt-4">
+        <h4>Dispatch Items for Purchase Order: {{ purchase_order.order_id }}</h4>
+
+            <div class="col-12">              
+                <div class="container fluid">
+                    <div class="row">                        
+                        <div class="col-12 col-md-4">
+                            <table class="table table-hover">
+                                <thead class="table-dark">
+                                    <h5 style="color:green;font-weight: bolder;">Summary</h5>
+                                    <tr>
+                                        <th>#</th>
+                                        <th>Product Name</th>
+                                        <th>Order Quantity</th>
+                                        <th>Dispatch Quantity</th>
+                                        <th>Good Quantity</th>
+                                        <th>Bad Quantity</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for product_name, totals in product_wise_totals.items %}
+                                        <tr>
+                                            <td>{{ forloop.counter }}</td>
+                                            <td>{{ product_name }}</td>
+                                            <td>{{ totals.order_quantity }}</td>
+                                            <td>{{ totals.dispatch_quantity }}</td>
+                                            <td>{{ totals.good_quantity }}</td>
+                                            <td>{{ totals.bad_quantity }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                                
+                            </table>
+                        </div>
+                        <div class="col-12 col-md-4"></div>
+                        <div class="col-12 col-md-4"></div>
+                    </div>
+                </div>
+               
+            </div>
+
+            <div class="col-12 mt-4">
+                <table class="table table-hover">
+                    <thead class="table-dark">
+                        <tr>
+                            <th rowspan="2" style="width: 5%;">#</th>
+                            <th rowspan="2" style="width: 15%;">Item Name</th>
+                            <th rowspan="2" style="color:yellow;font-weight: bold; width: 10%;">Order Qty</th>
+                            <th rowspan="2" style="color:green;font-weight: bold; width: 10%;">Dispatch Qty</th>
+                            <th rowspan="2" style="color:yellow;font-weight: bold; width: 15%;">Committed Delivery</th>
+                            <th rowspan="2" style="color:green;font-weight: bold; width: 15%;">Actual Delivery</th>
+                            <th rowspan="2" style="width: 10%;">Delivery Status</th>
+                            <th rowspan="2" style="width: 20%;">Next Action</th>
+                            <th rowspan="2" style="width: 10%;">Cancel</th>
+                            <th colspan="2" style="color:yellow;font-weight: bold; width: 15%;">Quality Control</th>
+                        </tr>
+                        <tr>
+                            <th>Good Quantity</th>
+                            <th>Bad Quantity</th>
+                        </tr>
+                    </thead>
+            
+                    <tbody>
+                        {% for shipment, dispatch_items in shipments.items %}
+                            <h6> Shipment ID: {{ shipment.shipment_id }} : status: <b style="color:green;font-weight: bold;">{{ shipment.status }}</b></h6>
+                            {% for dispatch_item in dispatch_items %}
+                                <tr>
+                                    <td>{{ forloop.counter }}</td>
+                                    <td>{{ dispatch_item.dispatch_item.product.name }}</td>
+                                    <td>{{ dispatch_item.dispatch_item.quantity }}</td>
+                                    <td>{{ dispatch_item.dispatch_quantity }}</td>
+                                    <td>{{ dispatch_item.delivery_date }}</td>
+                                    <td>
+                                        {% if dispatch_item.status|item_list:"REACHED,OBI,DELIVERED" %}
+                                            {{ dispatch_item.updated_at|date:"M-d,Y" }}
+                                        {% else %}
+                                            <span style="color:brown;font-weight: bold;">Not Arrived</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ dispatch_item.get_status_display }}</td>
+                                    <td>
+                                        <form action="{% url 'logistics:update_dispatch_status' dispatch_item.id %}" method="post">
+                                            {% csrf_token %}
+                                            <div class="d-flex align-items-center">
+                                                <select name="new_status" class="form-select me-2" style="width: 60%;">
+                                                   
+                                                    {% if dispatch_item.status == 'IN_PROCESS' %}
+                                                        <option value="ON_BOARD">On Board</option>
+                                                    {% elif dispatch_item.status == 'ON_BOARD' %}
+                                                        <option value="IN_TRANSIT">In Transit</option>
+                                                    {% elif dispatch_item.status == 'IN_TRANSIT' %}
+                                                        <option value="CUSTOM_CLEARANCE_IN_PROCESS">Custom Clearance In Process</option>
+                                                    {% elif dispatch_item.status == "CUSTOM_CLEARANCE_IN_PROCESS" %}
+                                                        <option value="REACHED">Reached</option>   
+                                                    {% elif dispatch_item.status == "OBI" %}
+                                                        <option value="OBI">OBI</option>                                                                                           
+                                                    {% else %}
+                                                        <option value = 'COMPLETED'>Completed</option>
+                                                    {% endif %}
+                                                </select>
+                                                <button type="submit" class="btn btn-primary btn-sm">Update</button>
+                                            </div>
+                                        </form>
+                                    </td>
+                                    <td>
+                                        {% if dispatch_item.status|item_list:"REACHED,OBI,DELIVERED,ONBOARD,CUSTOM_CLEARANCE_IN_PROCESS"|yesno:"true,false" %}
+                                        <i class="fas fa-times" style="color:red;font-weight: bold;"></i>
+                                        {% else %}
+                                        <a href="{% url 'logistics:cancel_dispatch_item' dispatch_item.id %}" class="btn btn-sm btn-danger">Cancel</a>
+                                        {% endif %}
+                                    </td>
+                                     <td>
+                                    {% with qc_item=qc_quantities|get_item:dispatch_item.id %}
+                                        {% if qc_item %}
+                                            {{ qc_item|get_item:"good_quantity"|default:0 }}
+                                        {% else %}
+                                            <span>QC Pending</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+
+                                  <td>
+                                    {% with qc_item=qc_quantities|get_item:dispatch_item.id %}
+                                        {% if qc_item %}
+                                            {{ qc_item|get_item:"bad_quantity"|default:0 }}
+                                        {% else %}
+                                            <span>QC Pending</span>
+                                        {% endif %}
+                                    {% endwith %}
+                                </td>
+
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+    </div>
+</div>
+
+
+
+
+{% endblock %}

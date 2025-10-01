@@ -266,7 +266,7 @@ def apply_leave(request):
             start_date = form.cleaned_data['applied_start_date']
             end_date = form.cleaned_data['applied_end_date']
             leave_application = form.save(commit=False)
-            employee = Employee.objects.filter(user_profile=request.user.user_profile).first()                    
+            employee = Employee.objects.filter(user=request.user).first()                 
             if not employee:
                 messages.error(request, 'Employee record not found!')
                 return redirect('leavemanagement:leave_history')
@@ -298,7 +298,7 @@ def leave_history(request):
     employee=None
     try:
         user_profile = request.user.user_profile
-        employee = Employee.objects.get(user_profile=user_profile)
+        employee = Employee.objects.get(user=request.user)
         leave_applications = LeaveApplication.objects.filter(employee=employee).select_related('leave_type')
         leave_balances = EmployeeLeaveBalance.objects.filter(employee=employee).select_related('leave_type')
 
@@ -344,7 +344,7 @@ def leave_summary(request):
     try:
         current_year = timezone.now().year
         user_profile = request.user.user_profile
-        employee = Employee.objects.get(user_profile=user_profile)
+        employee = Employee.objects.get(user=request.user)
         leave_balances = EmployeeLeaveBalance.objects.filter(employee=employee)     
         availed_leaves = LeaveApplication.objects.filter(
             employee=employee,
@@ -563,14 +563,20 @@ def has_compensated_hours_exclude_holiday(employee, records):
         return total_work_hours >= required_work_hours * len(records)
     return True  # Fixed-hour employees don’t need total work hours check
 
-from datetime import date, timedelta
-from django.db.models import Q
+
+
 
 def combined_check_lates_or_earlyouts(employee, is_late=True):
     today = date.today()
-    policy = LatePolicy.objects.first()  
+    policy = LatePolicy.objects.first()
 
-    # Set thresholds for leave and salary deductions
+    if not policy:
+        return {
+            "error": "Late policy is not defined in the system.",
+            "salary_violation": False,
+            "leave_violation": False,
+        }
+
     monthly_leave_deduct_threshold = (
         policy.max_monthly_late_in_before_leave_deduction if is_late 
         else policy.max_monthly_early_out_before_leave_deduction
@@ -579,7 +585,6 @@ def combined_check_lates_or_earlyouts(employee, is_late=True):
         policy.max_monthly_lates_in_before_salary_deduction if is_late 
         else policy.max_monthly_early_out_before_salary_deduction
     )
-
     max_consecutive_deduction = (
         policy.max_consecutive_late_in_before_leave_deduction if is_late 
         else policy.max_consecutive_early_out_before_leave_deduction
@@ -590,7 +595,7 @@ def combined_check_lates_or_earlyouts(employee, is_late=True):
     )
 
     result = {
-        "salary_violation": False, 
+        "salary_violation": False,
         "leave_violation": False
     }
 

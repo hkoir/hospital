@@ -2,7 +2,7 @@
 from django import forms
 from facilities.models import OTBooking
 from .models import MedicineBill,MiscellaneousBill,OTBill,WardBill,EmergencyVisit
-from .models import ConsultationBill,LabTestBill,BillingInvoice,Payment
+from .models import ConsultationBill,LabTestBill,BillingInvoice,Payment,DoctorServiceRate
 
 
 class ConsultationBillForm(forms.ModelForm):
@@ -77,9 +77,13 @@ class MiscBillForm(forms.ModelForm):
 
 
 class OTBookingForm(forms.ModelForm):
+    procedure = forms.ChoiceField(
+        choices=[],
+        widget=forms.Select(attrs={'class': 'form-control'})
+    )
     class Meta:
         model = OTBooking
-        fields = ['operation_theatre', 'patient', 'surgeon', 'booked_start', 'booked_end', 'procedure', 'notes']
+        fields = ['operation_theatre', 'patient', 'surgeon', 'booked_start', 'booked_end', 'procedure','surgery_type','notes']
         widgets = {
             'operation_theatre': forms.Select(attrs={'class': 'form-control'}),
             'patient': forms.Select(attrs={'class': 'form-control'}),
@@ -91,6 +95,24 @@ class OTBookingForm(forms.ModelForm):
                'style':'height:30px; width:100%'
                 }),
         }
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)  
+        raw_types = DoctorServiceRate.objects.values_list('service_type', flat=True)
+        unique_normalized = {}
+        
+        for stype in raw_types:
+            if stype:
+                normalized = stype.strip().lower()
+                if normalized not in unique_normalized:
+                    unique_normalized[normalized] = stype.strip()
+
+        # Set deduplicated and clean choices
+        self.fields['procedure'].choices = [
+            (val, val) for val in unique_normalized.values()
+        ]
+
+
 
     def clean(self):
         cleaned_data = super().clean()
