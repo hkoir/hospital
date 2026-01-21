@@ -45,6 +45,46 @@ def medical_record_list(request):
 
 
 
+from .forms import MedicalRecordInitialAssessmentForm
+from patients.models import PatientAdmission
+from core.models import Doctor
+
+@login_required
+def medical_record_update_initial_assessment(request, admission_id):
+    admission = get_object_or_404(PatientAdmission, id=admission_id)
+    billing= admission.billing_admission
+    medical_record = billing.medical_record  
+    # doctor = request.user.doctor                 #
+
+    # if admission.doctor != doctor:
+    #     messages.error(request, "You are not assigned to this patient.")
+    #     return redirect("patients:patient_admission_detail", admission_id=admission.id)
+
+    doctor = Doctor.objects.filter(user=request.user).first()
+
+    if request.method == "POST":
+        form = MedicalRecordInitialAssessmentForm(request.POST, instance=medical_record)
+
+        if form.is_valid():
+            mr = form.save(commit=False)
+            mr.doctor = doctor
+            mr.save()
+
+            messages.success(request, "Initial Assessment updated successfully.")
+            return redirect("patients:patient_admission_detail", admission_id=admission.id)
+    else:
+        form = MedicalRecordInitialAssessmentForm(instance=medical_record)
+
+    context = {
+        "form": form,
+        "admission": admission,
+        "medical_record": medical_record
+    }
+    return render(request, "medical_records/medical_record_initial_assessment.html", context)
+
+
+
+
 
 def grouped_lab_test_requests_view(request, record_id):
     medical_record = get_object_or_404(MedicalRecord, id=record_id)

@@ -257,6 +257,53 @@ def ledger_view(request, account_id):
 
 
 
+
+
+def ledger_search_and_view(request):
+    query = request.GET.get("query", "").strip()
+    account = None
+    ledger_rows = []
+
+    if query:
+        if query.isdigit():
+            account = Account.objects.filter(code=query).first() 
+        if not account:
+            account = Account.objects.filter(name__icontains=query).first()
+
+        if account:          
+            all_accounts = [account] + get_all_children(account)
+
+            lines = (
+                JournalEntryLine.objects
+                .filter(account__in=all_accounts)
+                .select_related("entry")
+                .order_by("entry__date", "id")
+            )
+
+            balance = 0
+            for line in lines:          
+                if account.type in ["ASSET", "EXPENSE"]:
+                    balance += (line.debit or 0) - (line.credit or 0)
+                else: 
+                    balance += (line.credit or 0) - (line.debit or 0)
+
+                ledger_rows.append({
+                    "date": line.entry.date,
+                    "description": line.description or line.entry.description,
+                    "account": line.account.name,
+                    "debit": line.debit,
+                    "credit": line.credit,
+                    "balance": balance,
+                })
+
+    return render(request, "accounting/ledger_search.html", {
+        "query": query,
+        "account": account,
+        "ledger_rows": ledger_rows,
+    })
+
+
+
 def trial_balance_view(request):
     report_date = request.GET.get("date")
     if report_date:
@@ -327,9 +374,17 @@ def profit_loss_view(request):
         else:
             report['expenses'].append(tree)
 
+    # 🔧 Here’s the fixed block
     for fy in fiscal_years:
-        total_income = sum(a['total_balances'][fy.id] for a in report['income'])
-        total_expenses = sum(a['total_balances'][fy.id] for a in report['expenses'])
+        # normalize income and expense balances
+        total_income = sum(
+            (a['total_balances'][fy.id])  # flip to positive
+            for a in report['income']
+        )
+        total_expenses = sum(
+            abs(a['total_balances'][fy.id])    # always positive
+            for a in report['expenses']
+        )
 
         tax_expense = 0
         tax_account = Account.objects.filter(name__icontains='Income Tax Expense').first()

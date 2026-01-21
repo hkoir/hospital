@@ -1,0 +1,33 @@
+<div class="container my-3">
+
+    <h5 class="text-center mb-3 fw-bold">Quick Navigation</h5>
+
+    <!-- Finance Section -->
+    <div class="d-flex justify-content-center flex-wrap gap-2 mb-2">
+        <span class="fw-semibold text-secondary small me-2">Medicine & Pharmacy:</span>
+       
+        <a href="{% url 'inventory:create_medicine_sale_only' %}" class="btn btn-sm btn-outline-primary">+ Sale Medicine</a>
+        <a href="{% url 'inventory:pending_medicine_deliveries' %}" class="btn btn-sm btn-outline-primary">Pending Medicine Delivery</a>
+
+        <a href="{% url 'inventory:inventory_transaction_view' %}" class="btn btn-sm btn-outline-primary">+ Add Medicine to stock</a>
+        <a href="{% url 'inventory:product_dashboard' %}" class="btn btn-sm btn-outline-primary">Medicine Dashboard</a>        
+	
+       <a href="{% url 'inventory:warehouse_add' %}" class="btn btn-sm btn-outline-primary">+ Warehouse</a>
+        <a href="{% url 'inventory:location_add' %}" class="btn btn-sm btn-outline-primary">+ Warehouse Location</a>
+        <a href="{% url 'inventory:product_type_add' %}" class="btn btn-sm btn-outline-primary">+ Product Type</a>
+        
+
+        <a href="{% url 'inventory:create_category' %}" class="btn btn-sm btn-outline-primary">+ Create new Category</a>
+        <a href="{% url 'inventory:create_product' %}" class="btn btn-sm btn-outline-primary">+ Create new Medicine</a>
+        <a href="{% url 'inventory:create_batch' %}" class="btn btn-sm btn-outline-primary">+ Create Batch</a>
+        <a href="{% url 'inventory:product_list' %}" class="btn btn-sm btn-outline-primary">Product List</a>
+        <a href="{% url 'inventory:inventory_dashboard' %}" class="btn btn-sm btn-outline-primary">Inventory dashboard</a>
+        <a href="{% url 'purchase:create_direct_purchase_invoice' %}" class="btn btn-sm btn-success">+ Purchase</a>
+  
+    </div>
+
+   
+
+ 
+<hr>
+</div>

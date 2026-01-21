@@ -25,28 +25,92 @@
         .btn-change-bed {
             margin-top: 20px;
         }
-    </style>
+
+
+ .action-btn {
+        min-height: 50px;          /* Equal height */
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 600;
+        border-radius: 10px !important;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        transition: all 0.2s ease-in-out;
+    }
+
+    .action-btn:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+
+
+
+</style>
 
 
 
     <div class="container patient-details">       
-        <h1 class="text-center mb-4">Invoice Details</h1>
+        <h1 class="text-center mb-4">Invoice & Services </h1>
 
         <div class="patient-info">
             <div class="row">
                 <div class="col-12">             
-                                        <div class="row justify-content-center mb-3">
+                    <div class="row justify-content-center mb-3">
                         {% for button in buttons_list %}
                         <div class="col-6 col-md-2 mb-2 d-flex justify-content-center">
-			 <a href="{{ button.url }}" class="btn btn-sm {{ button.btn_class }} my-2 w-100 text-center">
+			 <a href="{{ button.url }}" class="btn btn-sm {{ button.btn_class }} my-2 w-100 text-center action-btn">
                                 {{ button.label }}
                             </a>
 			
                         </div>
                         {% endfor %}
 
+			 <div class="col-6 col-md-2 mb-3 d-flex justify-content-center">
+                        <a href="{% url 'patients:patient_admission_list' %}" 
+                        class="btn btn-sm btn-info w-100 text-center action-btn">
+                        Assign Bed (Admission)
+                        </a>
+                    </div>
+                     <div class="col-6 col-md-2 mb-3 d-flex justify-content-center">
+                        <a href="{% url 'patients:patient_admission_list' %}" 
+                        class="btn btn-sm btn-info w-100 text-center action-btn">
+                        Change Bed (Admission)
+                        </a>
+                    </div>
+
+                    <div class="col-6 col-md-2 mb-3 d-flex justify-content-center">
+                        <a href="{% url 'billing:emergency_visit_list' %}"
+                        class="btn btn-sm btn-warning w-100 text-center action-btn">
+                        Assign Bed (Emergency)
+                        </a>
+                    </div>
+
+                   
+
+                    <div class="col-6 col-md-2 mb-3 d-flex justify-content-center">
+                        <a href="{% url 'billing:emergency_visit_list' %}"
+                        class="btn btn-sm btn-warning w-100 text-center action-btn">
+                        Change Bed (Emergency)
+                        </a>
+                    </div>
+
+		 <div class="col-6 col-md-2 mb-3 d-flex justify-content-center">
+                        <a href="{% url 'inventory:pending_medicine_deliveries' %}?invoice={{ invoice.id }}" 
+                        class="btn btn-sm btn-info w-100 text-center action-btn">
+                        Pending Medicine Delivery
+                        </a>
+                    </div>
+
+                     <div class="col-6 col-md-2 mb-3 d-flex justify-content-center">
+                        <a href="{% url 'lab_tests:pending_lab_test_deliveries' %}?invoice={{ invoice.id }}" 
+                        class="btn btn-sm btn-info w-100 text-center action-btn">
+                        Pending labTest Delivery
+                        </a>
+                    </div>
+
+
 			<div class="col-6 col-md-2 mb-2 d-flex justify-content-center">
-    			  <a href="{% url 'billing:ipd_invoice_list' %}" class="btn btn-sm btn-success my-2 w-100 text-center">
+    			  <a href="{% url 'billing:ipd_invoice_list' %}" class="btn btn-sm btn-secondary my-2 w-100 text-center">
         			Back to invoice
     			  </a>
 			</div>

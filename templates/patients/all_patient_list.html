@@ -1,8 +1,8 @@
+
+
 {% extends "base.html" %}
 
 {% block content %}
-
-
 <style>
     .btn-search {
         background-color: #007bff;
@@ -33,23 +33,36 @@
 
 
 
-<div class="container-fluid">   
-        <h2 class="text-xl font-bold mb-4">Patient List</h2>
+<div class="container-fluid">      
+    <div class="dashboard-wrapper">    
+        
+        <div class="left-panel mt-0">      
+            {% include 'workspace/staff_quick_access_link.html' %}
+        </div>
+       
+        <div class="right-panel">          
+           {% include 'workspace/staff_quick_access_link_top.html' %}
 
 
-	
-   <form method="get" class="my-4 form-inline-custom">
-    <input type="text" id="searchInput" name="search" placeholder="Search by name or phone"
-           class="p-2 border rounded form-control" value="{{ request.GET.search }}">
-    
-    <button type="submit" class="btn-search">🔍 Search</button>
+        <form method="get" class="my-4 form-inline-custom">
+                <input type="text" id="searchInput" name="search" placeholder="Search by name or phone"
+                    class="p-2 border rounded form-control" value="{{ request.GET.search }}">
+                
+                <button type="submit" class="btn-search">🔍 Search</button>
 
-    <a href="{% url 'accounts:direct_patient_registration' %}" class="btn btn-success btn-sm">
-        ➕ Register new patient
-    </a>
-</form>
+                <a href="{% url 'accounts:direct_patient_registration' %}" class="btn btn-success btn-sm">
+                    ➕ Register new patient
+                </a>
+            </form>
 
-         <div class="row">
+
+
+       <div class="row">
+         <div class="d-flex justify-content-between mb-3">
+             <h3>Patients</h3>
+            <a href="{% url 'patients:patient_create' %}" class="btn btn-primary">Add Patient</a>
+          </div>
+            
 
             {% if page_obj %}
             <div class="col table-responsive">
@@ -59,6 +72,9 @@
                         <th class="p-2 border">ID</th>
                         <th class="p-2 border">Name</th>
                         <th class="p-2 border">Phone</th>
+                         <th class="p-2 border">email</th>
+                          <th class="p-2 border">Reference</th>
+                          <th>Action</th>
                     
                     </tr>
                 </thead>
@@ -68,7 +84,24 @@
                         <td class="p-2 border">{{ patient.patient_id }}</td>
                         <td class="p-2 border">{{ patient.name }}</td>
                         <td class="p-2 border">{{ patient.phone }}</td>
-                        
+                        <td class="p-2 border">{{ patient.email}}</td>
+
+                       <td class="p-2 border">
+                            {% if patient.referral_source %}
+                                <a href="{% url 'billing:referral_source_detail' patient.referral_source.id %}">
+                                    {{ patient.referral_source }} | {{ patient.referral_source.referral_type }}
+                                </a>
+                            {% else %}
+                                -
+                            {% endif %}
+                        </td>
+
+                        <td>                         
+                            <a href="{% url 'patients:patient_update' patient.id %}" class="btn btn-sm btn-warning">Edit</a>
+                            <a href="{% url 'patients:patient_delete' patient.id %}" class="btn btn-sm btn-danger">Delete</a>
+                            <a href="{% url 'patients:patient_id_card' patient.id %}" class="btn btn-sm btn-info">🪪 Print ID Card</a>
+
+                        </td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -100,6 +133,22 @@
             {% endif %}
         </div>
 
+        </div>
+     </div>
+
     </div>
 </div>
+
+
+<script>
+    window.addEventListener('load', function () {
+        const searchParam = new URLSearchParams(window.location.search).get('search');
+        if (searchParam) {
+            // Clear the input field visually after the page loads
+            setTimeout(() => {
+                document.getElementById('searchInput').value = '';
+            }, 100);
+        }
+    });
+</script>
 {% endblock %}

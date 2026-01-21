@@ -60,6 +60,19 @@ urlpatterns = [
   path('process-request-order/<int:order_id>/', views.process_purchase_request, name='process_purchase_request'),
 
 
+########################### Direct Purchase Procurement ###########################################################
+    path("create_direct_purchase_invoice/", views.create_direct_purchase_invoice, name="create_direct_purchase_invoice"),
+    path("update_direct_purchase_invoice/<int:pk>/", views.create_direct_purchase_invoice, name="update_direct_purchase_invoice"),
+    path('confirm_purchase_direct_invoice/<int:invoice_id>/', views.confirm_or_update_direct_purchase_invoice, name='confirm_direct_purchase_invoice'),
+    path('direct_purchase_invoices/', views.direct_purchase_invoice_list, name='direct_purchase_invoice_list'),
+    path('direct_purchase_invoices/<int:pk>/', views.direct_purchase_invoice_detail, name='direct_purchase_invoice_detail'),
+    path('direct_purchase_invoice/<int:pk>/mark_paid/', views.mark_direct_purchase_invoice_paid, name='mark_direct_purchase_invoice_paid'),
+
+    path('mark_direct_purchase_goods_received<int:pk>/', views.mark_direct_purchase_goods_received, name='mark_direct_purchase_goods_received'),
+    path('receive_goods<int:invoice_id>/', views.receive_goods, name='received_goods'),
+
+    path('make-payment/', views.make_purchase_payment, name='make_payment'),  
+    path('make-payment_id<int:invoice_id>//', views.make_purchase_payment, name='make_payment_id'), 
 
 
 ]

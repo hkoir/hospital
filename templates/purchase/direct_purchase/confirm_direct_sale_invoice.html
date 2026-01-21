@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+
+
+{% include 'purchase/quick_access_link.html' %}
+
+<div class="container mt-5">
+    <div class="card shadow-sm p-4">
+        <h3 class="text-warning">⚠ Confirm Direct Purchase</h3>
+        <p>Are you sure you want to confirm invoice <strong>#{{ invoice.invoice_number }}</strong> and update the stock?</p>
+        <p>This action will add the quantities to inventory. This cannot be undone.</p>
+
+        <form method="post">
+            {% csrf_token %}
+            <a href="{% url 'purchase:direct_purchase_invoice_list' %}" class="btn btn-secondary">Cancel</a>
+            <button type="submit" class="btn btn-success">✅ Confirm & Update Stock</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

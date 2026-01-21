@@ -1,0 +1,141 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+
+{% include 'lab_tests/quick_access_link.html' %}
+
+<div class="container mt-4">   
+
+<form method="get" class="mb-3">
+        <div class="input-group">
+            <input type="text"
+                name="q"
+                value="{{ q|default:'' }}"
+                class="form-control"
+                placeholder="Search Request Order, Patient Name, Mobile, Test...">
+
+             <button type="submit" class="btn btn-primary">
+                Search
+            </button>
+        </div>
+    </form>
+
+    <h2 class="mb-4">Collected Samples</h2>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-bordered align-middle">
+            <thead class="table-dark text-center">
+                <tr>
+		    <th>Prescription </th>
+                    <th>Request Order</th>
+                    <th>Request Item</th>
+                    <th>Patient / Requester</th>
+                    <th>Doctor</th>
+                    <th>Sample ID</th>
+                    <th>Sample Type</th>
+                    <th>Barcode</th>
+                    <th>Barcode Image</th>
+                    <th>Collected By</th>
+                    <th>Collected At</th>                   
+                    <th>Status</th>
+                    <th>Notes</th>
+                    <th>Update Progress</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for sample in samples %}
+                <tr class="text-center">
+
+		    <td>
+                        {% if sample.request_order.medical_record %}
+                            <a href="{% url 'patients:print_prescription' sample.request_order.medical_record.id %}"
+				class=" btn btn-sm btn-outline-success">
+                                View prescription
+                            </a>
+                        {% else %}
+                            <span>No prescription</span>
+                        {% endif %}
+                    </td>
+
+                    <td>{{ sample.request_order.requested_lab_test_code }}</td>
+                    <td>{{ sample.request_item.lab_test }}</td>
+                   <td>
+                    {% if sample.request_order.medical_record.patient %}
+                        <a href="{% url 'patients:patient_details_with_id' sample.request_order.medical_record.patient.id %}">
+                            {{ sample.request_order.medical_record.patient.name }} | 
+                            {{ sample.request_order.medical_record.patient.patient_id }}
+                        </a>
+                    {% else %}
+                        <span class="text-muted">No patient assigned</span>
+                    {% endif %}
+                </td>
+
+                    <td>
+                         {% if sample.request_order.medical_record.doctor %}
+                        <a href="{% url 'core:doctor_details' sample.request_order.medical_record.doctor.id %}">
+                            {{ sample.request_order.medical_record.doctor }} | 
+                            
+                        </a>
+                    {% else %}
+                        <span class="text-muted">No doctor assigned</span>
+                    {% endif %}
+                      
+                    </td>
+                    <td>{{ sample.sample_id }}</td>
+                    <td>{{ sample.sample_type }}</td>
+                    <td>{{ sample.barcode }}</td>
+                    <td>
+                        {% if sample.barcode_image %}
+                            <img src="{{ sample.barcode_image.url }}" alt="Barcode" style="height:50px;">
+                        {% else %}
+                            <span class="text-muted">No barcode</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ sample.collected_by.username }}</td>
+                    <td>{{ sample.collected_at|date:"d M Y H:i" }}</td>
+                    <td>
+                        {% if sample.status == "collected" %}
+                            <span class="badge bg-success">{{ sample.status|title }}</span>
+                        {% elif sample.status == "pending" %}
+                            <span class="badge bg-warning">{{ sample.status|title }}</span>
+                        {% else %}
+                            <span class="badge bg-info">{{ sample.status|title }}</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ sample.notes|default:"-" }}</td>
+                   <td>
+                    {% if sample.status == 'collected' %}
+                        <a href="{% url 'lab_tests:mark_sample_receive' sample.id %}" 
+                        class="btn btn-sm btn-primary mb-1">Mark as Received</a>
+                    {% elif sample.status == 'received' %}
+                        <a href="{% url 'lab_tests:mark_sample_processing' sample.id %}" 
+                        class="btn btn-sm btn-warning mb-1">Mark as Processing</a>
+                    {% elif sample.status == 'processing' %}
+                        <a href="{% url 'lab_tests:mark_sample_completed' sample.id %}" 
+                        class="btn btn-sm btn-success mb-1">Mark as Completed</a>
+                    {% endif %}
+                </td>
+
+                    <td>
+                        <a href="{% url 'lab_tests:print_sample_label' sample_id=sample.id %}" 
+                           class="btn btn-sm btn-secondary mb-1">Print Label</a>
+                        {% if sample.status == "pending" %}
+                            <a href="{% url 'lab_tests:collect_sample' sample.request_item.id %}" 
+                               class="btn btn-sm btn-primary mb-1">Collect</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="12" class="text-center text-muted">No samples available.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -202,24 +202,55 @@
 
 <!-- Hospital Services Tools -->
 <div class="container mt-4">
+
+<!-- Hospital Services Tools -->
+<div class="container mt-4">
   <h2 class="text-center mb-4 fw-bold text-primary">Patient Service Tools</h2>
-  <div class="d-flex justify-content-between">
-    <a href="{% url 'patients:patient_list' %}" class="btn btn-outline-primary w-40 text-start my-4">
-     <i class="bi bi-search me-2"></i> Search Patient
-  </a>
-   <a href="{% url 'facilities:ward_room_bed_status' %}" class="btn btn-outline-success w-40 text-start my-4">
-     <i class="bi bi-search me-2"></i> Search available beds
-   </a>
-   <a href="{% url 'billing:ipd_invoice_list' %}" class="btn btn-outline-success w-40 text-start my-4">
-         <i class="bi bi-search me-2"></i> Search invoices
-      </a>
+   <div class="row g-3 my-4 justify-content-center">  
 
-       <a href="{% url 'appointments:available_doctors'%}" class="btn btn-outline-success w-40 text-start my-4">
-         <i class="bi bi-search me-2"></i> Find Doctor
-      </a>
+       <div class="col-6 col-md-3 col-lg-3">
+        <a href="{% url 'workspace:staff_dashboard' %}" class="btn btn-outline-danger w-100 text-center">
+            <i class="bi bi-people me-2"></i> Staff Workspace
+        </a>
+    </div>
+      <div class="col-6 col-md-3 col-lg-3">
+        <a href="{% url 'workspace:doctor_dashboard' %}" class="btn btn-outline-primary w-100 text-center">
+            <i class="bi bi-person-workspace me-2"></i> Doctor Workspace
+        </a>
+    </div>
+
+    <div class="col-6 col-md-3 col-lg-3">
+        <a href="{% url 'workspace:management_dashboard' %}" class="btn btn-outline-primary w-100 text-center">
+            <i class="bi bi-person-workspace me-2"></i> Management Dashboard
+        </a>
+    </div>
+    
+    <div class=" d-none d-md-block col-md-3">
+        <a href="{% url 'patients:patient_list' %}" class="btn btn-outline-primary w-100 text-center">
+            <i class="bi bi-search me-2"></i> Search Patient
+        </a>
+    </div>
+     <div class=" d-none d-md-block col-md-3">
+        <a href="{% url 'appointments:available_doctors' %}" class="btn btn-outline-info w-100 text-center">
+            <i class="bi bi-person-badge me-2"></i> Find Doctor
+        </a>
+    </div>
+
+       <div class=" d-none d-md-block col-md-3">
+        <a href="{% url 'facilities:ward_room_bed_status' %}" class="btn btn-outline-success w-100 text-center">
+            <i class="bi bi-bed me-2"></i> Search Available Beds
+        </a>
+    </div>
+
+      <div class=" d-none d-md-block col-md-3">
+        <a href="{% url 'billing:ipd_invoice_list' %}" class="btn btn-outline-warning w-100 text-center">
+            <i class="bi bi-receipt me-2"></i> Search Invoices
+        </a>
+    </div>   
+  
+</div>
 
 
-  </div>
   <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-4">
 
     <!-- Card: New Patient Registration -->
@@ -301,11 +332,23 @@
         <div class="card-body text-center">
           <i class="bi bi-calendar-check-fill text-success display-4 mb-3"></i>
           <h5 class="card-title">Accounting</h5>
-          <p class="card-text">Accounting book keeping and Financial report</p>
+          <p class="card-text">Accounting book keeping Journal entry. Automate entry journal entry</p>
           <a href="{% url 'accounting:profit_loss' %}" class="btn btn-outline-success w-100">+ Accounting</a>
         </div>
       </div>
     </div>
+
+   <div class="col">
+      <div class="card h-100 border-success shadow-sm hover-shadow">
+        <div class="card-body text-center">
+          <i class="fas fa-chart-line text-success display-4 mb-3"></i>
+          <h5 class="card-title">Finance</h5>
+          <p class="card-text">Automate Financial report, No manual intervention needed.</p>
+          <a href="{% url 'accounting:profit_loss' %}" class="btn btn-outline-success w-100">+ Finance</a>
+        </div>
+      </div>
+    </div>
+
 
   </div>
 </div>

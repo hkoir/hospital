@@ -1,0 +1,177 @@
+{% load custom_filters %}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Medicine Sale Invoice</title>
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+<style>
+    body {
+        background: #fff;
+        font-size: 14px;
+    }
+
+    .invoice-box {
+        padding: 25px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #fff;
+        max-width: 900px;
+        margin: auto;
+    }
+
+    h4 {
+        font-weight: 700;
+        margin-bottom: 0;
+    }
+
+    .table th {
+        background: #f5f5f5;
+        vertical-align: middle;
+    }
+
+    .small-text {
+        font-size: 12px;
+        color: #555;
+    }
+
+    @media print {
+        .no-print {
+            display: none !important;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+        }
+    }
+</style>
+</head>
+
+<body>
+
+<div class="invoice-box">
+
+    <!-- HEADER -->
+   <!-- Add QR code in the header or bottom corner -->
+<div class="row mb-4">
+     <div class="col-8 d-flex align-items-center gap-3">
+        {% if invoice.medical_record.doctor.company %}
+            <img src="{{ invoice.medical_record.doctor.company.logo.url }}"
+                alt="Logo"
+                style="width:60px; height:60px; object-fit:contain;">
+        {% endif %}
+
+          <div>
+            <h4 class="mb-1">{{ request.tenant.name }}</h4>
+
+            <p class="mb-0" style="line-height:1.4;">
+                <strong>Address:</strong> {{ invoice.medical_record.doctor.address }}<br>
+                <strong>Contact:</strong> {{ invoice.medical_record.doctor.company.contact_person }}<br>
+                <strong>Web:</strong> {{ invoice.medical_record.doctor.company.website }}
+            </p>
+        </div>
+        
+    </div>
+    <div class="col-4 text-end">
+        <h5 class="text-primary fw-bold">MEDICINE SALE INVOICE</h5>
+        <p class="mb-0"><strong>Invoice No:</strong> {{ invoice.invoice_id }}</p>
+        <p><strong>Date:</strong> {{ invoice.created_at|date:'d M Y h:i A' }}</p>
+        {% if qr_code %}
+        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" style="width:60px; height:60px;">
+        {% endif %}
+    </div>
+</div>
+
+
+    <hr>
+
+    <!-- PATIENT INFO -->
+    <div class="row mb-4">
+        <div class="col-6">
+            <p class="mb-1"><strong>Patient Name:</strong> {{ patient.name }}</p>
+            <p class="mb-1"><strong>Patient ID:</strong> {{ patient.patient_id }}</p>
+            {% if medical_record and medical_record.doctor %}
+            <p class="mb-1"><strong>Doctor:</strong> {{ medical_record.doctor.name }}</p>
+            {% endif %}
+        </div>
+        <div class="col-6 text-end">
+            <p class="mb-1"><strong>Printed On:</strong> {{ print_date|date:"d M Y h:i A" }}</p>
+        </div>
+    </div>
+
+    <!-- ITEMS TABLE -->
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Medicine</th>
+                <th class="text-center">Qty</th>
+                <th class="text-end">Price</th>
+                <th class="text-end">Subtotal</th>
+                <th class="text-center">Dosage Info</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in medicine_bills %}
+            <tr>
+                <td>{{ item.medicine.name }}</td>
+
+                <td class="text-center">{{ item.quantity }}</td>
+
+                <td class="text-end">{{ item.price_per_unit }}</td>
+
+                <td class="text-end">
+                    {{ item.quantity|multiply:item.price_per_unit }}
+                </td>
+
+                <!-- DOSAGE COLUMN -->
+                <td class="small-text">
+                    {% if item.dosage or item.dosage_schedule or item.duration or item.instructions %}
+                        {% if item.dosage %}
+                            <strong>Dosage:</strong> {{ item.dosage }}<br>
+                        {% endif %}
+                        {% if item.dosage_schedule %}
+                            <strong>Schedule:</strong> {{ item.dosage_schedule }}<br>
+                        {% endif %}
+                        {% if item.duration %}
+                            <strong>Duration:</strong> {{ item.duration }} days<br>
+                        {% endif %}
+                        {% if item.instructions %}
+                            <strong>Note:</strong> {{ item.instructions }}
+                        {% endif %}
+                    {% else %}
+                        <em>No prescription info</em>
+                    {% endif %}
+                </td>
+
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- TOTAL -->
+    <div class="text-end mt-3">
+        <h5><strong>Total Amount: </strong> {{ total_medicine_amount }}</h5>
+        <h5><strong>Paid: </strong> {{ total_medicine_amount }}</h5>
+        <h5 class="text-success"><strong>Payment Status: PAID</strong></h5>
+    </div>
+
+    <hr>
+
+    <!-- FOOTER -->
+    <p class="text-center small mt-3">Thank you. For any query contact our pharmacy desk.</p>
+
+    <div class="text-center no-print mt-3">
+        <button onclick="window.print()" class="btn btn-primary">Print</button>
+        <a href="{% url 'inventory:pending_medicine_deliveries' %}" class="btn btn-secondary">Back</a>
+    </div>
+</div>
+
+<script>
+    setTimeout(() => window.print(), 500);
+</script>
+
+</body>
+</html>

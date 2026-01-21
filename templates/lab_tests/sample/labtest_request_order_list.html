@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include 'lab_tests/quick_access_link.html' %}
+
+
+<div class="container mt-4">
+    <h2>All Request Order</h2>
+    <h4 class="mb-3 text-primary fw-bold">Lab Test Sample Collection</h4>
+     <div class="table-responsive">
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+		 <th>Request code</th>
+		<th>Medical Record</th>
+		<th>Prescription</th>
+                <th>Prepare Final report</th>
+                <th>Get Final report</th>
+		<th>Patient</th>
+                <th>Doctor</th>
+                <th>Request Date</th>
+		<th>Sample collection status </th>
+                <th class="text-center">Actions</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            {% for req in page_obj %}
+            <tr>
+		 
+		 <td>{{ req.requested_lab_test_code }}</td>
+		 <td>{{ req.medical_record.medical_record_code }}</td>
+		<td>
+                    {% if req.medical_record %}
+                        <a href="{% url 'patients:print_prescription' req.test_items.first.prescription.id %}"
+				 class="btn btn-sm btn-outline-success">
+                            View prescription
+                        </a>
+                    {% else %}
+                        <span>No prescription</span>
+                    {% endif %}
+                </td>
+                <td>
+                    <a href="{% url 'lab_tests:create_lab_test_result_with_items' req.medical_record.id req.appointment.id %}"
+			 class="btn btn-sm btn-outline-success">
+                        Prepare Final report</a>
+                </td>
+               <td>
+                {% if req.lab_test_result_order.first %}
+                    <a href="{% url 'lab_tests:final_lab_report' req.lab_test_result_order.first.id %}">
+                        Get Final Report
+                    </a>
+                {% else %}
+                    <span class="text-danger">No Order</span>
+                {% endif %}
+            </td>
+
+                <td>{{ req.medical_record.patient.name }} | {{ req.medical_record.patient.patient_id }}</td>
+                <th>{{ req.appointment.doctor.name }}</th>
+                <td>{{ req.created_at|date:"d M Y - h:i A" }}</td>
+
+		<td>
+		<a href="{% url 'lab_tests:request_sample_list' req.id %}">View samples </a>
+		</td>
+
+                <td class="text-center">
+                    {% if not req.all_samples_collected %}
+                    <a href="{% url 'lab_tests:request_order_items' req.id %}"
+                       class="btn btn-sm btn-primary">
+                        View Test Items & Collect Sample
+                    </a>
+                    {% else %}
+                    <span class="badge bg-success">All samples collected</span>
+                    {% endif %}
+                </td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4" class="text-center text-danger">
+                    No pending lab test requests found.
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+ <!-- Pagination Controls -->
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+
+
+
+</div>
+</div>
+{% endblock %}

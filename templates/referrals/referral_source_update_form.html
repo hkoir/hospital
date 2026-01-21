@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% include 'referrals/quick_access_link.html' %}
+
+    <div class="container mt-4">
+    <h2 class="mb-4">{% if object %}Edit{% else %}Create{% endif %} Referral Source</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="row g-3">
+
+            <div class="col-md-4">{{ form.referral_type.label_tag }} {{ form.referral_type }}</div>
+            <div class="col-md-4 referral-internal">{{ form.internal_doctor.label_tag }} {{ form.internal_doctor }}</div>
+
+            <div class="col-md-4 referral-external">{{ form.external_name.label_tag }} {{ form.external_name }}</div>
+            <div class="col-md-4 referral-external">{{ form.external_contact.label_tag }} {{ form.external_contact }}</div>
+
+            <div class="col-md-4 referral-agent">{{ form.agent_name.label_tag }} {{ form.agent_name }}</div>
+            <div class="col-md-4 referral-agent">{{ form.agent_phone.label_tag }} {{ form.agent_phone }}</div>
+
+            <div class="col-md-4 referral-hospital">{{ form.hospital_name.label_tag }} {{ form.hospital_name }}</div>
+            <div class="col-md-4 referral-hospital">{{ form.hospital_contact.label_tag }} {{ form.hospital_contact }}</div>
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success">{% if object %}Update{% else %}Save{% endif %}</button>
+            <a href="{% url 'billing:referral_source_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+
+    </form>
+</div>
+
+
+
+
+{% endblock %}

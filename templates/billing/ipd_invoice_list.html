@@ -1,113 +1,322 @@
 {% extends 'base.html' %}
 {% load custom_filters %}
 {% block content %}
+ 
+
+<style>
+
+.dashboard-wrapper {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 15px;
+}
+
+/* Left Panel Styling */
+.left-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    height: auto;
+    position: static;
+    top: 0px;
+}
+
+/* ===== Responsive Mobile Layout ===== */
+@media (max-width: 992px) {
+
+    .dashboard-wrapper {
+        grid-template-columns: 1fr;  /* stacked vertically */
+    }
+
+    .left-panel {
+        position: relative;          /* disable sticky */
+        top: 0;
+        margin-bottom: 20px;
+    }
+
+    .kpi-card {
+        padding: 18px;
+    }
+}
+
+    .left-panel h5 {
+        font-weight: 700;
+        margin-bottom: 18px;
+        color: #003c82;
+    }
+
+    .quick-link {
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        background: #f7faff;
+        border-radius: 10px;
+        border: 1px solid #e1ecf9;
+        text-decoration: none;
+        display: block;
+        font-weight: 600;
+        color: #003c82;
+        transition: 0.2s;
+    }
+
+    .quick-link:hover {
+        background: #e8f1ff;
+        border-color: #d7e5ff;
+        transform: translateX(5px);
+    }
+
+    .right-panel h3 {
+        font-weight: 700;
+        color: #003c82;
+    }
+
+    .kpi-card {
+        padding: 10px;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        text-align: center;
+        height: 80px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 14px;
+        color: #003c82;
+    }
+
+    .list-group-item {
+        border-radius: 12px !important;
+        margin-bottom: 8px;
+        border: 1px solid #eaeaea;
+    }
 
 
-<div class="container">
-    <div class="col-12">
-      <form method="get" class="my-2" novalidate,>
-                {% csrf_token %}
-                <div class="row">
+.table-responsive {
+    width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    display: block !important;
+}
+
+
+.custom-checkbox {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+    gap: 6px;
+    font-size: 14px;
+    user-select: none;
+}
+
+/* Hide default checkbox */
+.custom-checkbox input[type="checkbox"] {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+/* Custom box */
+.custom-checkbox .checkmark {
+    width: 18px;
+    height: 18px;
+    border: 2px solid #8fb3d9;
+    border-radius: 4px;
+    background-color: #e8eef5;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+/* Checked state */
+.custom-checkbox input[type="checkbox"]:checked + .checkmark {
+    background-color: #0d6efd;
+    border-color: #0d6efd;
+    box-shadow: 0 0 6px rgba(13,110,253,0.4);
+}
+
+/* Checkmark icon */
+.custom-checkbox .checkmark:after {
+    content: "";
+    position: absolute;
+    display: none;
+}
+
+.custom-checkbox input[type="checkbox"]:checked + .checkmark:after {
+    display: block;
+    left: 5px;
+    top: 1px;
+    width: 6px;
+    height: 12px;
+    border: solid white;
+    border-width: 0 2px 2px 0;
+    transform: rotate(45deg);
+}
+
+</style>
+
+
+
+<div class="container-fluid">
+    <div class="dashboard-wrapper">      
+        <div class="left-panel mt-0">      
+            {% include 'workspace/staff_quick_access_link.html' %}
+        </div>
+       
+        <div class="right-panel">
+
+        <div class="col-12">
+
+	<form method="get" class="my-3" novalidate>
+          {% csrf_token %}
+
+          <div class="card shadow-sm border-0">
+              <div class="card-body">
+
+                  <h5 class="mb-3 fw-semibold text-primary">
+                      <i class="bi bi-funnel"></i> Filter Options
+                  </h5>
+
+
+		 <div class="row g-1">
                     {% for field in form %}
-                        <div class="col-6 col-md-2">
-                            <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                            {{ field|add_class:"form-control" }}
-                            {% if field.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ field.errors|striptags }}
-                                </div>
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-                    
-                </div>
-
-                <div class="d-flex justify-content-between mt-4">                    
-                    <button type="submit" class="btn btn-primary">Apply filter</button>
-                    
-                </div>
-      </form>
-	</div>
-
-	<div class="col-12 table-responsive">
-        <h2>IPD Invoice List</h2>
-        <table class="table table-bordered table-striped">
-            <thead class="table-info">
-                <tr>
-                    <th>#Invoice ID</th>
-		   <th> Medical record code </th>
-		   <th> admission code </th>
-                    <th>Patient</th>
-
-                    <th>Service Type</th>
-                    <th>Total Amount</th>
-                    <th>Total Paid</th>
-                    <th>Remaining</th>
-
-                    <th>Status</th>               
-                    <th>Created</th>
-                    <th>Invoice Action</th>
-                    <th>Finalize Bill</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for invoice in page_obj %}
-                <tr>
-		     <td>{{ invoice.invoice_id }}</td>
-		     <td>{{ invoice.medical_record.medical_record_code }}</td>
-		     <td>{{ invoice.admission.admission_code }}</td>
-                    <td>{{ invoice.patient.name }}/{{ invoice.patient.patient_id }}</td>
-
-                    <td>{{ invoice.invoice_type}}</td>
-                    <td>{{ invoice.total_amount }}</td>
-                    <td>{{ invoice.total_paid }}</td>
-                    <td>{{ invoice.remaining_amount }}</td>
-
-                    <td>
-
-                        {% if invoice.status == 'Paid' %}
-                            <span class="badge bg-success">Paid</span>
-                        {% elif invoice.status == 'Partially Paid' %}
-                            <span class="badge bg-warning text-dark">Partial</span>
+                        <div class="col-12 col-md-3">                        
+                            {% if field.field.widget.input_type == "checkbox" %}
+                            <label class="custom-checkbox d-flex align-items-center gap-2 mx-4 mt-2">
+                                {{ field }}
+                                <span class="checkmark"></span>
+                                {{ field.label }}
+                            </label>
                         {% else %}
-                            <span class="badge bg-warning">Unpaid</span>
+                            <div class="input-group">
+				 {{ field.label }}
+                                {{ field|add_class:"form-control" }}
+                                <span class="input-group-text bg-secondary">
+                                    <i class="bi bi-search text-white"></i>
+                                </span>
+                            </div>
                         {% endif %}
-                    </td>
-                
-                    <td>{{ invoice.created_at|date:"Y-m-d H:i" }}</td>
-                    <td>
-                        <a href="{% url 'billing:invoice_detail' invoice.id %}" class="btn btn-sm btn-primary">View</a>
-                        <a href="{% url 'billing:edit_invoice' invoice.id %}" class="btn btn-sm btn-warning">Edit</a>
-                        <a href="{% url 'billing:delete_invoice' invoice.id %}" class="btn btn-sm btn-danger">Delete</a>
-                    
-                    </td>
 
-                    <td> <a href="{% url 'billing:finalize_invoice' invoice.id %}" class="btn btn-sm btn-success">Finalize bill</a></td>
-                </tr>
-                {% empty %}
-                <tr>
-                    <td colspan="8" class="text-center">No invoices found.</td>
-                </tr>
+
+                        {% if field.errors %}
+                            <div class="text-danger small mt-1">
+                                {{ field.errors|striptags }}
+                            </div>
+                        {% endif %}
+                    </div>
                 {% endfor %}
-            </tbody>
-        </table>
-        <!-- Pagination Controls -->
-        <div class="pagination">
-            <span class="step-links">
-                {% if page_obj.has_previous %}
-                    <a href="?page=1">&laquo; first</a>
-                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-                {% endif %}
+                </div>
 
-                <span class="current">
-                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-                </span>
 
-                {% if page_obj.has_next %}
-                    <a href="?page={{ page_obj.next_page_number }}">next</a>
-                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-                {% endif %}
-            </span>
+                  <div class="d-flex justify-content-end mt-4">
+                      <a href="?" class="btn btn-outline-secondary me-2">
+                          <i class="bi bi-arrow-counterclockwise"></i> Reset
+                      </a>
+
+                      <button type="submit" class="btn btn-primary px-4">
+                          <i class="bi bi-check-circle"></i> Apply Filter
+                      </button>
+                  </div>
+              </div>
+          </div>
+      </form>
+
+            </div>
+
+            <div class="table-responsive">
+                <h2> Invoice List</h2>
+                <table class="table table-bordered table-striped">
+                    <thead class="table-info">
+                        <tr>
+                            <th>#Invoice ID</th>
+                            <th>Medical record code </th>
+                            <th> admission code </th>
+                            <th>Patient</th>
+                            <th>Service Type</th>
+                            <th>Total Amount</th>
+                            <th>Total Paid</th>
+                            <th>Remaining</th>
+                            <th>Status</th>               
+                            <th>Created</th>
+                            <th>Invoice Action</th>
+                            <th>Finalize Bill</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for invoice in page_obj %}
+                        <tr>
+                            <td>{{ invoice.invoice_id }}</td>
+                            <td>{{ invoice.medical_record.medical_record_code }}</td>
+                            <td>
+				{% if invoice.admission %}
+				{{ invoice.admission.admission_code }}
+				{% else %}
+				<span class="badge bg-info">Not admitted</span>
+				{% endif %}
+			    </td>
+
+			     <td>
+                        	<a href="{% url 'patients:patient_details_with_id'  invoice.patient.id %}"
+                        	style="text-decoration: None;">
+                        	{{ invoice.patient.name }}/{{ invoice.patient.patient_id }}</a>
+
+                    	    </td>
+
+                            <td>{{ invoice.invoice_type}}</td>
+                            <td>{{ invoice.total_amount }}</td>
+                            <td>{{ invoice.total_paid }}</td>
+                            <td>{{ invoice.remaining_amount }}</td>
+
+                            <td>
+
+                                {% if invoice.status == 'Paid' %}
+                                    <span class="badge bg-success">Paid</span>
+                                {% elif invoice.status == 'Partially Paid' %}
+                                    <span class="badge bg-warning text-dark">Partial</span>
+                                {% else %}
+                                    <span class="badge bg-warning">Unpaid</span>
+                                {% endif %}
+                            </td>
+                        
+                            <td>{{ invoice.created_at|date:"Y-m-d H:i" }}</td>
+                            <td>
+                                <a href="{% url 'billing:invoice_detail' invoice.id %}" class="btn btn-sm btn-primary">Add service</a>
+                                <a href="{% url 'billing:edit_invoice' invoice.id %}" class="btn btn-sm btn-warning">Edit</a>
+                                <a href="{% url 'billing:delete_invoice' invoice.id %}" class="btn btn-sm btn-danger">Delete</a>
+                            
+                            </td>
+
+                            <td> <a href="{% url 'billing:finalize_invoice' invoice.id %}" class="btn btn-sm btn-success">Finalize bill</a></td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="8" class="text-center">No invoices found.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <!-- Pagination Controls -->
+                <div class="pagination">
+                    <span class="step-links">
+                        {% if page_obj.has_previous %}
+                            <a href="?page=1">&laquo; first</a>
+                            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                        {% endif %}
+
+                        <span class="current">
+                            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                        </span>
+
+                        {% if page_obj.has_next %}
+                            <a href="?page={{ page_obj.next_page_number }}">next</a>
+                            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                        {% endif %}
+                    </span>
+                </div>
+            </div>
+        
         </div>
     </div>
 </div>

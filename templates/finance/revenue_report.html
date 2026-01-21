@@ -1,30 +1,105 @@
 
+
 {% extends "base.html" %}
 {% load static %}
 {% load custom_filters %}
 
-{% block extra_head %}
-
-
-{% endblock %}
-
 {% block content %}
 
-<div class="contaainer-fluid">
-    <h3 class="text-center my-5">Revenue report</h3>
-      <p>
-    <a href="{% url 'finance:top_expenses_head' %}"class="btn btn-sm btn-success">Expenses</a>
-    <a href="{% url 'finance:shareholder_dashboard' %}"class="btn btn-sm btn-primary">Dashboard</a>
-     
- </p>
-    <div class="row">
-        <div class="col-12 col-md-4 table-responsive">           
-            <table class="table">
-                <thead class="table-info">
-                    <tr>
-                        <th>Invoice Type</th>
-                        <th>Total Amount</th>
-                    </tr>
+
+<style>
+
+#todayCheck.form-check-input {
+    background-color: #e0e0e0; 
+    border-color: #ccc;        
+}
+
+#todayCheck.form-check-input:checked {
+    background-color: #0d6efd; 
+    border-color: #0d6efd;
+}
+
+#todayCheck.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); 
+}
+
+
+
+@media (max-width: 768px) {
+  .chart-scroll-wrapper > div {
+    min-width: 900px; /* wider for mobile scroll */
+  }
+}
+
+
+
+</style>
+
+{% include 'finance/quick_access_link.html' %}
+   <div class="container">
+     <div class="col-12">   
+       <form method="get" id="filterForm">
+        <div class=" row filter-toolbar mb-4 text-center">
+
+        <!-- Today Toggle -->
+        <div class="col-6 col-md-3 mb-2">
+            <div class="toggle-box border border-success bg-light rounded-3 px-3 py-2 d-flex align-items-center justify-content-center">
+                <input type="checkbox" class="form-check-input me-2" id="todayCheck" name="today" value="1" {% if today %}checked{% endif %}>
+                <label class="form-check-label fw-semibold mb-0" for="todayCheck">Today</label>
+            </div>
+        </div>
+
+        <!-- This Month Toggle -->
+         <div class="col-6 col-md-3 mb-2">
+            <div class="toggle-box border border-warning bg-light rounded-3 px-3 py-2 d-flex align-items-center justify-content-center">
+                <input type="checkbox" class="form-check-input me-2" id="monthCheck" name="this_month" value="1" {% if this_month %}checked{% endif %}>
+                <label class="form-check-label fw-semibold mb-0" for="monthCheck">This Month</label>
+            </div>
+        </div>
+
+        <!-- Start Date -->
+         <div class="col-6 col-md-3 mb-2">
+            <label for="start_date" class="form-label fw-semibold d-block mb-1">Start Date</label>
+            <input type="date" id="start_date" name="start_date" value="{{ start_date }}"
+                class="form-control form-control-sm text-center w-100">
+        </div>
+
+        <!-- End Date -->
+       <div class="col-6 col-md-3 mb-2">
+            <label for="end_date" class="form-label fw-semibold d-block mb-1">End Date</label>
+            <input type="date" id="end_date" name="end_date" value="{{ end_date }}"
+                class="form-control form-control-sm text-center w-100">
+        </div>
+
+        <!-- Filter Button -->
+     <div class="col-12 d-flex justify-content-between"> 
+         <div class="col-6 col-md-3 mb-2">            
+            <a href="{% url 'finance:revenue_report' %}" class="btn btn-sm btn-outline-secondary fw-semibold w-100">
+                Clear Filter</a>            
+        </div>    
+         <div class="col-6 col-md-3 mb-2">
+            <button type="submit" class="btn btn-primary fw-semibold w-100">Filter</button>
+        </div>
+        
+     </div>
+
+
+    </div>
+
+    </form>
+  </div>
+</div>
+
+<div class="container">
+    <!-- Overall Revenue Summary -->
+    
+    <h3 class="text-center mt-4">Overall Revenue Summary</h3>  
+     {% if labels_amounts %} 
+    <div class="row align-items-center">    
+        <div class="col-12 col-md-3 table-responsive mb-3">
+            <table class="table table-bordered">
+                <thead class="table-dark">
+                    <tr><th>Invoice Type</th><th>Total Amount</th></tr>
                 </thead>
                 <tbody>
                     {% for label, amount in labels_amounts %}
@@ -35,87 +110,281 @@
                     {% endfor %}
                 </tbody>
             </table>
-	<h4>Total revenue = {{ total_revenue|add_commas }}</h4>
+            <h5>Total Revenue = {{ total_revenue|add_commas }}</h5>
         </div>
-        <div class="col-12 col-md-5">           
-            <canvas id="barChart"></canvas>
+
+
+    <div class="col-12 col-md-9">  
+        <div class="row g-4 mb-5">
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-light fw-semibold">Revenue & Expense Overview</div>
+                <div class="card-body">
+                    <!-- Scrollable wrapper -->
+                    <div class="chart-scroll-wrapper" style="overflow-x: auto;">
+                    <div style="min-width: 600px;"> <!-- Force larger width for scroll -->
+                        <canvas id="overallBarChart" style="width: 100%; height: 300px;"></canvas>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-light fw-semibold">Revenue Composition</div>
+                <div class="card-body">
+                    <canvas id="overallPieChart" style="width: 100%; height: 300px;"></canvas>
+                </div>
+                </div>
+            </div>
         </div>
-        <div class="col-12 col-md-3">       
-        <canvas id="pieChart"></canvas>
+   </div>
+ 
+
+
+    
+
+    <!-- All Sections Revenue -->
+    <h3 class="text-center mt-4">Revenue by Sections</h3>      
+        <div class="col-12 col-md-3 table-responsive mb-3">
+            <table class="table table-bordered">
+                <thead class="table-info">
+                    <tr><th>Section</th><th>Total Amount</th></tr>
+                </thead>
+                <tbody>
+                    {% for section in revenue_section_data %}
+                    <tr>
+                        <td>{{ section.name }}</td>
+                        <td>{{ section.total|add_commas }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
+      
+
+      <div class="col-12 col-md-9">  
+        <div class="row g-4 mb-5">
+            <div class="col-md-8">
+                <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-light fw-semibold">Revenue & Expense Overview</div>
+                <div class="card-body">
+                    <!-- Scrollable wrapper -->
+                    <div class="chart-scroll-wrapper" style="overflow-x: auto;">
+                    <div style="min-width: 600px;"> <!-- Force larger width for scroll -->
+                        <canvas id="sectionBarChart" style="width: 100%; height: 300px;"></canvas>
+                    </div>
+                    </div>
+                </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-light fw-semibold">Revenue Composition</div>
+                <div class="card-body">
+                    <canvas  id="sectionPieChart" style="width: 100%; height: 300px;"></canvas>
+                </div>
+                </div>
+            </div>
+        </div>
+   </div>
+  {% else %}
+  <div class="text-center">
+  <span class="badge bg-info">-------------- No data found --------------</span>
+  </div>
+
+   {% endif %}
+        
     </div>
 </div>
 
 
 
-
-
 <script>
-    // Load data from Django context
-    const labels = JSON.parse('{{ labels|escapejs }}');
-    const amounts = JSON.parse('{{ amounts|escapejs }}');
+document.addEventListener('DOMContentLoaded', function() {
+    const todayCheck = document.getElementById('todayCheck');
+    const monthCheck = document.getElementById('monthCheck');
 
-    const backgroundColors = [
-        'rgba(255, 99, 132, 0.5)',
-        'rgba(54, 162, 235, 0.5)',
-        'rgba(255, 206, 86, 0.5)',
-        'rgba(75, 192, 192, 0.5)',
-        'rgba(153, 102, 255, 0.5)',
-        'rgba(255, 159, 64, 0.5)',
-    ];
+    function applyFilter(param) {
+        const url = new URL(window.location.href);
+        url.search = ''; // clear old params
+        if (param === 'today') url.searchParams.set('today', '1');
+        if (param === 'this_month') url.searchParams.set('this_month', '1');
+        window.location.href = url.toString();
+    }
 
-    const borderColors = [
-        'rgba(255,99,132,1)',
-        'rgba(54,162,235,1)',
-        'rgba(255,206,86,1)',
-        'rgba(75,192,192,1)',
-        'rgba(153,102,255,1)',
-        'rgba(255,159,64,1)',
-    ];
-
-    // Bar Chart
-    const barCtx = document.getElementById('barChart').getContext('2d');
-    const barChart = new Chart(barCtx, {
-        type: 'bar',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Total Amount by Invoice Type',
-                data: amounts,
-                backgroundColor: backgroundColors,
-                borderColor: borderColors,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            scales: {
-                y: {
-                    beginAtZero: true
-                }
-            }
+    todayCheck.addEventListener('change', function() {
+        if (this.checked) {
+            monthCheck.checked = false;
+            applyFilter('today');
         }
     });
 
-    // Pie Chart
-    const pieCtx = document.getElementById('pieChart').getContext('2d');
-    const pieChart = new Chart(pieCtx, {
-        type: 'pie',
-        data: {
-            labels: labels,
-            datasets: [{
-                label: 'Total Amount by Invoice Type',
-                data: amounts,
-                backgroundColor: backgroundColors,
-                borderColor: borderColors,
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: false,
+    monthCheck.addEventListener('change', function() {
+        if (this.checked) {
+            todayCheck.checked = false;
+            applyFilter('this_month');
         }
     });
+});
 </script>
 
 
+
+
+<!-- JS for Charts -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Overall Revenue Summary
+const overallLabels = JSON.parse('{{ labels|escapejs }}');
+const overallAmounts = JSON.parse('{{ amounts|escapejs }}');
+
+const backgroundColors = [
+    'rgba(255, 99, 132, 0.5)',
+    'rgba(54, 162, 235, 0.5)',
+    'rgba(255, 206, 86, 0.5)',
+    'rgba(75, 192, 192, 0.5)',
+    'rgba(153, 102, 255, 0.5)',
+    'rgba(255, 159, 64, 0.5)',
+    'rgba(200, 106, 86, 0.5)',
+];
+const borderColors = [
+    'rgba(255,99,132,1)',
+    'rgba(54,162,235,1)',
+    'rgba(255,206,86,1)',
+    'rgba(75,192,192,1)',
+    'rgba(153,102,255,1)',
+    'rgba(255,159,64,1)',
+    'rgba(200,106,86,.6)',
+];
+
+const overallBarCtx = document.getElementById('overallBarChart').getContext('2d');
+
+new Chart(overallBarCtx, { 
+    type: 'bar',
+    data: {
+        labels: overallLabels,
+        datasets: [{
+            label: 'Revenue by Invoice Type',
+            data: overallAmounts,
+            backgroundColor: backgroundColors,
+            borderColor: borderColors,
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false, // helps with responsiveness
+        scales: {
+            x: {
+                ticks: {
+                    autoSkip: false, // ✅ don't skip labels
+                    maxRotation: 45, // ✅ angle labels slightly
+                    minRotation: 0
+                }
+            },
+            y: {
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            },
+            tooltip: {
+                enabled: true
+            }
+        }
+    }
+});
+
+
+const overallPieCtx = document.getElementById('overallPieChart').getContext('2d');
+new Chart(overallPieCtx, {
+    type: 'pie',
+    data: {
+        labels: overallLabels,
+        datasets: [{
+            label: 'Revenue by Invoice Type',
+            data: overallAmounts,
+            backgroundColor: backgroundColors,
+            borderColor: borderColors,
+            borderWidth: 1
+        }]
+    },
+    options: { responsive: true }
+});
+
+// Sections Revenue
+const revenueSections = JSON.parse('{{ revenue_sections|escapejs }}');
+const sectionLabels = revenueSections.map(s => s.name);
+const sectionAmounts = revenueSections.map(s => s.total);
+
+const sectionBarCtx = document.getElementById('sectionBarChart').getContext('2d');
+
+new Chart(sectionBarCtx,{ 
+    type: 'bar',
+    data: {
+         labels: sectionLabels,
+        datasets: [{
+            label: 'Revenue by Section',
+            data: sectionAmounts,
+            backgroundColor: backgroundColors,
+            borderColor: borderColors,
+            borderWidth: 1
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false, // helps with responsiveness
+        scales: {
+            x: {
+                ticks: {
+                    autoSkip: false, // ✅ don't skip labels
+                    maxRotation: 45, // ✅ angle labels slightly
+                    minRotation: 0
+                }
+            },
+            y: {
+                beginAtZero: true
+            }
+        },
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            },
+            tooltip: {
+                enabled: true
+            }
+        }
+    }
+});
+
+
+
+
+
+
+const sectionPieCtx = document.getElementById('sectionPieChart').getContext('2d');
+new Chart(sectionPieCtx, {
+    type: 'pie',
+    data: {
+        labels: sectionLabels,
+        datasets: [{
+            label: 'Revenue by Section',
+            data: sectionAmounts,
+            backgroundColor: backgroundColors,
+            borderColor: borderColors,
+            borderWidth: 1
+        }]
+    },
+    options: { responsive: true }
+});
+</script>
 {% endblock %}
+

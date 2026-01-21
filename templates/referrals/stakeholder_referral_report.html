@@ -1,0 +1,225 @@
+
+
+{% extends 'base.html' %}
+{% block content %}
+
+{% include 'referrals/quick_access_link.html' %}
+
+<div class="container mt-4">
+
+    <h2 class="mb-4">Stakeholder Referral Report</h2>
+     <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="fw-bold text-dark mb-0">
+            📊 Referral reports
+        </h2>
+        <small class="text-muted">Reporting Period: {{ start_date }} → {{ end_date }}</small>
+     </div> 
+
+    <form method="get" id="filterForm">
+        <div class=" row filter-toolbar mb-4 text-center">
+
+        <!-- Today Toggle -->
+        <div class="col-6 col-md-3 mb-2">
+            <div class="toggle-box border border-success bg-light rounded-3 px-3 py-2 d-flex align-items-center justify-content-center">
+                <input type="checkbox" class="form-check-input me-2" id="todayCheck" name="today" value="1" {% if today %}checked{% endif %}>
+                <label class="form-check-label fw-semibold mb-0" for="todayCheck">Today</label>
+            </div>
+        </div>
+
+        <!-- This Month Toggle -->
+         <div class="col-6 col-md-3 mb-2">
+            <div class="toggle-box border border-warning bg-light rounded-3 px-3 py-2 d-flex align-items-center justify-content-center">
+                <input type="checkbox" class="form-check-input me-2" id="monthCheck" name="this_month" value="1" {% if this_month %}checked{% endif %}>
+                <label class="form-check-label fw-semibold mb-0" for="monthCheck">This Month</label>
+            </div>
+        </div>
+
+        <!-- Start Date -->
+         <div class="col-6 col-md-3 mb-2">
+            <label for="start_date" class="form-label fw-semibold d-block mb-1">Start Date</label>
+            <input type="date" id="start_date" name="start_date" value="{{ start_date }}"
+                class="form-control form-control-sm text-center w-100">
+        </div>
+
+        <!-- End Date -->
+       <div class="col-6 col-md-3 mb-2">
+            <label for="end_date" class="form-label fw-semibold d-block mb-1">End Date</label>
+            <input type="date" id="end_date" name="end_date" value="{{ end_date }}"
+                class="form-control form-control-sm text-center w-100">
+        </div>
+
+        <div class="col-md-3 mb-2">
+            <label for="stakeholder_type">Stakeholder Type</label>
+            <select id="stakeholder_type" name="stakeholder_type" class="form-control">
+                <option value="">-- Select --</option>
+                <option value="internal_doctor" {% if stakeholder_type == 'internal_doctor' %}selected{% endif %}>Internal Doctor</option>
+                <option value="external_doctor" {% if stakeholder_type == 'external_doctor' %}selected{% endif %}>External Doctor</option>
+                <option value="agent" {% if stakeholder_type == 'agent' %}selected{% endif %}>Agent</option>
+                <option value="hospital" {% if stakeholder_type == 'hospital' %}selected{% endif %}>Hospital/Clinic</option>
+            </select>
+        </div>
+        <div class="col-md-3 mb-2">
+            <label for="stakeholder_id">Stakeholder</label>
+            <select id="stakeholder_id" name="stakeholder_id" class="form-control">
+                <option value="">-- Select --</option>
+                {% if stakeholder_type == 'internal_doctor' %}
+                    {% for id, name in internal_doctors %}
+                        <option value="{{ id }}" {% if stakeholder_id|stringformat:"s" == id|stringformat:"s" %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                {% elif stakeholder_type == 'external_doctor' %}
+                    {% for name in external_doctors %}
+                        <option value="{{ name }}" {% if stakeholder_id == name %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                {% elif stakeholder_type == 'agent' %}
+                    {% for name in agents %}
+                        <option value="{{ name }}" {% if stakeholder_id == name %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                {% elif stakeholder_type == 'hospital' %}
+                    {% for name in hospitals %}
+                        <option value="{{ name }}" {% if stakeholder_id == name %}selected{% endif %}>{{ name }}</option>
+                    {% endfor %}
+                {% endif %}
+
+            </select>
+        </div>
+
+        <!-- Filter Button -->
+        <div class="col-6 col-md-3 mt-4">
+            <button type="submit" class="btn btn-primary fw-semibold w-100">Filter</button>
+        </div>
+        </div>
+    </form>
+
+
+    <!-- Summary -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>Summary</h5>
+            <div class="row">
+                <div class="col-md-3">Total Service Amount: <strong>{{ summary.total_service_amount|default:"0.00" }}</strong></div>
+                <div class="col-md-3">Total Commission: <strong>{{ summary.total_commission|default:"0.00" }}</strong></div>
+                <div class="col-md-3">Total Paid: <strong>{{ summary.total_paid|default:"0.00" }}</strong></div>
+                <div class="col-md-3">Remaining: <strong>{{ summary.remaining|default:"0.00" }}</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed List -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Patient</th>
+                    <th>Referrer Type</th>
+                    <th>Referrer</th>
+                    <th>Service Type</th>
+                    <th>Invoice</th>
+                    <th>Service Amount</th>
+                    <th>Commission Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in referrals %}
+                <tr>
+                    <td>{{ r.created_at|date:"Y-m-d" }}</td>
+
+                    <td>
+                        {% if r.invoice and r.invoice.patient %}
+                        {{ r.invoice.patient.name }}
+                        {% else %}
+                        No patient
+                        {% endif %}
+                    </td>
+                    <td>{{ r.referral_source.referral_type }}</td>
+                     <td>
+                        {% if r.referral_source.referral_type == "internal_doctor" %}
+                            {{ r.referral_source.internal_doctor.name }} | {{ r.referral_source.referral_type }}
+                        {% elif r.referral_source.referral_type == "external_doctor" %}
+                            {{ r.referral_source.external_name }}| {{ r.referral_source.referral_type }}
+                        {% elif r.referral_source.referral_type == "agent" %}
+                            {{ r.referral_source.agent_name }}| {{ r.referral_source.referral_type }}
+                        {% elif r.referral_source.referral_type == "hospital" %}
+                            {{ r.referral_source.hospital_name }}| {{ r.referral_source.referral_type }}
+                        {% else %}
+                            {{ r.referral_source.referral_type|capfirst }}
+                        {% endif %}
+                    </td>
+                    <td>{{ r.service_type }}</td>
+                    <td>{{ r.invoice.invoice_id }}</td>
+                    <td>{{ r.service_amount }}</td>
+                    <td>{{ r.commission_amount }}</td>
+                    <td>
+                        {% if r.status == "Paid" %}
+                            <span class="badge bg-success">{{ r.status }}</span>
+                        {% elif r.status == "Approved" %}
+                            <span class="badge bg-info">{{ r.status }}</span>
+                        {% else %}
+			      <a href="{% url 'billing:create_referral_payment' %}">
+                            <span class="badge bg-warning">{{ r.status }}</span>
+			    </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center">No referrals found for selected filters.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+
+
+</div>
+
+
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('filterForm');
+    const todayCheck = document.getElementById('todayCheck');
+    const monthCheck = document.getElementById('monthCheck');
+
+    todayCheck.addEventListener('change', function() {
+        if (this.checked) monthCheck.checked = false; // optional: uncheck other
+        form.submit();
+    });
+
+    monthCheck.addEventListener('change', function() {
+        if (this.checked) todayCheck.checked = false; // optional: uncheck other
+        form.submit();
+    });
+    const stakeholderType = document.getElementById('stakeholder_type');
+    stakeholderType.addEventListener('change', function() {
+        form.submit();
+    });
+
+});
+</script>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const stakeholderType = document.getElementById("stakeholder_type");
+    const stakeholderId = document.getElementById("stakeholder_id");
+
+    function updateStakeholderOptions() {
+        const type = stakeholderType.value;
+        fetchOptions(type);
+    }
+
+    stakeholderType.addEventListener("change", updateStakeholderOptions);
+
+    function fetchOptions(type) {
+        // This is optional: if you want dynamic fetch via API
+        // For now, options are rendered by template
+    }
+});
+</script>
+
+{% endblock %}
+

@@ -17,9 +17,6 @@ from django.core.paginator import Paginator
 
 
 
-# def create_notification(user,notification_type, message):   
-#     Notification.objects.create(user,message=message,notification_type=notification_type)
-
 
 
 
@@ -44,15 +41,12 @@ def mark_notification_as_read(notification_id):
 
 
 @login_required
-@require_POST  # Only allow POST requests
 def mark_notification_read_view(request, notification_id):
-    try:
-        notification = Notification.objects.get(id=notification_id, user=request.user)
-        notification.is_read = True
-        notification.save()
-        return JsonResponse({"success": True}) 
-    except Notification.DoesNotExist:
-        return JsonResponse({"success": False, "error": "Notification not found"}, status=404)
+    notification = get_object_or_404(Notification, id=notification_id)
+    notification.is_read = True
+    notification.save()
+    messages.success(request, "Notification marked as read.")
+    return redirect(request.META.get("HTTP_REFERER", "/"))
 
 
 

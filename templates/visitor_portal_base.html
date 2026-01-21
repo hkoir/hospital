@@ -264,13 +264,13 @@
                                 </form>
                             </li>                         
                                                   
-                            <li><a class="dropdown-item" href="{% url 'accounts:password_change' %}" style="text-decoration: none;"><i class="fas fa-key"></i>&nbsp;Change Password </a></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:pwdreset' %}" style="text-decoration: none;"><i class="fas fa-lock"></i> &nbsp;Forgot Password</a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:send_change_password_otp' %}" style="text-decoration: none;"><i class="fas fa-key"></i>&nbsp;Change Password </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:send_password_reset_otp' %}" style="text-decoration: none;"><i class="fas fa-lock"></i> &nbsp;Forgot Password</a></li>
                             {% else %}
                             <li><a class="dropdown-item" href="" style="text-decoration: none;"><i class="fas fa-user"></i></a>&nbsp;Your account</li>
                             <li><a class="dropdown-item" href="{% url 'accounts:login' %}" style="text-decoration: none;"><i class="fas fa-sign-in-alt"></i> &nbsp;Login</a></li>
                             <li><a class="dropdown-item" href="{% url 'accounts:register_patient' %}" style="text-decoration: none;"><i class="fas fa-sign-in-alt"></i> &nbsp;Register</a></li>
-                            <li><a class="dropdown-item" href="{% url 'accounts:pwdreset' %}" style="text-decoration: none;"><i class="fas fa-lock"></i>&nbsp;Forgot Password </a></li>
+                            <li><a class="dropdown-item" href="{% url 'accounts:send_password_reset_otp' %}" style="text-decoration: none;"><i class="fas fa-lock"></i>&nbsp;Forgot Password </a></li>
                             {% endif %}
                         </ul>                 
                     </li> 

@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+{% block content %}
+
+{% include 'referrals/quick_access_link.html' %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Referral Report</h2>
+
+    <!-- Filter -->
+    <form method="get" class="row g-3 mb-4">
+        <div class="col-md-3">
+            <label for="start_date">From Date</label>
+            <input type="date" id="start_date" name="start_date" class="form-control" value="{{ start_date }}">
+        </div>
+        <div class="col-md-3">
+            <label for="end_date">To Date</label>
+            <input type="date" id="end_date" name="end_date" class="form-control" value="{{ end_date }}">
+        </div>
+        <div class="col-md-3 align-self-end">
+            <button class="btn btn-primary">Filter</button>
+            <a href="{% url 'billing:referral_report' %}" class="btn btn-secondary">Reset</a>
+        </div>
+    </form>
+
+    <!-- Summary -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <h5>Summary</h5>
+            <div class="row">
+                <div class="col-md-3">Total Service Amount: <strong>{{ summary.total_service_amount|default:"0.00" }}</strong></div>
+                <div class="col-md-3">Total Commission: <strong>{{ summary.total_commission|default:"0.00" }}</strong></div>
+                <div class="col-md-3">Total Paid: <strong>{{ summary.total_paid|default:"0.00" }}</strong></div>
+                <div class="col-md-3">Remaining: <strong>{{ summary.remaining|default:"0.00" }}</strong></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Detailed List -->
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Date</th>
+                    <th>Patient</th>
+                    <th>Referrer</th>
+                    <th>Service Type</th>
+                    <th>Invoice</th>
+                    <th>Service Amount</th>
+                    <th>Commission Amount</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for r in referrals %}
+                <tr>
+                    <td>{{ r.created_at|date:"Y-m-d" }}</td>
+                    <td>{{ r.invoice.patient.name }}</td>
+                    <td>
+                        {% if r.referral_source.referral_type == "internal_doctor" %}
+                            {{ r.referral_source.internal_doctor.name }} | {{ r.referral_source.referral_type }}
+                        {% elif r.referral_source.referral_type == "external_doctor" %}
+                            {{ r.referral_source.external_name }}| {{ r.referral_source.referral_type }}
+                        {% elif r.referral_source.referral_type == "agent" %}
+                            {{ r.referral_source.agent_name }}| {{ r.referral_source.referral_type }}
+                        {% elif r.referral_source.referral_type == "hospital" %}
+                            {{ r.referral_source.hospital_name }}| {{ r.referral_source.referral_type }}
+                        {% else %}
+                            {{ r.referral_source.referral_type|capfirst }}
+                        {% endif %}
+                    </td>
+                    <td>{{ r.service_type }}</td>
+                    <td>{{ r.invoice.invoice_id }}</td>
+                    <td>{{ r.service_amount }}</td>
+                    <td>{{ r.commission_amount }}</td>
+                    <td>
+                        {% if r.status == "Paid" %}
+                            <span class="badge bg-success">{{ r.status }}</span>
+                        {% elif r.status == "Approved" %}
+                            <span class="badge bg-info">{{ r.status }}</span>
+                        {% else %}
+                            <span class="badge bg-warning">{{ r.status }}</span>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="8" class="text-center">No referrals found in this date range.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}

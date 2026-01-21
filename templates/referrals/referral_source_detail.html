@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% include 'referrals/quick_access_link.html' %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Referral Source Details</h2>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <h5 class="card-title">Referral Type: {{ referral.get_referral_type_display }}</h5>
+            <hr>
+            <table class="table table-bordered">
+                <tbody>
+                    {% for key, value in data.items %}
+                        <tr>
+                            <th>{{ key }}</th>
+                            <td>{{ value|default:"-" }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            <a href="{% url 'billing:referral_source_list' %}" class="btn btn-secondary mt-2">Back to List</a>
+        </div>
+    </div>
+</div>
+
+{% endblock %}

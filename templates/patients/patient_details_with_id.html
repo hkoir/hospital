@@ -1,0 +1,91 @@
+
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+
+<div class="container mt-4">
+
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="{% url 'patients:patient_list' %}" class="btn btn-secondary btn-sm">
+            &larr; Back to Patients
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Patient Photo and Basic Info -->
+        <div class="col-md-4">
+            <div class="card shadow-sm">
+                {% if patient.patient_photo %}
+                    <img src="{{ patient.patient_photo.url }}" class="card-img-top" alt="{{ patient.name }}">
+                {% else %}
+                    <img src="{% static 'images/default_patient.png' %}" class="card-img-top" alt="No Photo">
+                {% endif %}
+                <div class="card-body text-center">
+                    <h4 class="card-title">{{ patient.name|default:"N/A" }}</h4>
+                    <p class="text-muted mb-1">Patient ID: <strong>{{ patient.patient_id|default:"N/A" }}</strong></p>
+                    <p class="text-muted mb-1">Gender: <strong>{{ patient.gender|default:"N/A" }}</strong></p>
+                    <p class="text-muted mb-1">Date of Birth: <strong>{{ patient.date_of_birth|date:"d M Y"|default:"N/A" }}</strong></p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Patient Details -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    Patient Details
+                </div>
+                <div class="card-body">
+                    <div class="row mb-2">
+                        <div class="col-sm-4 text-muted">Email:</div>
+                        <div class="col-sm-8">{{ patient.email|default:"N/A" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4 text-muted">Phone:</div>
+                        <div class="col-sm-8">{{ patient.phone|default:"N/A" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4 text-muted">Address:</div>
+                        <div class="col-sm-8">{{ patient.address|default:"N/A" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4 text-muted">Emergency Contact:</div>
+                        <div class="col-sm-8">{{ patient.emergency_contact|default:"N/A" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4 text-muted">Guardian:</div>
+                        <div class="col-sm-8">{{ patient.guardian.name|default:"N/A" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4 text-muted">Referral Source:</div>
+                        <div class="col-sm-8">{{ patient.referral_source.name|default:"N/A" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4 text-muted">Medical History:</div>
+                        <div class="col-sm-8">{{ patient.medical_history|default:"N/A" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4 text-muted">Created At:</div>
+                        <div class="col-sm-8">{{ patient.created_at|date:"d M Y H:i" }}</div>
+                    </div>
+                    <div class="row mb-2">
+                        <div class="col-sm-4 text-muted">Last Updated:</div>
+                        <div class="col-sm-8">{{ patient.updated_at|date:"d M Y H:i" }}</div>
+                    </div>
+                </div>
+
+                <div class="card-footer text-end">
+                    <a href="" class="btn btn-sm btn-primary">
+                        Edit Patient
+                    </a>
+                    <a href="" class="btn btn-sm btn-secondary">
+                        Back to List
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

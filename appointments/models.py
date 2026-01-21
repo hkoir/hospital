@@ -27,6 +27,12 @@ class AppointmentSlot(models.Model):
 
         super().save(*args, **kwargs)
 
+    def __str__(self):
+        return f" with {self.doctor} on {self.date}-at slots:{self.start_time}-{self.end_time}"
+ 
+
+
+
     
 import logging
 
@@ -35,6 +41,8 @@ logger = logging.getLogger(__name__)
 class Appointment(models.Model):
     appointment_code = models.CharField(max_length=30,null=True,blank=True)
     medical_record = models.ForeignKey(MedicalRecord, null=True, blank=True, on_delete=models.SET_NULL, related_name='medical_record_appointments')
+    invoice = models.ForeignKey('billing.BillingInvoice', null=True, blank=True, on_delete=models.SET_NULL, related_name='invoice_appointments')
+    appointment_type = models.CharField(max_length=20,choices={('New','New'),('Follow-up','Follow up')},null=True,blank=True)
     STATUS_CHOICES = [
         ('Pending', 'Pending'),
         ('Confirmed', 'Confirmed'),
@@ -43,6 +51,7 @@ class Appointment(models.Model):
         ('Lab-Test-Requested', 'Lab Test Requested'),
         ('Completed', 'Completed'),
         ('Cancelled', 'Cancelled'),
+        ('Scheduled', 'Scheduled'),
     ]
     user= models.ForeignKey(CustomUser, on_delete=models.CASCADE,null=True,blank=True)
     doctor = models.ForeignKey(Doctor, on_delete=models.CASCADE,null=True,blank=True,related_name='doctor_appointments')
@@ -56,6 +65,8 @@ class Appointment(models.Model):
     )
     date = models.DateField(default=timezone.now)   
     status = models.CharField(max_length=50, choices=STATUS_CHOICES, default='Pending')    
+    created_at = models.DateTimeField(auto_now_add=True,null=True,blank=True)
+    updated_at = models.DateTimeField(auto_now=True,null=True,blank=True)
 
     def save(self, *args, **kwargs):
         if self.timeslot:

@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% load custom_filters %}
+{% load static %}
+
+{% block content %}
+
+<div class="container mt-4">
+    <div class="card shadow-sm">
+
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">OT Booking for Invoice #{{ invoice.id }}</h5>
+        </div>
+
+       <div class="card-body">            
+            <form method="POST">                
+                {% csrf_token %}
+             
+                <fieldset>
+                    <legend>OT Booking Details</legend>
+                    <div class="row">
+                        {% for field in form %}
+                        <div class="col-md-4 mb-3">
+                            <label class="form-label">{{ field.label }}</label>
+                            {{ field|add_class:'form-control' }}
+                            
+                            <!-- show field error -->
+                            {% if field.errors %}
+                                <div class="text-danger small">
+                                    {{ field.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                                    
+                </fieldset>
+            
+                <fieldset>
+                    <legend>Procedures / Services</legend>                   
+                    {{ formset.management_form }}
+                     <div class="row">   
+                        <div class="table-responsive">                     
+                            <table id="procedure-table" class="table table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>Procedure</th>                             
+                                        <th>Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for f in formset %}
+                                    <tr class="procedure-row">
+                                         {{ f.id }}
+                                        <td>{{ f.procedure|add_class:'form-control' }}</td>
+                                           {{ f.DELETE }}
+                                      
+                                        <td>
+                                            <button type="button" class="remove-row btn btn-danger btn-sm">Remove</button>
+                                        </td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                             </div>
+                        </div>
+
+                            <button type="button" id="add-row" class="btn btn-primary btn-sm mt-2">Add Procedure</button>
+                        </fieldset>
+
+                        <button type="submit" class="btn btn-success mt-3">Save Booking</button>
+                    </form>
+
+                    <!-- Hidden empty form template -->
+                    <table style="display:none;">
+                        <tr id="empty-row">
+                                {{ formset.empty_form.id }}
+                            <td>{{ formset.empty_form.procedure|add_class:'form-control' }}</td>   
+                              {{ formset.empty_form.DELETE }}                       
+                            <td><button type="button" class="remove-row btn btn-danger btn-sm">Remove</button></td>
+                        </tr>
+                    </table>
+                 
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+$(document).ready(function() {
+    // Add new row
+    $('#add-row').click(function() {
+        var totalForms = $('#id_procedures-TOTAL_FORMS'); // must match your formset prefix
+        var formIdx = parseInt(totalForms.val());
+
+        // Clone empty_form
+        var newRow = $('#empty-row').clone().removeAttr('id').show();
+
+        // Replace __prefix__ with index
+        newRow.html(newRow.html().replace(/__prefix__/g, formIdx));
+
+        // Append to table
+        $('#procedure-table tbody').append(newRow);
+
+        // Increment TOTAL_FORMS
+        totalForms.val(formIdx + 1);
+    });
+
+    // Remove row
+    $('#procedure-table').on('click', '.remove-row', function() {
+        $(this).closest('tr').remove();
+    });
+});
+
+</script>
+
+
+
+
+{% endblock %}
+

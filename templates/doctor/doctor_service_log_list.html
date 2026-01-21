@@ -1,0 +1,117 @@
+{% extends "base.html" %}
+{% block content %}
+
+
+
+
+<div class="container-fluid">
+    <div class="dashboard-wrapper">      
+        <div class="left-panel mt-0">      
+            {% include 'workspace/staff_quick_access_link.html' %}
+        </div>
+       
+        <div class="right-panel">  
+            {% include 'referrals/quick_access_link.html' %} 
+
+    <h2 class="mb-4">Doctor Service Logs</h2>
+
+    <form method="get" class="row mb-3" id="filterForm">
+    <div class="col-md-3">
+        <input type="text" name="q" class="form-control" placeholder="Search patient/service/invoice"
+               value="{{ query }}">
+    </div>
+
+    <div class="col-md-3">
+        <select name="doctor" class="form-control auto-submit">
+            <option value="">-- All Doctors --</option>
+            {% for doc in doctors %}
+            <option value="{{ doc.id }}" {% if selected_doctor == doc.id|stringformat:"s" %}selected{% endif %}>
+                {{ doc }}
+            </option>
+            {% endfor %}
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <select name="paid" class="form-control auto-submit">
+            <option value="">-- Payment Status --</option>
+            <option value="paid" {% if paid_status == 'paid' %}selected{% endif %}>Paid</option>
+            <option value="unpaid" {% if paid_status == 'unpaid' %}selected{% endif %}>Unpaid</option>
+        </select>
+    </div>
+
+    <div class="col-md-3">
+        <button type="submit" class="btn btn-primary">Filter</button>
+        <a href="{% url 'billing:doctor_service_log_list' %}" class="btn btn-secondary">Reset</a>
+    </div>
+</form>
+
+    <div class="table-responsive">
+        <table class="table table-bordered table-striped">
+            <thead class="table-light">
+                <tr>
+                    <th>Date</th>
+                    <th>Doctor</th>
+                    <th>Patient</th>
+                    <th>Service Type</th>
+                    <th>Surgery Type</th>
+                    <th>Service Fee</th>
+                    <th>Doctor Share</th>
+                    <th>Hospital Share</th>
+                    <th>Paid</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for log in logs %}
+                <tr>
+                    <td>{{ log.service_date }}</td>
+                    <td>
+ 			 <a href="{% url 'core:doctor_details' log.doctor.id%}"
+                            style="text-decoration: none;">
+                            {{ log.doctor}} | {{ log.doctor.specialization}}
+                            {% if log.doctor.user.photo_id %}
+                            <img src="{{ log.doctor.user.photo_id.url }}"
+                            style="width:40px;height:40px">
+                            {% endif %}
+                            </a>
+		    </td>
+                    <td>{{ log.patient.name }}</td>
+                    <td>{{ log.service_type }}</td>
+                    <td>{{ log.surgery_type|default:"-" }}</td>
+                    <td>{{ log.service_fee|default:"-" }}</td>
+                    <td>{{ log.doctor_share|default:"-" }}</td>
+                    <td>{{ log.hospital_share|default:"-" }}</td>
+                    <td>
+                        {% if log.is_paid %}
+                            <span class="badge bg-success">Paid</span>
+                        {% else %}
+                        <a href="{% url 'billing:create_doctor_service_log_payment' %}">
+                            <span class="badge bg-warning">Unpaid</span>
+                            </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="9" class="text-center">No service logs found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    document.querySelectorAll('.auto-submit').forEach(function(select) {
+        select.addEventListener('change', function() {
+            document.getElementById('filterForm').submit();
+        });
+    });
+});
+</script>
+
+{% endblock %}

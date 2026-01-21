@@ -1,0 +1,32 @@
+<div class="container my-3">
+
+    <h5 class="text-center mb-3 fw-bold">Quick Navigation</h5>
+
+    <!-- Finance Section -->
+    <div class="d-flex justify-content-center flex-wrap gap-2 mb-2">
+        <span class="fw-semibold text-secondary small me-2">Finance:</span>
+
+        <a href="{% url 'finance:revenue_report' %}" class="btn btn-sm btn-outline-primary">Revenue</a>
+        <a href="{% url 'finance:top_expenses_head' %}" class="btn btn-sm btn-outline-secondary">Top Expenses</a>
+        <a href="{% url 'finance:shareholder_dashboard' %}" class="btn btn-sm btn-outline-warning">Shareholders</a>
+       <a href="{% url 'finance:create_asset' %}" class="btn btn-sm btn-outline-primary">+ Asset</a>  
+       <a href="{% url 'finance:create_expense' %}" class="btn btn-sm btn-outline-info">+ Expense</a>
+	 <a href="{% url 'billing:stakeholder_referral_report' %}" class="btn btn-sm btn-outline-dark">Ref Report</a>
+        <a href="{% url 'billing:create_referral_payment' %}" class="btn btn-sm btn-outline-danger">Pay Referral</a>
+       <a href="{% url 'billing:doctor_service_log_list' %}" class="btn btn-sm btn-outline-dark">Doctor Services</a>
+        <a href="{% url 'billing:create_doctor_service_log_payment' %}" class="btn btn-sm btn-outline-danger">Pay Doctor service </a>
+
+    </div>
+
+    <!-- Doctor & Referral -->
+    <div class="d-flex justify-content-center flex-wrap gap-2 mt-1">
+        <span class="fw-semibold text-secondary small me-2">Policy & Rules:</span>
+        <a href="{% url 'core:tax_policy_create' %}" class="btn btn-sm btn-outline-primary">+ Tax Policy</a>
+        <a href="{% url 'core:service_tax_policy_create' %}" class="btn btn-sm btn-outline-secondary">+ Service tax Policy</a>
+        <a href="{% url 'billing:doctor_service_rate_create' %}" class="btn btn-sm btn-outline-primary">+ Doc Rate</a>
+        <a href="{% url 'billing:doctor_service_rate_list' %}" class="btn btn-sm btn-outline-secondary">Doc Rates</a>
+        <a href="{% url 'billing:referral_source_list' %}" class="btn btn-sm btn-outline-warning">Ref Sources</a>
+        <a href="{% url 'billing:referral_rule_list' %}" class="btn btn-sm btn-outline-info">Ref Rules</a>
+    </div>
+<hr>
+</div>

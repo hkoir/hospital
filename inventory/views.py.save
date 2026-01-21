@@ -1,0 +1,581 @@
+
+from django.shortcuts import render, redirect,get_object_or_404
+from django.db.models import F
+from django.contrib.auth.decorators import login_required,permission_required
+from django.contrib import messages
+import json
+from django.db.models import Sum
+from django.template.loader import render_to_string
+from django.core.paginator import Paginator
+from django.http import JsonResponse
+
+from .models import Inventory
+# from inventory.models import Batch,Product,ProductCategory
+from product.models import Product,Category
+from purchase.models import Batch
+
+from.forms import BatchForm,AddProductForm,AddCategoryForm,CommonFilterForm
+from.forms import ProductSearchForm,InventoryTransactionForm
+
+
+from django.utils import timezone
+from django.db import transaction
+from django.forms import modelformset_factory
+from .forms import MedicineSaleOnlyForm, MedicineSaleItemForm
+from.models import MedicineSaleItem,MedicineSaleOnly,Product
+from medical_records.models import MedicalRecord
+from billing.models import BillingInvoice,Payment
+from billing.models import MedicineBill
+
+
+@login_required
+def product_dashboard(request):
+    return render(request,'inventory/product_dashboard.html')
+
+
+
+@login_required
+def product_list(request):
+    product = None
+    products = Product.objects.all().order_by('-created_at')
+    form = CommonFilterForm(request.GET or None)  
+    if form.is_valid():
+        product = form.cleaned_data.get('product_name')
+        if product:
+            products = products.filter(name__icontains=product.name)  
+    
+    paginator = Paginator(products, 10)  
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    form=CommonFilterForm()
+
+    return render(request, 'inventory/product_list.html', {
+        'products': products,
+        'page_obj': page_obj,
+        'product': product,
+        'form': form,
+    })
+
+
+
+@login_required
+def manage_category(request, id=None):  
+    instance = get_object_or_404(ProductCategory, id=id) if id else None
+    message_text = "updated successfully!" if id else "added successfully!"  
+    form = AddCategoryForm(request.POST or None, request.FILES or None, instance=instance)
+
+    if request.method == 'POST' and form.is_valid():
+        form_intance=form.save(commit=False)
+        form_intance.user = request.user
+        form_intance.save()        
+        messages.success(request, message_text)
+        return redirect('inventory:create_category')
+
+    datas = Category.objects.all().order_by('-created_at')
+    paginator = Paginator(datas, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'inventory/manage_category.html', {
+        'form': form,
+        'instance': instance,
+        'datas': datas,
+        'page_obj': page_obj
+    })
+
+
+
+@login_required
+def delete_category(request, id):
+    instance = get_object_or_404(Category, id=id)
+    if request.method == 'POST':
+        instance.delete()
+        messages.success(request, "Deleted successfully!")
+        return redirect('inventory:create_category')
+
+    messages.warning(request, "Invalid delete request!")
+    return redirect('inventory:create_category')
+
+
+
+
+@login_required
+def manage_product(request, id=None):  
+    instance = get_object_or_404(Product, id=id) if id else None
+    message_text = "updated successfully!" if id else "added successfully!"  
+    form = AddProductForm(request.POST or None, request.FILES or None, instance=instance)
+
+    if request.method == 'POST' and form.is_valid():
+        form_intance=form.save(commit=False)
+        form_intance.user = request.user
+        form_intance.save()        
+        messages.success(request, message_text)
+        return redirect('inventory:create_product') 
+
+    datas = Product.objects.all().order_by('-created_at')
+    paginator = Paginator(datas, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'inventory/manage_product.html', {
+        'form': form,
+        'instance': instance,
+        'datas': datas,
+        'page_obj': page_obj
+    })
+
+
+
+@login_required
+def delete_product(request, id):
+    instance = get_object_or_404(Product, id=id)
+    if request.method == 'POST':
+        instance.delete()
+        messages.success(request, "Deleted successfully!")
+        return redirect('inventory:create_product')
+
+    messages.warning(request, "Invalid delete request!")
+    return redirect('inventory:create_product')
+
+
+@login_required
+def product_data(request,product_id):
+    product_instance = get_object_or_404(Product,id=product_id)
+    return render(request,'inventory/product_data.html',{'product_instance':product_instance})
+
+
+
+
+@login_required
+def manage_batch(request, id=None):  
+    instance = get_object_or_404(Batch, id=id) if id else None
+    message_text = "updated successfully!" if id else "added successfully!"  
+    form = BatchForm(request.POST or None, request.FILES or None, instance=instance)
+
+    if request.method == 'POST' and form.is_valid():
+        product = form.cleaned_data['product']
+        manufacture_date = form.cleaned_data['manufacture_date']
+        expiry_date = form.cleaned_data['expiry_date']
+        quantity = form.cleaned_data['quantity']
+        unit_price = form.cleaned_data['purchase_price']
+        product_type= form.cleaned_data['product_type']  
+
+        existing_batch = Batch.objects.filter(product=product, manufacture_date=manufacture_date).first()
+        if existing_batch:              
+            existing_batch.quantity += quantity
+            existing_batch.remaining_quantity = F('remaining_quantity') + quantity
+            #existing_batch.unit_price = unit_price  # Decide if price should be updated
+        else:
+            batch = form.save(commit=False)
+            batch.user = request.user          
+            batch.remaining_quantity = quantity
+            batch.save()          
+           
+        messages.success(request, message_text)
+        return redirect('inventory:create_batch')  
+
+    datas = Batch.objects.all().order_by('-updated_at')
+    paginator = Paginator(datas, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'inventory/manage_batch.html', {
+        'form': form,
+        'instance': instance,
+        'datas': datas,
+        'page_obj': page_obj
+    })
+
+
+
+@login_required
+def delete_batch(request, id):
+    instance = get_object_or_404(Batch, id=id)
+    if request.method == 'POST':
+        instance.delete()
+        messages.success(request, "Deleted successfully!")
+        return redirect('inventory:create_batch')      
+
+    messages.warning(request, "Invalid delete request!")
+    return redirect('inventory:create_batch') 
+
+
+
+# @login_required
+# def inventory_transaction_view(request):
+#     if request.method == 'POST':
+#         form = InventoryTransactionForm(request.POST, user=request.user)
+#         if form.is_valid():
+#             form.save()
+#             messages.success(request,'successfully added product into stock')
+#             return redirect('inventory:inventory_transaction_view')  
+#     else:
+#         form = InventoryTransactionForm(user=request.user)
+
+#     return render(request, 'inventory/inventory_transaction.html', {'form': form})
+
+
+
+from inventory.services.inventory import process_transaction
+
+def create_inventory_transaction(request):
+    if request.method == "POST":
+        form = InventoryTransactionForm(request.POST, user=request.user)
+        if form.is_valid():
+            transaction = form.save(commit=False)
+            transaction.user = request.user
+            transaction.save()
+
+            # Call the service to apply business rules
+            try:
+                process_transaction(
+                    transaction,
+                    user=request.user,
+                    target_warehouse=form.cleaned_data.get('target_warehouse'),
+                    target_location=form.cleaned_data.get('target_location')
+                )
+                messages.success(request, "Transaction processed successfully.")
+            except Exception as e:
+                messages.error(request, f"Transaction failed: {str(e)}")
+                # Optional: rollback transaction if needed
+
+            return redirect("inventory:inventory_dashboard")
+    else:
+        form = InventoryTransactionForm(user=request.user)
+    return render(request, "inventory/inventory_transaction.html", {"form": form})
+
+
+
+
+@login_required
+def inventory_dashboard(request):
+    table_data = Inventory.objects.select_related('product', 'warehouse', 'location', 'batch')
+    product=None
+    warehouse=None
+    location=None
+    batch=None
+
+    form = ProductSearchForm(request.GET or None)
+    if request.method == 'GET':
+        form = ProductSearchForm(request.GET or None)
+        if form.is_valid():
+            product=form.cleaned_data['product']
+            batch=form.cleaned_data['batch']
+            warehouse=form.cleaned_data['warehouse']
+            location=form.cleaned_data['location']
+
+            if product:
+                table_data = table_data.filter(product__name__icontains=product)
+
+            if batch:
+                table_data = table_data.filter(batch__batch_number__icontains=batch)
+            if warehouse:
+                table_data = table_data.filter(warehouse__name__icontains=warehouse)
+            if location:
+                table_data = table_data.filter(location__name__icontains=location)
+
+        else:
+            print(form.errors)
+          
+    
+    form = ProductSearchForm()
+    datas = table_data 
+    paginator = Paginator(datas, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        html = render_to_string('inventory/partials/inventory_table.html', {'page_obj': page_obj})
+        return JsonResponse({'html': html})
+
+
+    inventory_data = table_data.values(
+        'product__name'
+    ).annotate(
+        total_quantity=Sum('quantity'),
+        reorder_level=Sum('reorder_level')
+    ).order_by('total_quantity')[:10]
+
+
+    labels = [item['product__name'] for item in inventory_data]
+    quantities = [item['total_quantity'] for item in inventory_data]
+    reorder_levels = [item['reorder_level'] for item in inventory_data]
+
+  
+
+    context = {
+        'labels': json.dumps(labels),
+        'quantities': json.dumps(quantities),
+        'reorder_levels': json.dumps(reorder_levels),
+        'page_obj': page_obj,
+        'form':form,
+        'product':product,
+        'warehouse':warehouse,
+        'location':location,
+        'batch':batch,
+    }
+  
+    
+    return render(request, 'inventory/inventory_dashboard.html', context)
+
+
+
+
+
+@login_required
+def get_medicines(request, category_id):
+    medicines = Product.objects.filter(category_id=category_id).values('id', 'name')
+    print('trigerring ajax')
+    return JsonResponse(list(medicines), safe=False)
+
+
+@login_required
+def get_batches(request, product_id):
+    batches = Batch.objects.filter(product_id=product_id)
+    data = [
+        {
+            "id": b.id,
+            "product_name": b.product.name, 
+            "remaining_quantity": b.remaining_quantity,
+            "batch_number": b.batch_number
+        }
+        for b in batches
+    ]
+    return JsonResponse(data, safe=False)
+
+
+
+
+
+
+
+
+
+@login_required
+def pending_medicine_deliveries(request):
+    invoices = BillingInvoice.objects.filter(
+        medicine_bills__status='Paid'
+    ).exclude(
+        medicine_bills__status='Delivered'
+    ).distinct()
+
+    invoice_data = []
+    for invoice in invoices:
+        medicine_bills = invoice.medicine_bills.filter(status='Paid')
+        medicine_total = sum([bill.total_price() for bill in medicine_bills])
+        invoice_data.append((invoice, medicine_total))
+
+    return render(request, 'inventory/pending_medicine_deliveries.html', {
+        'invoices': invoices,
+        'invoice_data':invoice_data
+    })
+
+
+
+@login_required
+@transaction.atomic
+def deliver_invoice_medicines(request, invoice_id):
+    invoice = get_object_or_404(BillingInvoice, id=invoice_id)
+    medicine_bills = invoice.medicine_bills.filter(status='Paid')  # Only paid medicines can be delivered
+
+    for bill in medicine_bills:
+        # Check stock
+        batch = Batch.objects.filter(product=bill.medicine, quantity__gte=bill.quantity).order_by('expiry_date').first()
+        if not batch:
+            messages.error(request, f"Insufficient stock for {bill.medicine.name}. Cannot deliver.")
+            return redirect('billing:invoice_detail', pk=invoice_id)
+
+        # Deduct and deliver
+        batch.quantity -= bill.quantity
+        batch.save()
+
+        bill.status = 'Delivered'
+        bill.delivered_by = request.user
+        bill.delivered_at = timezone.now()
+        bill.save()
+
+    messages.success(request, "All paid medicines successfully delivered.")
+    return redirect('inventory:pending_medicine_deliveries')
+
+
+######################################################################
+
+from.models import Warehouse,Location
+from.forms import AddWarehouseForm,AddLocationForm,QualityControlCompletionForm
+from .utils import get_warehouse_stock,calculate_stock_value,calculate_stock_value2
+from .utils import update_purchase_order,update_purchase_request_order,update_shipment_status 
+
+@login_required
+def manage_warehouse(request, id=None):  
+    instance = get_object_or_404(Warehouse, id=id) if id else None
+    message_text = "updated successfully!" if id else "added successfully!"
+    form = AddWarehouseForm(request.POST or None, instance=instance)
+
+    if request.method == 'POST' and form.is_valid():
+        form_instance=form.save(commit=False)
+        form_instance.user=request.user
+        form_instance.save()
+        messages.success(request, message_text)
+        return redirect('inventory:create_warehouse')
+
+    datas = Warehouse.objects.all().order_by('-created_at')
+    paginator = Paginator(datas, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'inventory/manage_inventory/manage_warehouse.html', {
+        'form': form,
+        'instance': instance,
+        'datas': datas,
+        'page_obj': page_obj
+    })
+
+@login_required
+def delete_warehouse(request, id):
+    instance = get_object_or_404(Warehouse, id=id)
+    if request.method == 'POST':
+        instance.delete()
+        messages.success(request, "Deleted successfully!")
+        return redirect('inventory:create_warehouse')
+
+    messages.warning(request, "Invalid delete request!")
+    return redirect('inventory:create_warehouse')
+
+
+
+@login_required
+def manage_location(request, id=None):   
+
+    instance = get_object_or_404(Location, id=id) if id else None
+    message_text = "updated successfully!" if id else "added successfully!"
+    form = AddLocationForm(request.POST or None, instance=instance)
+
+    if request.method == 'POST' and form.is_valid():
+        form_instance = form.save(commit=False)
+        form_instance.user=request.user
+        form_instance.save()
+        messages.success(request, message_text)
+        return redirect('inventory:create_location')
+
+    datas = Location.objects.all().order_by('-created_at')
+    paginator = Paginator(datas, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, 'inventory/manage_inventory/manage_location.html', {
+        'form': form,
+        'instance': instance,
+        'datas': datas,
+        'page_obj': page_obj
+    })
+
+
+@login_required
+def delete_location(request, id):
+    instance = get_object_or_404(Location, id=id)
+    if request.method == 'POST':
+        instance.delete()
+        messages.success(request, "Deleted successfully!")
+        return redirect('inventory:create_location')
+
+    messages.warning(request, "Invalid delete request!")
+    return redirect('inventory:create_location')
+
+
+@login_required
+def get_locations(request):
+    warehouse_id = request.GET.get('warehouse_id')
+    locations = Location.objects.filter(warehouse_id=warehouse_id)
+
+    options = '<option value="">Select Location</option>'  
+    for location in locations:
+        options += f'<option value="{location.id}">{location.name}</option>'
+    return JsonResponse(options, safe=False)
+
+
+
+
+
+@login_required
+def complete_quality_control(request, qc_id):
+    quality_control = get_object_or_404(QualityControl, id=qc_id)    
+    good_quantity = quality_control.good_quantity
+    purchase_dispatch_item = quality_control.purchase_dispatch_item
+    purchase_shipment = purchase_dispatch_item.purchase_shipment
+    purchase_order = purchase_shipment.purchase_order
+    purchase_request_order = purchase_order.purchase_request_order
+    purchase_order_item = purchase_dispatch_item.dispatch_item
+    batch_fetch = purchase_order_item.batch
+  
+    if request.method == 'POST':
+        selected_warehouse_id = request.POST.get('warehouse')
+        selected_warehouse = Warehouse.objects.get(id=selected_warehouse_id) if selected_warehouse_id else None
+
+        form = QualityControlCompletionForm(request.POST, warehouse=selected_warehouse)
+        if form.is_valid():
+            warehouse = form.cleaned_data['warehouse']
+            location = form.cleaned_data['location']
+           
+            try:
+                with transaction.atomic():
+
+                    inventory_transaction = InventoryTransaction.objects.create(
+                        user=request.user,
+                        warehouse=warehouse,
+                        location=location,
+                        product=quality_control.product,
+                        batch = batch_fetch,
+                        transaction_type='INBOUND',
+                        quantity=good_quantity,
+                        purchase_order=purchase_dispatch_item.dispatch_item.purchase_order
+                    )
+
+                    inventory, created = Inventory.objects.get_or_create(
+                        warehouse=warehouse,
+                        location=location,
+                        product=quality_control.product,
+                        batch = batch_fetch,
+                        user=request.user,
+                        defaults={
+                            'quantity': good_quantity 
+                        }
+                    )
+        
+                    if not created:
+                        inventory.quantity += good_quantity
+                        inventory.save()
+                        messages.success(request, "Inventory updated successfully.")
+                    else:
+                        messages.success(request, "Inventory created successfully.")
+
+                    inventory_transaction.inventory = inventory
+                    inventory_transaction.save()
+                    messages.success(request, "Inventory and inventory_transaction linking created successfully.")
+                    
+
+            except Exception as e: 
+                logger.error("Error creating delivery: %s", e)
+                messages.error(request, f"An error occurred {str(e)}")
+                return redirect('purchase:qc_dashboard')
+                 
+            purchase_dispatch_item.status = 'DELIVERED'
+            purchase_dispatch_item.save()   
+
+            update_purchase_order(purchase_order.id)      
+            update_shipment_status(purchase_shipment.id)
+            update_purchase_request_order(purchase_request_order.id)  
+            purchase_shipment.update_shipment_status()
+       
+            messages.success(request, "Quality control completed and product added to inventory.")
+            return redirect('purchase:qc_dashboard')
+        else:      
+            print(form.errors)    
+            messages.error(request, "Failed to update inventory. Form is not valid.")
+  
+
+    form = QualityControlCompletionForm(initial={'batch':batch_fetch})
+    return render(request, 'inventory/complete_quality_control.html', {
+        'form': form,
+        'quality_control': quality_control,
+    })

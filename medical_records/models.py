@@ -13,7 +13,15 @@ class MedicalRecord(models.Model):
     external_doctor = models.CharField(max_length=255, blank=True, null=True)
     diagnosis = models.TextField(default='N/A')
     treatment_plan = models.TextField(default='N/A')
+
+     # Vital signs
+    vital_bp = models.CharField(max_length=20, blank=True, null=True)
+    vital_pulse = models.CharField(max_length=20, blank=True, null=True)
+    vital_temp = models.CharField(max_length=20, blank=True, null=True)
+    vital_spo2 = models.CharField(max_length=20, blank=True, null=True)
     date = models.DateField(auto_now_add=True)
+    remarks = models.TextField(blank=True, null=True)
+
 
     def save(self, *args, **kwargs):
         if not self.medical_record_code:
@@ -34,6 +42,7 @@ class MedicalRecord(models.Model):
 
 class MedicalRecordProgress(models.Model):
     medical_record = models.ForeignKey(MedicalRecord, on_delete=models.CASCADE, related_name='progress_notes')
+    doctor = models.ForeignKey('core.Doctor', on_delete=models.SET_NULL, null=True, blank=True, related_name='medical_proggress_records')
     date = models.DateTimeField(auto_now_add=True)
     updated_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True,related_name='add_progress_notes')
     diagnosis = models.TextField()
@@ -57,6 +66,7 @@ class Prescription(models.Model):
     medical_record = models.ForeignKey(
         MedicalRecord, on_delete=models.CASCADE, related_name='prescriptions',null=True,blank=True
     )
+    progress = models.ForeignKey(MedicalRecordProgress, on_delete=models.CASCADE, null=True, blank=True)
     patient_type = models.CharField(
         max_length=50, choices=[('IPD', 'Inpatient'), ('OPD', 'OutPatient')], null=True, blank=True
     )
@@ -144,7 +154,7 @@ class PrescribedMedicine(models.Model):
         return dosage_val * total_doses * self.medication_duration
 
     def save(self, *args, **kwargs):
-        self.quantity = self.calculate_quantity()
+        #self.quantity = self.calculate_quantity()
         super().save(*args, **kwargs)
 
     def __str__(self):

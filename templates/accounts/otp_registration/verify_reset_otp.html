@@ -1,0 +1,85 @@
+{% extends "sub_base.html" %}
+
+{% block content %}
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6 col-lg-5">
+            <div class="card shadow rounded-4 border-0">
+                <div class="card-body p-4">
+                    <h4 class="mb-4 text-center text-primary fw-bold">Reset Password</h4>
+
+                    {% if error %}
+                        <div class="alert alert-danger">{{ error }}</div>
+                    {% elif messages %}
+                        {% for message in messages %}
+                            <div class="alert alert-{{ message.tags }}">{{ message }}</div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <form method="POST" action="{% url 'accounts:verify_password_reset_otp' %}">
+                        {% csrf_token %}
+                        {% if phone %}
+                            <input type="hidden" name="phone" value="{{ phone }}">
+                        {% endif %}
+
+                        <div class="mb-3">
+                            <label for="otp" class="form-label">Enter OTP sent to your phone</label>
+                            <input type="text" class="form-control" name="otp" id="otp" placeholder="6-digit code" maxlength="6" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="new_password" class="form-label">New Password</label>
+                            <input type="password" class="form-control" name="new_password" id="new_password" required>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="confirm_password" class="form-label">Confirm Password</label>
+                            <input type="password" class="form-control" name="confirm_password" id="confirm_password" required>
+                        </div>
+
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-success btn-block">Reset Password</button>
+                        </div>
+                    </form>
+
+                    {% if valid_until %}
+                    <div class="text-center mt-3">
+                        <small class="text-muted">
+                            Didn’t receive the OTP? 
+                            <span id="resend-section">
+                                <a id="resend-link" href="{% url 'accounts:resend_otp' phone %}" class="text-decoration-none d-none">Resend</a>
+                                <span id="countdown"></span>
+                            </span>
+                        </small>
+                    </div>
+                    <script>
+                        const validUntil = new Date("{{ valid_until|date:'c' }}");
+                        const countdownEl = document.getElementById("countdown");
+                        const resendLink = document.getElementById("resend-link");
+
+                        function updateCountdown() {
+                            const now = new Date();
+                            const diff = validUntil - now;
+
+                            if (diff <= 0) {
+                                countdownEl.innerText = '';
+                                resendLink.classList.remove('d-none');
+                                clearInterval(timer);
+                            } else {
+                                const seconds = Math.floor(diff / 1000);
+                                const minutes = Math.floor(seconds / 60);
+                                const remainingSeconds = seconds % 60;
+                                countdownEl.innerText = ` (Resend available in ${minutes}:${remainingSeconds.toString().padStart(2,'0')})`;
+                            }
+                        }
+
+                        const timer = setInterval(updateCountdown, 1000);
+                        updateCountdown();
+                    </script>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -16,11 +16,6 @@ import json
 
 
 
-
-
-
-
-
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -45,6 +40,15 @@ from core.forms import CommonFilterForm
 from django.core.paginator import Paginator
 from .forms import PurchaseInvoiceAttachmentForm,PurchasePaymentAttachmentForm
 from accounting.models import JournalEntry, JournalEntryLine, Account,FiscalYear
+
+
+
+
+
+
+
+def money_receipt(request):
+    return render(request,'finance/money_receipt.html')
 
 
 @login_required
@@ -624,19 +628,52 @@ def delete_expense(request, id):
 
 
 
+from billing.models import BillingInvoice, ConsultationBill, MedicineBill, LabTestBill, OTBill,WardBill
+from django.db.models import Sum, F, ExpressionWrapper, DecimalField
+from django.utils.dateparse import parse_date
+from datetime import datetime
 
-def revenue_report(request): 
-    data = (
-        BillingInvoice.objects.values('invoice_type')
-        .annotate(total_amount=Sum('total_amount'))
+
+
+
+from django.utils.timezone import now
+from datetime import timedelta
+
+
+def revenue_report(request):
+    today = now().date()
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+    today_param = request.GET.get('today')
+    month_param = request.GET.get('this_month')
+
+    start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date() if start_date_str else today.replace(month=1, day=1)
+    end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date() if end_date_str else today
+
+    if today_param:
+        start_date = end_date = today
+    elif month_param:
+        start_date = today.replace(day=1)
+        next_month = today.replace(day=28) + timedelta(days=4)
+        end_date = (next_month - timedelta(days=next_month.day))
+
+    start_datetime = datetime.combine(start_date, datetime.min.time())
+    end_datetime = datetime.combine(end_date, datetime.max.time())
+    
+    invoice_filters = {}
+  
+    invoice_filters['created_at__date__range'] = (start_date, end_date)
+
+    summary_data = BillingInvoice.objects.filter(**invoice_filters).values('invoice_type').annotate(
+        total_amount=Sum('total_amount')
     )
 
-    # Prepare data for chart
     labels = []
     amounts = []
     total_revenue = 0
     labels_amounts = []
-    for item in data:
+
+    for item in summary_data:
         label = item['invoice_type']
         amount = float(item['total_amount'] or 0)
         total_revenue += amount
@@ -644,35 +681,109 @@ def revenue_report(request):
         amounts.append(amount)
         labels_amounts.append((label, amount))
 
+    revenue_sections = []
+    consultation_total = ConsultationBill.objects.filter(invoice__in=BillingInvoice.objects.filter(**invoice_filters)).aggregate(
+        total=Sum('consultation_fee')
+    )['total'] or 0
+    revenue_sections.append({'name': 'Consultation', 'total': float(consultation_total)})
+
+    medicine_total = MedicineBill.objects.filter(invoice__in=BillingInvoice.objects.filter(**invoice_filters)).annotate(
+        total_price=ExpressionWrapper(F('price_per_unit') * F('quantity'), output_field=DecimalField())
+    ).aggregate(total=Sum('total_price'))['total'] or 0
+    revenue_sections.append({'name': 'Medicine', 'total': float(medicine_total)})
+
+    lab_total = LabTestBill.objects.filter(invoice__in=BillingInvoice.objects.filter(**invoice_filters)).aggregate(
+        total=Sum('test_fee')
+    )['total'] or 0
+    revenue_sections.append({'name': 'Lab Test', 'total': float(lab_total)})
+    ward_total = WardBill.objects.filter(invoice__in=BillingInvoice.objects.filter(**invoice_filters)).aggregate(
+        total=Sum('total_bill')
+    )['total'] or 0
+    revenue_sections.append({'name': 'Ward', 'total': float(ward_total)})
+
+    try:
+        from billing.models import OTBill
+        ot_total = OTBill.objects.filter(invoice__in=BillingInvoice.objects.filter(**invoice_filters)).aggregate(
+            total=Sum('total_charge')
+        )['total'] or 0
+        revenue_sections.append({'name': 'OT', 'total': float(ot_total)})
+    except ImportError:
+        pass
+
     context = {
-        'labels': json.dumps(labels),   
-        'amounts': json.dumps(amounts), 
-       'labels_amounts': labels_amounts,
-       'total_revenue':total_revenue 
+        'labels': json.dumps(labels),
+        'amounts': json.dumps(amounts),
+        'labels_amounts': labels_amounts,
+        'total_revenue': total_revenue,
+        'revenue_sections': json.dumps(revenue_sections),  # For JS
+        'revenue_section_data': revenue_sections,          # For table display
+        'start_date': start_date,
+        'end_date': end_date,       
+      
+        "today": bool(today_param),
+        "this_month": bool(month_param),
     }
+
     return render(request, 'finance/revenue_report.html', context)
 
 
 
 
+
+
 def top_expenses_head(request):
-    expense_data = AllExpenses.objects.values('expense_head').annotate(total_amount=Sum('amount')).order_by('-total_amount')[:10]
-    total_amount =0
+    today = now().date()
+    start_date_str = request.GET.get('start_date')
+    end_date_str = request.GET.get('end_date')
+    today_param = request.GET.get('today')
+    month_param = request.GET.get('this_month')
+
+    start_date = datetime.strptime(start_date_str, "%Y-%m-%d").date() if start_date_str else today.replace(month=1, day=1)
+    end_date = datetime.strptime(end_date_str, "%Y-%m-%d").date() if end_date_str else today
+
+    if today_param:
+        start_date = end_date = today
+    elif month_param:
+        start_date = today.replace(day=1)
+        next_month = today.replace(day=28) + timedelta(days=4)
+        end_date = (next_month - timedelta(days=next_month.day))
+
+    start_datetime = datetime.combine(start_date, datetime.min.time())
+    end_datetime = datetime.combine(end_date, datetime.max.time())
+
+    expenses_qs = AllExpenses.objects.all()    
+    expenses_qs = expenses_qs.filter(created_at__range=(start_date,end_date))  
+
+    expense_data = (
+        expenses_qs.values('expense_head')
+        .annotate(total_amount=Sum('amount'))
+        .order_by('-total_amount')[:10]
+    )
+
+    all_expenses = expenses_qs.order_by('-id')
 
     expense_heads = [data['expense_head'] for data in expense_data]
     amounts = [float(data['total_amount']) for data in expense_data]
+    total_amount = sum(amounts)
 
-    total_amount = sum(amounts) 
+    combined = zip(expense_heads, amounts)
 
+    paginator = Paginator(all_expenses, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
 
-    combined = zip(expense_heads, amounts) 
-    
     return render(request, 'finance/top_expense_head.html', {
-        'expense_heads': json.dumps(expense_heads),   
-        'amounts': json.dumps(amounts), 
+        'expense_heads': json.dumps(expense_heads),
+        'amounts': json.dumps(amounts),
         'combined_data': combined,
-        'total_amount':total_amount
+        'page_obj': page_obj,
+        'total_amount': total_amount,
+        'start_date': start_date,
+        'end_date': end_date,
+      
     })
+
+
 
 
 
@@ -688,12 +799,13 @@ def shareholder_dashboard(request):
     months_passed = today.month 
     employees = Employee.objects.all()
     for emp in employees:   
-        print(f'employee name{emp.name} salary/month{emp.salary_structure.net_salary()}')    
-        estimated_salary_paid = emp.salary_structure.net_salary() * months_passed or Decimal(0.00)
+        estimated_salary_paid = (emp.salary_structure.net_salary() * months_passed
+                         if emp.salary_structure else Decimal(0.00))
 
-    
-       
-
+    total_income = total_income or Decimal("0")
+    total_doctor_payment = total_doctor_payment or Decimal("0")
+    other_expenses = other_expenses or Decimal("0")
+    estimated_salary_paid = estimated_salary_paid or Decimal("0")
     net_profit = total_income - (total_doctor_payment + other_expenses + estimated_salary_paid)
 
     shareholders = Shareholder.objects.all()
@@ -711,11 +823,6 @@ def shareholder_dashboard(request):
     }
 
     return render(request, 'finance/shareholder_dashboard.html', context)
-
-
-
-
-
 
 
 

@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="container my-4">
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">
+                <i class="bi bi-clipboard2-pulse me-2"></i>
+                Initial Assessment – {{ admission.patient.name }}
+            </h5>
+        </div>
+
+        <div class="card-body">
+
+            <form method="POST" novalidate>
+                {% csrf_token %}
+
+                <!-- Diagnosis -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Initial Diagnosis</label>
+                    {{ form.diagnosis }}
+                </div>
+
+                <!-- Treatment Plan -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Treatment Plan</label>
+                    {{ form.treatment_plan }}
+                </div>
+
+                <!-- Remarks -->
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Remarks</label>
+                    {{ form.remarks }}
+                </div>
+
+                <hr>
+
+                <h5 class="fw-bold mb-3">
+                    <i class="bi bi-heart-pulse me-2"></i>
+                    Vital Signs
+                </h5>
+
+                <div class="row g-3">
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">BP</label>
+                        {{ form.vital_bp }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Pulse</label>
+                        {{ form.vital_pulse }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">Temperature</label>
+                        {{ form.vital_temp }}
+                    </div>
+
+                    <div class="col-md-3">
+                        <label class="form-label fw-semibold">SpO₂ (%)</label>
+                        {{ form.vital_spo2 }}
+                    </div>
+                </div>
+
+                <div class="mt-4 text-end">
+                    <button class="btn btn-success px-4">
+                        <i class="bi bi-check2-circle me-1"></i>
+                        Save Assessment
+                    </button>
+                </div>
+
+            </form>
+
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

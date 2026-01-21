@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+{% load static %}
+
+{% block content %}
+
+{% include 'referrals/quick_access_link.html' %}
+<div class="container mt-5">
+    <div class="card shadow-sm rounded">
+        <div class="card-header bg-primary text-white">
+            <h4 class="mb-0">
+                {% if object %}Edit Referral Rule{% else %}Add New Referral Rule{% endif %}
+            </h4>
+        </div>
+        <div class="card-body">
+             <form method="POST" enctype="multipart/form-data" class="p-4">
+            {% csrf_token %}
+            
+            <div class="row">
+                {% for field in form %}
+                <div class="col-6 col-md-3">
+
+                    {# Handle Boolean Fields Differently #}
+                    {% if field.field.widget.input_type == "checkbox" %}
+                        <div class="form-check mt-4">
+                            {{ field }}
+                            <label class="form-check-label fw-semibold ms-1" for="{{ field.id_for_label }}">
+                                {{ field.label }}
+                            </label>
+                        </div>
+                    {% else %}
+                        <label class="form-label fw-semibold" for="{{ field.id_for_label }}">
+                            {{ field.label }}
+                        </label>
+                        {{ field|add_class:"form-control" }}
+                    {% endif %}
+
+                    {% if field.help_text %}
+                        <small class="form-text text-muted">{{ field.help_text }}</small>
+                    {% endif %}
+
+                    {% for error in field.errors %}
+                        <div class="text-danger small">{{ error }}</div>
+                    {% endfor %}
+                </div>
+            {% endfor %}
+            </div>
+          
+            <button type="submit" class="btn btn-primary my-4">
+                {% if object %}Edit{% else %}Add New {% endif %}
+            </button>
+            <a href="{% url 'billing:referral_rule_list' %}" class="btn btn-secondary my-4">Cancel</a>
+            
+        </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const referralTypeField = document.getElementById("id_referral_type");
+    const referralSourceField = document.getElementById("id_referral_source");
+
+    function toggleReferralSource() {
+        if (!referralTypeField) return;
+
+        // Show referral source ONLY when referral type is internal or external
+        if (referralTypeField.value === "internal_doctor" || referralTypeField.value === "external_doctor") {
+            referralSourceField.closest(".col-6").style.display = "block";
+        } else {
+            referralSourceField.closest(".col-6").style.display = "none";
+            referralSourceField.value = "";
+        }
+    }
+
+    toggleReferralSource();
+    
+    if (referralTypeField) {
+        referralTypeField.addEventListener("change", toggleReferralSource);
+    }
+});
+</script>

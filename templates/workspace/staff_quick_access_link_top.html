@@ -1,0 +1,99 @@
+
+
+
+<style>
+
+.quick-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 10px;
+    padding: 10px 5px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #333;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: all 0.25s ease-in-out;
+    height: 100%;
+}
+
+.quick-tile i {
+    font-size: 1.4rem;
+    margin-bottom: 6px;
+    color: #007bff;
+}
+
+/* Hover animation */
+.quick-tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Color themes */
+.tile-warning i { color: #ffc107; }
+.tile-primary i { color: #007bff; }
+.tile-info i    { color: #17a2b8; }
+.tile-success i { color: #28a745; }
+.tile-danger i  { color: #dc3545; }
+.tile-secondary i { color: #6c757d; }
+
+/* Small column padding */
+.quick-col {
+    padding: 6px !important;
+}
+
+</style>
+
+<div class="card shadow-sm border-0 rounded-4" style="background-color:#f5f6fa;">
+    <div class="card-body">
+        <div class="row g-2 text-center">         
+
+         <div class="col-6 col-md-2 quick-col">
+                <a href="{% url 'accounts:direct_patient_registration' %}" class="quick-tile tile-primary">
+                    <i class="fas fa-user-plus"></i>
+                    Register Patient
+                </a>
+            </div>
+
+       <div class="col-6 col-md-2 quick-col">
+                <a href="{% url 'appointments:general_appointment' %}" class="quick-tile tile-info">
+                    <i class="fas fa-calendar-plus"></i>
+                    Create Appointment
+                </a>
+            </div>
+
+          <div class="col-6 col-md-2 quick-col">
+                <a href="{% url 'workspace:appointment_list' %}" class="quick-tile tile-success">
+                    <i class="fas fa-calendar-check"></i>
+                    Appointment List
+                </a>
+            </div>
+
+          <div class="col-6 col-md-2 quick-col">
+                <a href="{% url 'patients:patient_admission_create' %}" class="quick-tile tile-success">
+                    <i class="fas fa-procedures"></i>
+                    New Admission
+                </a>
+            </div>
+
+           <div class="col-6 col-md-2 quick-col">
+                <a href="{% url 'patients:patient_admission_list' %}" class="quick-tile tile-success">
+                    <i class="fas fa-bed"></i>
+                    All Admissions
+                </a>
+            </div>
+
+           <div class="col-6 col-md-2 quick-col">
+                <a href="{% url 'billing:emergency_visit_create' %}" class="quick-tile tile-danger">
+                    <i class="fas fa-ambulance"></i>
+                    Emergency Intake
+                </a>
+            </div>
+
+
+        </div>
+    </div>
+</div>

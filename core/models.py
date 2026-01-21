@@ -10,6 +10,70 @@ from core.utils import DEPARTMENT_CHOICES,EMPLOYEE_LEVEL_CHOICES,POSITION_CHOICE
 import uuid
 from accounts.models import CustomUser
 
+from.utils import SERVICE_TYPE_CHOICES
+
+
+class TaxPolicy(models.Model):
+    name = models.CharField(max_length=30,null=True,blank=True)
+    policy_code = models.CharField(max_length=40,null=True,blank=True)
+    vat_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)   # e.g. 15
+    vat_type = models.CharField(max_length=15, choices=[
+        ("inclusive", "Inclusive"),
+        ("exclusive", "Exclusive")
+    ], default="exclusive")
+
+    ait_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)   # e.g. 5
+    ait_type = models.CharField(max_length=15, choices=[
+        ("inclusive", "Inclusive"),
+        ("exclusive", "Exclusive")
+    ], default="exclusive")
+
+    is_active = models.BooleanField(default=True)
+    
+    def save(self, *args, **kwargs): 
+        if not self.policy_code:
+            timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
+            unique_id = str(uuid.uuid4().hex)[:6]  
+            self.policy_code = f"POLICY-{timestamp}-{unique_id}"      
+        super().save(*args, **kwargs)
+
+
+    def __str__(self):
+        return f"Tax Policy (VAT {self.vat_rate}%, AIT {self.ait_rate}%)"
+
+
+class ServiceTaxPolicy(models.Model):   
+    policy_code = models.CharField(max_length=40,null=True,blank=True)
+    name = models.CharField(max_length=100, choices=SERVICE_TYPE_CHOICES, unique=True)
+    unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0.00)
+    vat_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    vat_type = models.CharField(max_length=20, choices=[
+        ("inclusive", "Inclusive"),
+        ("exclusive", "Exclusive"),
+        ("exempt", "Exempt"),
+    ], default="exempt")
+
+    ait_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    ait_type = models.CharField(max_length=20, choices=[
+        ("inclusive", "Inclusive"),
+        ("exclusive", "Exclusive"),
+        ("exempt", "Exempt"),
+    ], default="exempt")
+
+    is_default = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+
+    def save(self, *args, **kwargs): 
+        if not self.policy_code:
+            timestamp = timezone.now().strftime('%Y%m%d%H%M%S')
+            unique_id = str(uuid.uuid4().hex)[:6]  
+            self.policy_code = f"POLICY-{timestamp}-{unique_id}"      
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"{self.name} Policy"
+
+
 
 
 class Notice(models.Model):

@@ -2,6 +2,9 @@
 {% extends 'base.html' %}
 {% block content %}
 
+
+{% include 'appointments/quick_access_link.html' %}
+
 <div class="container-fluid">
      <form method="POST">
         {% csrf_token %}           

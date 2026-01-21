@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sample Label</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <style>
+        body { font-size: 12px; padding: 10px; }
+        .label-box {
+            border: 1px dashed #222;
+            padding: 10px;
+            width: 320px;
+            margin: auto;
+        }
+        .qr img { width: 70px; height: 50px; }
+        @media print {
+            .no-print { display: none; }
+            body { margin: 0; padding: 0; }
+            .label-box { border: none; }
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="label-box">
+
+    <div class="text-center">
+        <strong>{{ request.tenant.name }}</strong><br>
+        <small>{{ request.tenant.phone }}</small>
+    </div>
+
+    <hr class="my-2">
+
+    <div class="d-flex justify-content-between">
+        <div>
+	
+            <strong>Sample ID:</strong> {{ sample.sample_id }}<br>
+            <strong>Patient:</strong> {{ sample.request_order.medical_record.patient.name }} |
+            {{ sample.request_order.medical_record.patient.patient_id }}<br>
+            <strong>Doctor:</strong> {{ sample.request_order.medical_record.doctor }}<br>
+             <strong>Requested test:</strong> {{ sample.request_item.lab_test }}<br>
+            <strong>Sample Type:</strong> {{ sample.sample_type }}<br>
+            <strong>Date:</strong> {{ sample.collected_at|date:"d M Y h:i A" }}<br>
+             <strong>Collected by:</strong> {{ sample.collected_by.username }}<br>
+        </div>
+
+        <div class="qr">
+            <img src="{{ sample.barcode_image.url }}">
+        </div>
+    </div>
+</div>
+
+<div class="text-center mt-3 no-print">
+    <button onclick="window.print()" class="btn btn-primary btn-sm">Print Label</button>
+</div>
+
+</body>
+</html>

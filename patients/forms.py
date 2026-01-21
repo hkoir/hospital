@@ -7,11 +7,26 @@ from .models import PatientAdmission,DischargeReport
 
 
 
+
 class PatientForm(forms.ModelForm):
     class Meta:
         model = Patient
-        fields = '__all__'
+        fields = [
+            'referral_source', 'patient_id', 'user', 'guardian', 'name', 'email', 'phone',
+            'date_of_birth', 'gender', 'address', 'emergency_contact', 'medical_history', 'patient_photo'
+        ]
+        widgets = {
+            'date_of_birth': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
+            'gender': forms.Select(attrs={'class': 'form-select'}),
+            'address': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+            'medical_history': forms.Textarea(attrs={'rows': 3, 'class': 'form-control'}),
+        }
 
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        for field_name, field in self.fields.items():
+            if not isinstance(field.widget, (forms.Select, forms.DateInput, forms.Textarea)):
+                field.widget.attrs.update({'class': 'form-control'})
 
 class DirectPatientForm(forms.ModelForm):
     class Meta:
@@ -33,21 +48,43 @@ from facilities.models import Ward
 class PatientAdmissionForm(forms.ModelForm):
     class Meta:
         model = PatientAdmission
-        exclude =['status','discharge_date','admission_date','admission_code','invoice','bed_assignment_date']
+        exclude =['status','discharge_date','discharge_approved','admission_date','admission_code','invoice','bed_assignment_date']
 
         widgets={
             'reason_for_admission':forms.Textarea(attrs={
                 'class':'form-control',
                 'row':3,
                 'style':'height:50px'
-               
-                })
+
+                }),
+            'assigned_ward': forms.Select(attrs={'id': 'ward', 'class': 'form-select'}),
+            'assigned_room': forms.Select(attrs={'id': 'room', 'class': 'form-select'}),
+            'assigned_bed': forms.Select(attrs={'id': 'bed', 'class': 'form-select'}),
         }
+
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)        
-        self.fields['assigned_bed'].queryset = Bed.objects.filter(is_occupied=False)
-        self.fields['assigned_room'].queryset = Room.objects.filter(is_occupied=False)
-        self.fields['assigned_ward'].queryset = Ward.objects.filter(is_occupied=False)
+        super().__init__(*args, **kwargs)
+        self.fields['assigned_ward'].queryset = Ward.objects.filter(ward_rooms__is_occupied=False).distinct()
+
+        if 'assigned_ward' in self.data:
+            try:
+                ward_id = int(self.data.get('assigned_ward'))
+                self.fields['assigned_room'].queryset = Room.objects.filter(ward_id=ward_id)
+            except (ValueError, TypeError):
+                self.fields['assigned_room'].queryset = Room.objects.none()
+        else:
+            self.fields['assigned_room'].queryset = Room.objects.none()
+
+        if 'assigned_room' in self.data:
+            try:
+                room_id = int(self.data.get('assigned_room'))
+                self.fields['assigned_bed'].queryset = Bed.objects.filter(room_id=room_id, is_occupied=False)
+            except (ValueError, TypeError):
+                self.fields['assigned_bed'].queryset = Bed.objects.none()
+        else:
+            self.fields['assigned_bed'].queryset = Bed.objects.none()
+
+
 
     def clean_assigned_bed(self):
         bed = self.cleaned_data.get('assigned_bed')
@@ -91,7 +128,7 @@ class BedAssignmentForm(forms.Form):
 class DischargeReportForm(forms.ModelForm):
     class Meta:
         model = DischargeReport
-        fields = ['summary', 'diagnosis', 'treatment_given', 'follow_up_instructions', 'additional_notes']
+        exclude = ['patient_admission','patient_emergency','doctor','invoice','created_at']
         widgets={
             'summary':forms.Textarea(attrs={
                 'row':6,
@@ -102,12 +139,12 @@ class DischargeReportForm(forms.ModelForm):
                 'row':6,
                 'style':'height:200px'
             }),
-            
+
             'treatment_given':forms.Textarea(attrs={
                 'row':6,
                 'style':'height:200px'
             }),
-            
+
               'follow_up_instructions':forms.Textarea(attrs={
                 'row':6,
                 'style':'height:200px'
@@ -116,6 +153,10 @@ class DischargeReportForm(forms.ModelForm):
                 'row':6,
                 'style':'height:200px'
             }),
-            
-            
+             'follow_up_date':forms.DateInput(attrs={'type':'date'})
+
+
         }
+
+
+

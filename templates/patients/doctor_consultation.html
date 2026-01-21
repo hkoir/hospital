@@ -74,169 +74,195 @@
             </div>
 
             <!-- Prescription Section -->
-            <div class="col-12">
-                <div class="card mb-4">
-                    <div class="card-header bg-success text-white">Medicines</div>
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header bg-success text-white">Medicines</div>
+                    
                     <div class="card-body">
-                        {{ prescription_formset.management_form }}  
+                    {{ prescription_formset.management_form }}
 
-                        <div id="prescription-container">
-                            {% for form in prescription_formset %}
-                            <div class="prescription-item border p-3 mb-3">
-                                <div class="row">
-                                    {% for field in form %}
-                                        {% if field.name != "id" and field.name != "DELETE" %}
-                                        <div class="col-md-6 p-1">
-                                            {{ field.label_tag }}
-                                            {{ field }}
-                                        </div>
+                    <div id="prescription-container">
+                        {% for form in prescription_formset %}
+                        <div class="prescription-item border p-3 mb-3">
+                            <div class="row">
+                                {% for field in form %}
+                                    {% if field.name == "id" or field.name == "DELETE" %}
+                                        {{ field }}  {# hidden fields #}
+                                    {% else %}
+                                    <div class="col-md-6 p-1">
+                                        {{ field.label_tag }}
+                                        {% if field.name == "medication_name" %}
+                                            {{ field }}  {# Keep original Select2 class #}
+                                        {% else %}
+                                            {{ field|add_class:"form-control" }}
                                         {% endif %}
-                                    {% endfor %}
-                                </div>
-                                {% if not forloop.first %}
-                                <button type="button" class="btn btn-danger remove-prescription">Remove</button>
-                                {% endif %}
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
                             </div>
+                            {% if not forloop.first %}
+                                <button type="button" class="btn btn-danger remove-prescription mt-2">Remove</button>
+                            {% endif %}
+                        </div>
+                        {% endfor %}
+                    </div>
+
+                    <!-- Add Button -->
+                    <div class="d-flex justify-content-between align-items-center mt-2">
+                        <button type="button" id="add-prescription" class="btn btn-secondary">+ Add Medicine</button>
+                    </div>
+
+                <!-- Hidden empty form for cloning -->
+                    <div id="empty-prescription-form" style="display:none;">
+                        <div class="row">
+                            {% for field in prescription_formset.empty_form %}
+                                {% if field.name == "id" or field.name == "DELETE" %}
+                                    {{ field }}  {# hidden fields #}
+                                {% else %}
+                                <div class="col-md-6 p-1">
+                                    {{ field.label_tag }}
+                                    {% if field.name == "medication_name" %}
+                                        {{ field }}
+                                    {% else %}
+                                        {{ field|add_class:"form-control" }}
+                                    {% endif %}
+                                </div>
+                                {% endif %}
                             {% endfor %}
                         </div>
-                        
-                        <!-- Add Medicine Button -->
-                        <div class="d-flex justify-content-between align-items-center mt-2">
-                            <button type="button" id="add-prescription" class="btn btn-secondary">+ Add Medicine</button>
-                        </div>
-                        
                     </div>
+
                 </div>
             </div>
-            
+        </div>
 
-            <!-- Lab Test Selection -->
-            <div class="col-12">
-                <div class="card mb-4">
-                    <div class="card-header bg-primary text-white">Lab Test</div>
-                    <div class="card-body">
 
-                        <div class="col-md-6">
-                            <div class="form-group w-100">
-                                <select class="form-control select2-field" name="lab_tests" id="id_lab_tests" multiple>
-                                    {% for labtest in lab_tests %}
-                                        <option value="{{ labtest.id }}">{{ labtest.test.test_name }}</option>
-                                    {% endfor %}
-                                </select>
-                            </div>
+
+        <!-- Lab Test Selection -->
+        <div class="col-12">
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">Lab Test</div>
+                <div class="card-body">
+
+                    <div class="col-md-6">
+                        <div class="form-group w-100">
+                            <select class="form-control select2-field" name="lab_tests" id="id_lab_tests" multiple>
+                                {% for labtest in lab_tests %}
+                                    <option value="{{ labtest.id }}">{{ labtest.test.test_name }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
-                        
-                        
-                        
+                    </div>                     
+                                            
 
-
-
-                    </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Submit Button -->
-            <div class="col-12">
-                <button type="submit" class="btn btn-primary mt-3">Submit Consultation</button>
-            </div>
+        <!-- Submit Button -->
+        <div class="col-12">
+            <button type="submit" class="btn btn-primary mt-3">Submit Consultation</button>
+        </div>
 
-        </form>
+    </form>
     </div>
 </div>
 
-
-
-
-<!-- Select2 Initialization -->
 <script>
-  $(document).ready(function() {
-    $('#id_lab_tests').select2({
-    width: 'element',  // or try 'resolve'
-    ajax: {
-        url: '{% url "lab_tests:lab_test_search" %}',
-        dataType: 'json',
-        processResults: function(data) {
-            return {
-                results: data.results
-            };
-        }
-    },
-    placeholder: "Search for Lab Tests",
-    allowClear: true
-});
+document.addEventListener("DOMContentLoaded", function () {
+    const container = document.getElementById("prescription-container");
+    const addButton = document.getElementById("add-prescription");
+    const totalForms = document.getElementById("id_form-TOTAL_FORMS");
+    const emptyFormHtml = document.getElementById("empty-prescription-form").innerHTML;
 
-    // Remove placeholder when typing
+    // Initialize Select2 for existing medicine fields
+    function initMedicineSelect2(selectElement) {
+        $(selectElement).select2({
+            width: '100%',
+            placeholder: "Search Medicine",
+            allowClear: true,
+            ajax: {
+                url: "{% url 'patients:medicine_search' %}",
+                dataType: 'json',
+                delay: 250,
+                data: function(params) { return { q: params.term }; },
+                processResults: function(data) { return { results: data.results }; }
+            },
+            minimumInputLength: 1
+        });
+    }
+
+    container.querySelectorAll(".medication-name-select").forEach(initMedicineSelect2);
+
+    // Add new prescription row
+    addButton.addEventListener("click", function () {
+        const formIndex = parseInt(totalForms.value);
+
+        // Replace __prefix__ with current form index
+        let newFormHtml = emptyFormHtml.replace(/__prefix__/g, formIndex);
+
+        // Create new row container
+        const newItem = document.createElement("div");
+        newItem.classList.add("prescription-item", "border", "p-3", "mb-3");
+        newItem.innerHTML = newFormHtml;
+
+        // Append remove button
+        if (container.querySelectorAll(".prescription-item").length >= 1) {
+            const removeBtn = document.createElement("button");
+            removeBtn.type = "button";
+            removeBtn.className = "btn btn-danger remove-prescription mt-2";
+            removeBtn.innerText = "Remove";
+            newItem.appendChild(removeBtn);
+        }
+
+        container.appendChild(newItem);
+
+        // Initialize Select2 for new medicine field
+        $(newItem).find(".medication-name-select").each(function () {
+            initMedicineSelect2(this);
+        });
+
+        // Update total forms
+        totalForms.value = formIndex + 1;
+    });
+
+    // Remove row
+    container.addEventListener("click", function (event) {
+        if (event.target.classList.contains("remove-prescription")) {
+            const items = container.querySelectorAll(".prescription-item");
+            if (items.length > 1) {
+                const item = event.target.closest(".prescription-item");
+                item.remove();
+                totalForms.value = parseInt(totalForms.value) - 1;
+            }
+        }
+    });
+
+
+
+
+    // Initialize Select2 for lab tests
+    $('#id_lab_tests').select2({
+        width: '100%',
+        placeholder: "Search for Lab Tests",
+        allowClear: true,
+        ajax: {
+            url: '{% url "lab_tests:lab_test_search" %}',
+            dataType: 'json',
+            processResults: function(data) {
+                return { results: data.results };
+            }
+        }
+    });
+
     $('#id_lab_tests').on('select2:open', function() {
         $('.select2-search__field').attr('placeholder', '');
     });
-
-    // Restore placeholder when closing
     $('#id_lab_tests').on('select2:close', function() {
         $('.select2-search__field').attr('placeholder', 'Search for Lab Tests');
     });
 });
-
-
-
-
 </script>
 
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const prescriptionContainer = document.getElementById("prescription-container");
-        const addButton = document.getElementById("add-prescription");
-        const totalForms = document.getElementById("id_form-TOTAL_FORMS");
-    
-        addButton.addEventListener("click", function () {
-            const formIndex = parseInt(totalForms.value);
-            const allItems = prescriptionContainer.querySelectorAll(".prescription-item");
-            const lastItem = allItems[allItems.length - 1];
-            
-            // Add remove button to the last item if it doesn't have one yet
-            if (!lastItem.querySelector(".remove-prescription") && allItems.length > 0) {
-                const removeBtn = document.createElement("button");
-                removeBtn.type = "button";
-                removeBtn.className = "btn btn-danger remove-prescription mt-2";
-                removeBtn.innerText = "Remove";
-                lastItem.appendChild(removeBtn);
-            }
-    
-            // Clone and clean up for the new item
-            const newItem = lastItem.cloneNode(true);
-            newItem.querySelectorAll("input, select, textarea").forEach((input) => {
-                const newName = input.name.replace(/-\d+-/, `-${formIndex}-`);
-                input.name = newName;
-                input.id = `id_${newName}`;
-                if (input.type === "checkbox" || input.type === "radio") {
-                    input.checked = false;
-                } else {
-                    input.value = "";
-                }
-            });
-    
-            // Remove any existing remove button from the new clone
-            const removeBtnInClone = newItem.querySelector(".remove-prescription");
-            if (removeBtnInClone) {
-                removeBtnInClone.remove();
-            }
-    
-            prescriptionContainer.appendChild(newItem);
-            totalForms.value = formIndex + 1;
-        });
-    
-        // Handle Remove Button Click
-        prescriptionContainer.addEventListener("click", function (event) {
-            if (event.target.classList.contains("remove-prescription")) {
-                const items = prescriptionContainer.querySelectorAll(".prescription-item");
-                if (items.length > 1) {
-                    const item = event.target.closest(".prescription-item");
-                    item.remove();
-                    totalForms.value = parseInt(totalForms.value) - 1;
-                }
-            }
-        });
-    });
-    </script>
-     
 
 {% endblock %}

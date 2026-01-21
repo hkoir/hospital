@@ -78,7 +78,17 @@ urlpatterns = [
     path('assign_user_to_group/', views.assign_user_to_group, name='assign_user_to_group'),
     path('assign_permissions_to_group/', views.assign_permissions_to_group, name='assign_permissions_to_group'),
     path('get_permissions_for_model/', views.get_permissions_for_model, name='get_permissions_for_model'),
-    path('search_all/', views.search_all, name='search_all')
-  
+    path('search_all/', views.search_all, name='search_all'),
+
+    path('send_otp/', views.send_otp, name='send_otp'),   
+    path('resend_otp/<str:phone_number>/', views.send_otp, name='resend_otp'),
+    path('verify_otp/', views.verify_otp, name='verify_otp'),   
+
+    path('send_password_reset_otp/', views.send_password_reset_otp, name='send_password_reset_otp'),
+    path('verify_password_reset_otp/', views.verify_password_reset_otp, name='verify_password_reset_otp'),
+
+    path('send_change_password_otp/', views.send_change_password_otp, name='send_change_password_otp'),
+    path('verify_change_password_otp/', views.verify_change_password_otp, name='verify_change_password_otp'),
+
 
 ]

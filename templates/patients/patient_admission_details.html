@@ -59,7 +59,21 @@
                 </div>
             {% endif %}
 
-            <a href="{% url 'patients:change_bed' admission_id=admission.id %}" class="btn btn-primary btn-change-bed">Change Bed</a>
+		  {% if assigned_bed %}
+            <!-- Already assigned → show Change Bed -->
+            <a href="{% url 'patients:change_bed' admission_id=admission.id %}"
+            class="btn btn-warning btn-change-bed">
+                Change Bed
+            </a>
+        {% else %}
+                <!-- Not assigned → show Assign Bed -->
+                <a href="{% url 'patients:assign_bed_invoice' admission.billing_admission.id %}"
+                class="btn btn-primary btn-change-bed">
+                    Assign Bed
+                </a>
+        {% endif %}
+
+
         </div>
     </div>
 

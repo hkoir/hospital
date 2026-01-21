@@ -17,12 +17,13 @@ urlpatterns = [
     path('journal-entries/<int:pk>/', views.journalentry_detail, name='journalentry_detail'),
 
     path('balance-sheet/', views.balance_sheet_view, name='balance_sheet'),
-    path("ledger/<int:account_id>/", views.ledger_view, name="ledger"), 
+    path("ledger/<int:account_id>/", views.ledger_view, name="ledger"),
+    path("ledger_search/", views.ledger_search_and_view, name="ledger_search"),
     path("trial-balance/", views.trial_balance_view, name="trial_balance"), 
     path('profit-loss/', views.profit_loss_view, name='profit_loss'),
 
     path('balance-sheet-quarterly/', views.balance_sheet_quarterly, name='balance_sheet_quarterly'),
-     path('profit-loss-quarterly/', views.profit_loss_quarterly, name='profit_loss_quarterly'),
+    path('profit-loss-quarterly/', views.profit_loss_quarterly, name='profit_loss_quarterly'),
 
    
 ]

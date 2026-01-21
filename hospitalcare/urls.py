@@ -31,7 +31,7 @@ urlpatterns = [
     path('logistics/',include('logistics.urls',namespace='logistics')),  
     path('supplier/',include('supplier.urls',namespace='supplier')),  
     path('product/',include('product.urls',namespace='product')),  
-   
+     path('workspace/',include('workspace.urls',namespace='workspace')),   
     
 ]
 

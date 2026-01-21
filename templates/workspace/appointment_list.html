@@ -1,0 +1,373 @@
+
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+
+<style>
+    /* ===== Corporate Hospital Dashboard Styling ===== */
+
+    /* ===== Desktop Grid Layout ===== */
+.dashboard-wrapper {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 15px;
+}
+
+/* Left Panel Styling */
+.left-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    height: auto;
+    position: static;
+    top: 0px;
+}
+
+/* ===== Responsive Mobile Layout ===== */
+@media (max-width: 992px) {
+
+    .dashboard-wrapper {
+        grid-template-columns: 1fr;  /* stacked vertically */
+    }
+
+    .left-panel {
+        position: relative;          /* disable sticky */
+        top: 0;
+        margin-bottom: 20px;
+    }
+
+    .kpi-card {
+        padding: 18px;
+    }
+}
+
+    .left-panel h5 {
+        font-weight: 700;
+        margin-bottom: 18px;
+        color: #003c82;
+    }
+
+    .quick-link {
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        background: #f7faff;
+        border-radius: 10px;
+        border: 1px solid #e1ecf9;
+        text-decoration: none;
+        display: block;
+        font-weight: 600;
+        color: #003c82;
+        transition: 0.2s;
+    }
+
+    .quick-link:hover {
+        background: #e8f1ff;
+        border-color: #d7e5ff;
+        transform: translateX(5px);
+    }
+
+    .right-panel h3 {
+        font-weight: 700;
+        color: #003c82;
+    }
+
+    .kpi-card {
+        padding: 10px;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        text-align: center;
+        height: 80px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 14px;
+        color: #003c82;
+    }
+
+    .list-group-item {
+        border-radius: 12px !important;
+        margin-bottom: 8px;
+        border: 1px solid #eaeaea;
+    }
+</style>
+
+
+<div class="container-fluid">
+    <div class="dashboard-wrapper">  
+
+      <div class="left-panel mt-0">      
+        {% include 'workspace/staff_quick_access_link.html' %}
+      </div>
+
+    <div class="right-panel">
+        <h3 class="mb-4">🏥 Apointments</h3>
+
+    <!-- ====== STAT CARDS ====== -->
+    <div class="row mb-4">      
+         <div class="col-12"> 
+            <div class="card mb-4 shadow-sm">
+                <div class="card-body">
+                    <form method="GET">
+                        <div class="d-flex flex-wrap align-items-end gap-3">
+                            <!-- Start Date -->
+                            <div class="d-flex align-items-center">
+                                <label class="me-2 mb-0">Start-date</label>
+                                <input type="date" name="start_date" class="form-control form-control-sm w-auto" value="{{ request.GET.start_date }}">
+                            </div>
+            
+                            <!-- End Date -->
+                            <div class="d-flex align-items-center">
+                                <label class="me-2 mb-0">End-date</label>
+                                <input type="date" name="end_date" class="form-control form-control-sm w-auto" value="{{ request.GET.end_date }}">
+                            </div>
+            
+                            <!-- Doctor -->
+                            <div>
+                                <select name="doctor" class="form-select form-select-sm w-auto">
+                                    <option value="">Select a Doctor</option>
+                                    {% for doctor in doctors %}
+                                        <option value="{{ doctor.id }}" {% if doctor.id == request.GET.doctor|default:"" %}selected{% endif %}>
+                                            {{ doctor.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+            
+                            <!-- Patient -->
+                            <div>
+                                <select name="patient" class="form-select form-select-sm w-auto">
+                                    <option value="">Select a Patient</option>
+                                    {% for patient in patients %}
+                                        <option value="{{ patient.id }}" {% if patient.id == request.GET.patient|default:"" %}selected{% endif %}>
+                                            {{ patient.name }}
+                                        </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+            
+                            <!-- Single Date -->
+                            <div class="d-flex align-items-center">
+                                <label class="me-2 mb-0">Date</label>
+                                <input type="date" name="date" class="form-control form-control-sm w-auto" value="{{ request.GET.date }}">
+                            </div>
+            
+                            <!-- Submit Button -->
+                            <div>
+                                <button type="submit" class="btn btn-success btn-sm">
+                                    <i class="bi bi-search me-1"></i> Search
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+                   
+    </div>
+
+    <!-- ====== PATIENT QUEUE ====== -->
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold m-0">Appointments</h5>
+        </div>
+
+        <div class="card-body p-0">
+            {% if page_obj  %}
+            <div class="table-responsive">
+
+		<table class="table table-hover align-middle mb-0">
+                            <thead class="table-dark">
+                                <tr>
+                                     <th>Appointment type</th>
+                                    <th>Patient</th>
+                                    <th style="white-space:nowrap;">Patient Img</th>
+                                    <th style="white-space: nowrap;">Age / Gender</th>
+                                    <th>Reason</th>
+                                    <th>Doctor</th>
+                                     <th>Status</th>
+                                    <th>Confirm visit</th>
+                                    <th>Action</th>
+                                    <th width="150"></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for appt in page_obj %}                    
+                                    <tr>
+                                        <td>{{ appt.appointment_type }}</td>
+                                    <td>
+                                          <a href="{% url 'patients:patient_details_with_id'  appt.patient.id %}"
+                                        style="text-decoration: None;">
+                                        {{ appt.patient.name }}/{{ appt.patient.patient_id }}</a>  
+                                    
+                                          
+                                    </td>
+                                    <td>
+                                        {% if appt.patient %}
+                                        <a href="{% url 'patients:patient_details_with_id' appt.patient.id %}">
+                                            {% if appt.patient.patient_photo %}
+                                                <img src="{{ appt.patient.patient_photo.url }}" 
+                                                    alt="Patient Photo" 
+                                                    style="width: 20px; height: 20px; object-fit: cover; border-radius: 50%;">
+                                            {% else %}
+                                                <span class="text-muted">No Photo</span>
+                                            {% endif %}
+                                            </a>
+                                            {% endif %}
+                                        </td>
+
+                                        <td>{{ appt.patient.calculate_age }} / {{ appt.patient.gender }}</td>
+                                        <td>{{ appt.patient.medical_history|default:"-" }}</td>
+                                        <td>
+                                            <a href="{% url 'core:doctor_details'  appt.doctor.id %}"
+                                            style="text-decoration: None;">
+                                                {{ appt.doctor.name}} | {{ appt.doctor.specialization}}</a>     
+                                                          
+                                        </td>
+
+                                        <td class="fw-bold text-primary">{{ appt.status}}</td>
+                                        <td>
+                                           {% if not appt.status == "Prescription-Given" %}
+					     {% if appt.patient_type == 'IPD' %}
+                                              <form method="POST" action="{% url 'billing:ipd_followup_confirm_visit' appt.id %}"
+						 class="confirm-visit-form">
+                                                {% csrf_token %}
+                                                <button type="submit" class="btn btn-sm btn-warning">Confirm Visit</button>
+                                               </form>
+						{% endif %}
+                                            {% else %}
+                                            <span class="badge bg-success"><i class="fas fa-check"></i>Done</span>
+                                            {% endif %}
+                                        </td>
+                                        <td>                                                
+                                           <div class="d-flex flex-wrap align-items-center gap-2">  
+                                            {% if appt.payment_status == 'Paid' %}
+
+                                                    {% if appt.status == 'Prescription-Given' %}
+                                                        <i class="fas fa-check text-success fw-bold">Consultation done, Prescribed</i>
+                                                    {% else %}
+                                                        <a href=""
+                                                        class="btn btn-sm btnoutline-success">Consulting Due</a>
+                                                    {% endif %}
+
+                                            {% elif appt.status == 'Cancelled' %}
+                                                <strong class="text-danger d-block text-center fw-bold mt-2">Cancelled</strong>
+
+                                            {% else %}
+                                                <div class="d-flex justify-content-between mt-4">
+						   {% if appt.patient_type == "OPD" %}
+                                                    <a href="{% url 'appointments:booking_confirmation_payment' appt.id %}" 
+                                                    class="btn btn-sm btn-success">Pay now</a>
+                                                   {% endif %}
+						     <button class="btn btn-sm btn-danger cancel-btn" data-id="{{ appt.id }}">Cancel</button>
+                                                </div>
+                                            {% endif %}   
+                                        
+                                    
+                                        <a href="{% url 'patients:patient_medical_records' appt.patient.id %}"
+                                            class="btn btn-sm  btn-secondary mt-2">
+                                                Medical records </a>
+                                                                
+                                        {% if appt.status == 'Prescription-Given' and appt.medical_record %}
+                                            <a href="{% url 'patients:download_prescription' appt.medical_record.id %}"
+                                            class="btn btn-sm  btn-warning mt-2">
+                                                Download Prescription
+                                            </a>
+						 {% if appt.medical_record and appt.medical_record.prescriptions.exists %}
+                                                    <a href="{% url 'patients:print_prescription' appt.medical_record.prescriptions.first.id %}"
+                                                    class="btn btn-sm btn-primary mt-2">
+                                                        Print Prescription
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-muted small">No prescription yet</span>
+                                                {% endif %}
+					
+                                        {% endif %}
+
+                                        {% if appt.medical_record.billing_invoice_records.patient_type == 'OPD' %}
+                                            {% with test_result=appointment.medical_record.test_results.first %}
+                                                {% if test_result %}
+                                                    <a href="{% url 'lab_tests:download_test_report' test_result.id %}" 
+                                                    class="btn btn-sm btn-success mt-2">
+                                                        Download Test Result </a>
+                                                    {% endif %}
+                                                {% endwith %}
+                                        {% endif %}
+
+                                    {% if appt.status == 'Prescription-Given' %}
+                                         {% with invoice=appt.medical_record.billing_invoice_records %}
+                                            {% if invoice %}
+                                                {% if invoice.lab_test_bills.exists or invoice.medicine_bills.exists %}
+                                                    <span>Medicine/Labtest added</span>  
+                                                    {% else %}    
+                                                     <a href="{% url 'appointments:add_medicine_labtest_to_invoice' appt.id %}" 
+                                                       class="btn btn-sm btn-success my-2 text-center">
+                                                        Add medicine/Lab Test bill
+                                                    </a>                                    
+                                                {% endif %}
+                                            {% endif %}
+                                         {% endwith %}
+                                   
+                                    {% else %}
+                                    <span class="badge bg-warning">Prescription Due</span>
+                                    {% endif %}                               
+				</div>
+                                </td>
+                            </tr>                      
+                        {% endfor %}
+                            </tbody>
+                        </table>
+            </div>
+             <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">previous</a>
+                    {% endif %}
+            
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+            
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+            {% else %}
+                <p class="p-4 text-center text-muted">No patients in queue.</p>
+            {% endif %}
+        </div>
+    </div>
+
+    </div>
+</div>
+    </div>
+</div>
+
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const forms = document.querySelectorAll('.confirm-visit-form');
+    forms.forEach(function(form) {
+        form.addEventListener('submit', function(e) {
+            const confirmed = confirm("Are you sure you want to confirm this visit and create the consultation bill?");
+            if (!confirmed) {
+                e.preventDefault(); // Cancel form submission
+            }
+        });
+    });
+});
+</script>
+
+
+
+{% endblock %}

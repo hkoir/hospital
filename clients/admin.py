@@ -1,7 +1,6 @@
 from django.contrib import admin
 from.models import Client,Domain,Tenant,TenantInfo,SubscriptionPlan,Subscription,DemoRequest,PaymentProfile
-from.models import UserRequestLog
-
+from.models import UserRequestLog,TenantSMSConfig,GlobalSMSConfig
 
 class DomainAdmin(admin.ModelAdmin):
     def get_model_perms(self, request):
@@ -38,4 +37,15 @@ admin.site.register(PaymentProfile)
 admin.site.register(DemoRequest)
 
 admin.site.register(UserRequestLog)
+
+
+admin.site.register(TenantSMSConfig)
+admin.site.register(GlobalSMSConfig)
+
+
+
+
+
+
+
 

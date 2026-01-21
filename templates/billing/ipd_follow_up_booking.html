@@ -14,6 +14,11 @@
           <h5 class="mb-0">IPD follow up Appointment</h5>
         </div>
         <div class="card-body">
+	 <p>
+          <strong>Invoice:</strong>{{ invoice.invoice_id }}<br>
+          <strong>Patient:</strong>{{ invoice.patient }} | {{ invoice.patient.patient_id }}<br>        
+        <strong>Admitting Physician:</strong>{{ invoice.medical_record.doctor.name }} | {{ invoice.medical_record.doctor.specialization }}
+        </p>
           <form method="POST">
             {% csrf_token %}
 
@@ -59,8 +64,9 @@
                 <!-- Hidden Fields -->
                 <input type="hidden" name="patient_id" value="{{ patient.id }}">
                 <input type="hidden" name="invoice_id" value="{{ invoice.id }}">
-              <div class="col-6 col-md-3 mt-4">
+		<div class=" mt-4 d-flex justify-content-between align-items-center mt-3">
                  <button type="submit" class="btn btn-success">Confirm Booking</button>
+		 <a class="btn btn-secondary" href="{% url 'billing:invoice_detail' invoice.id %}">Back to Invoice</a>
                 </div>
              </div> <!-- row close -->
           </form>

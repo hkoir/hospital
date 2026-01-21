@@ -1,0 +1,108 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Patient ID Card</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+
+<style>
+body { font-family: Arial, sans-serif; }
+.card {
+    width: 320px;
+    border: 2px solid #0d6efd;
+    border-radius: 10px;
+    padding: 10px;
+    text-align: center;
+    margin: auto;
+}
+.photo {
+    width: 90px; height: 90px;
+    border-radius: 8px;
+    object-fit: cover;
+    border: 2px solid #0d6efd;
+}
+.qr {
+    width: 100px; height: 100px;
+}
+.title {
+    font-weight: bold; margin-top: 5px; font-size: 18px;
+}
+.info {
+    text-align: left;
+    font-size: 14px;
+    margin-top: 8px;
+}
+.print-btn {
+    margin-top: 10px;
+}
+@media print {
+    .print-btn { display: none; }
+}
+
+
+
+ .floating-home-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 55px;
+    height: 55px;
+    background: #007bff;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    text-decoration: none;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+    z-index: 1005;
+    transition: 0.25s ease-in-out;
+}
+
+.floating-home-btn:hover {
+    background: #0056b3;
+    transform: scale(1.08);
+}
+
+</style>
+
+</head>
+<body>
+
+<div class="card">
+    <h4>🏥 Green Delta Hospital</h4>
+    
+    {% if patient.patient_photo %}
+        <img src="{{ patient.patient_photo.url }}" class="photo">
+    {% elif patinet.user.photo_id %}
+    <img src="{{ patient.user.photo_id.url }}" class="photo">
+    {% else %}
+        No Photo
+    {% endif %}
+    
+    <div class="title">{{ patient.name }}</div>
+    <small>Patient ID: <strong>{{ patient.patient_id }}</strong></small><br>
+    
+    <div class="info">
+        📞 {{ patient.phone }}<br>
+        🎂 {{ patient.date_of_birth }}<br>
+        👤 {{ patient.gender }}<br>
+    </div>
+    
+    <img src="data:image/png;base64,{{ qr_image }}" class="qr">
+    
+    <button onclick="window.print()" class="print-btn btn btn-primary">Print ID Card</button>
+</div>
+
+
+{% if request.user.role == 'staff' %}
+<a href="{% url 'workspace:staff_dashboard' %}" class="floating-home-btn">
+    <i class="fa fa-home"></i>
+</a>
+{% endif %}
+
+
+</body>
+</html>

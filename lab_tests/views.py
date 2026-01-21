@@ -35,6 +35,81 @@ from django.contrib import messages
 from reportlab.lib.utils import simpleSplit
 
 
+
+from django.contrib.auth.mixins import LoginRequiredMixin
+from django.views.generic import CreateView, UpdateView,TemplateView
+from.forms import LabtestCategoryForm,LabtestCatelogueForm
+from .models import LabTestCategory,LabTestCatalog
+from django.urls import reverse,reverse_lazy
+
+
+
+class LabtestCategoryCreateView(LoginRequiredMixin, TemplateView):
+    template_name = "lab_tests/labtest_category_form.html"
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = LabtestCategoryForm()
+
+        # Paginate warehouses
+        categories = LabTestCategory.objects.all().order_by("-created_at")
+        paginator = Paginator(categories, 10)
+        page_number = self.request.GET.get("page")
+        context['page_obj'] = paginator.get_page(page_number)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = LabtestCategoryForm(request.POST)
+        if form.is_valid():
+            category = form.save(commit=False)
+            if not category.user:
+                category.user = request.user
+            category.save()
+            return redirect(request.path)
+        return self.get(request, *args, **kwargs)
+
+
+
+class LabtestCategoryUpdateView(LoginRequiredMixin, UpdateView):
+    model = LabTestCategory
+    form_class = LabtestCategoryForm
+    template_name = "lab_tests/labtest_category_form.html"
+    success_url = reverse_lazy("lab_tests:pending_lab_test_deliveries")
+
+
+class LabtestCatelogueCreateView(LoginRequiredMixin, TemplateView):
+    template_name = "lab_tests/labtest_catelogue_form.html"
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        context['form'] = LabtestCatelogueForm()
+
+        # Paginate warehouses
+        catelogues = LabTestCatalog.objects.all().order_by("-created_at")
+        paginator = Paginator(catelogues, 10)
+        page_number = self.request.GET.get("page")
+        context['page_obj'] = paginator.get_page(page_number)
+        return context
+
+    def post(self, request, *args, **kwargs):
+        form = LabtestCatelogueForm(request.POST)
+        if form.is_valid():
+            catelogue = form.save(commit=False)
+            if not catelogue.user:
+                catelogue.user = request.user
+            catelogue.save()
+            return redirect(request.path)
+        return self.get(request, *args, **kwargs)
+
+
+class LabtestCatelogueUpdateView(LoginRequiredMixin, UpdateView):
+    model =LabTestCatalog
+    form_class = LabtestCatelogueForm
+    template_name = "lab_tests/labtest_catelogue_form.html"
+    success_url = reverse_lazy("lab_tests:pending_lab_test_deliveries")
+
+
+
+
 def lab_test_search(request):
     query = request.GET.get("q", "")  
     tests = LabTestCatalog.objects.filter(test_name__icontains=query)[:10]  
@@ -120,11 +195,192 @@ def add_lab_test_result(request, result_order_id):
 #============================================================================================
 
 
+
+######################################### Sample collection ####################
+
+from .models import LabSampleCollection
+import qrcode,base64
+from io import BytesIO
+from django.core.files.base import ContentFile
+from .forms import LabSampleCollectionForm
+
+
+def all_request_order_list(request):
+    requests = LabTestRequest.objects.all().order_by("-id")
+
+    paginator = Paginator(requests, 10) 
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+    return render(request, "lab_tests/sample/labtest_request_order_list.html", {
+        "requests": requests,
+        'page_obj':page_obj
+    })
+
+
+def request_order_items(request, request_id):
+    lab_request = get_object_or_404(LabTestRequest, id=request_id)
+    items = lab_request.test_items.all()
+    context = {
+        "lab_request": lab_request,
+        "items": items
+    }
+    return render(request, "lab_tests/sample/labtest_request_order_items.html", context)
+
+
+
 @login_required
-def create_lab_test_result_with_items(request, medical_record_id):
+def collect_sample(request, request_item_id):
+    request_item = get_object_or_404(LabTestRequestItem, id=request_item_id)
+    form = LabSampleCollectionForm() 
+    if request.method == "POST":
+        form = LabSampleCollectionForm(request.POST, request.FILES)
+        if form.is_valid(): 
+            sample = form.save(commit=False)
+            sample.collected_by = request.user
+            sample.status = 'collected'
+            sample.request_item = request_item
+            sample.request_order = request_item.labtest_request
+            sample.collected_at = timezone.now()
+            sample.save()                 
+            return redirect("lab_tests:print_sample_label", sample_id=sample.id)
+    return render(request, "lab_tests/sample/collect_sample.html", {
+        "item": request_item,
+        "form": form, 
+    })
+
+@login_required
+def final_lab_report(request, order_id):
+    order = get_object_or_404(LabTestResultOrder, id=order_id)
+    results = order.results.all() 
+    context = {
+        "order": order,
+        "results": results,
+    }
+    return render(request, "lab_tests/sample/final_lab_report.html", context)
+
+
+@login_required
+def print_sample_label(request, sample_id):
+    sample = get_object_or_404(LabSampleCollection, id=sample_id)
+
+    # Generate QR
+    qr = qrcode.make(sample.sample_id)
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    qr_image = base64.b64encode(buffer.getvalue()).decode()
+
+    context = {
+        "sample": sample,
+        "qr_image": qr_image,
+    }
+    return render(request, "lab_tests/sample/print_sample_label.html", context)
+
+
+
+
+
+
+from django.db.models import Q
+
+def sample_list(request):
+    q = request.GET.get("q")
+    samples = LabSampleCollection.objects.select_related(
+        "request_order",
+        "request_order__medical_record",
+
+    )
+
+    if q:
+        samples = samples.filter(
+            Q(request_order__id__icontains=q) |
+            Q(request_order__medical_record__patient__name__icontains=q) |
+            Q(request_order__medical_record__patient__phone__icontains=q) |
+            Q(request_order__medical_record__id__icontains=q) |
+            Q(request_order__test_items__lab_test__test_name__icontains=q)
+        ).distinct()  
+       
+    samples = samples.order_by("-id") 
+    return render(
+        request,
+        "lab_tests/sample/sample_list.html",
+        {"samples": samples, "q": q}
+    )
+
+
+def request_sample_list(request,request_id):
+    request_order = get_object_or_404(LabTestRequest,id=request_id)    
+    return render(request,    
+        "lab_tests/sample/request_sample_list.html",
+       { 'request_order':request_order}
+       
+    )
+
+
+
+
+@login_required
+def mark_sample_receive(request, sample_id):
+    sample = get_object_or_404(LabSampleCollection, id=sample_id)   
+    if sample.status != "received":
+        sample.status = "received"
+        sample.save()
+        messages.success(request, f"Sample '{sample.sample_id}' marked as RECEIVED successfully.")
+    else:
+        messages.warning(request, f"Sample '{sample.sample_id}' is already marked as RECEIVED.")
+
+    return redirect("lab_tests:sample_list")
+
+@login_required
+def mark_sample_processing(request, sample_id):
+    sample = get_object_or_404(LabSampleCollection, id=sample_id)   
+    if sample.status != "processing":
+        sample.status = "processing"
+        sample.save()
+        messages.success(request, f"Sample '{sample.sample_id}' marked as RECEIVED successfully.")
+    else:
+        messages.warning(request, f"Sample '{sample.sample_id}' is already marked as RECEIVED.")
+
+    return redirect("lab_tests:sample_list")
+
+@login_required
+def mark_sample_completed(request, sample_id):
+    sample = get_object_or_404(LabSampleCollection, id=sample_id)   
+    if sample.status != "completed":
+        sample.status = "completed"
+        sample.save()
+        messages.success(request, f"Sample '{sample.sample_id}' marked as RECEIVED successfully.")
+    else:
+        messages.warning(request, f"Sample '{sample.sample_id}' is already marked as RECEIVED.")
+
+    return redirect("lab_tests:sample_list")
+
+
+
+from appointments.models import Appointment
+from medical_records.models import MedicalRecordProgress
+
+@login_required
+def create_lab_test_result_with_items(request, medical_record_id,appointment_id):
     medical_record = get_object_or_404(MedicalRecord, id=medical_record_id)
 
-    lab_test_request = LabTestRequest.objects.filter(medical_record=medical_record).last()
+    appointment = get_object_or_404(Appointment, id=appointment_id, medical_record=medical_record)
+    progress = MedicalRecordProgress.objects.filter(
+        medical_record=medical_record,
+
+    ).last()
+  
+    prescription = Prescription.objects.filter(
+        medical_record=medical_record,
+        progress=progress
+    ).last()
+
+    lab_test_request = LabTestRequest.objects.filter(
+        medical_record=medical_record,
+        appointment=appointment,
+        progress=progress
+    ).last()
+
 
     if request.method == 'POST':
         order_form = LabTestResultOrderForm(request.POST)
@@ -170,6 +426,9 @@ def create_lab_test_result_with_items(request, medical_record_id):
                             lab_test=test.test_name
                         )
                         lab_test_request_item.status = 'Completed'
+                        test.prescription = lab_test_request_item.prescription
+                        test.save(update_fields=['prescription'])
+
                         # After updating all LabTestRequestItems
                         all_items = LabTestRequestItem.objects.filter(labtest_request=lab_test_request)
 
@@ -181,43 +440,47 @@ def create_lab_test_result_with_items(request, medical_record_id):
                             lab_test_request.status = 'Pending'
 
                         lab_test_request.save()
-
                         lab_test_request_item.save()
                     except LabTestRequestItem.DoesNotExist:
                         print("No matching LabTestRequestItem found for test:", test.test_name)
 
             return redirect('lab_tests:lab_test_order_list')
     else:
-        order_form = LabTestResultOrderForm(initial={'medical_record': medical_record})
+        order_form = LabTestResultOrderForm(initial={'medical_record': medical_record,'lab_test_request':lab_test_request,'patient_type':'OPD'})
         formset = LabTestResultFormSet(queryset=LabTestResult.objects.none())
 
     return render(request, 'lab_tests/create_lab_test_result_with_items.html', {
         'order_form': order_form,
         'formset': formset,
         'medical_record': medical_record,
+        'lab_test_request':lab_test_request
     })
+
+
+
 
 
 
 
 @login_required
 def lab_test_order_list(request):
-    lab_test_orders =  LabTestResultOrder.objects.none()
-    form = LabTestFilter(request.GET)   
-    if form.is_valid():
-        medical_record = form.cleaned_data['medical_record']
-        lab_test_orders =  LabTestResultOrder.objects.all().order_by('-updated_at')
-        if medical_record:
-            lab_test_orders = lab_test_orders.filter(medical_record=medical_record)
+    search_query = request.GET.get('search', '')
+    lab_test_orders =  LabTestResultOrder.objects.all().order_by('-id')
+    if search_query:
+        lab_test_orders = lab_test_orders.filter(
+            Q(lab_test_request__requested_lab_test_code__icontains=search_query) |
+            Q(medical_record__medical_record_code__icontains=search_query) |
+            Q(medical_record__patient__name__icontains=search_query)|
+            Q(medical_record__patient__phone__icontains=search_query) |
+            Q(medical_record__patient__patient_id__icontains=search_query)
+        )
 
-    datas =lab_test_orders.order_by('-updated_at')
+    datas =lab_test_orders
     paginator = Paginator(datas, 5)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request,'lab_tests/lab_test_result_order_list.html',{'page_obj':page_obj,'form':form})
-
-
+    return render(request,'lab_tests/lab_test_result_order_list.html',{'page_obj':page_obj})
 
 
 def draw_justified_paragraph(pdf, text, x, y, max_width=500, pdf_height=800, line_height=15):  
@@ -301,16 +564,26 @@ def generate_test_report_pdf(request, result_order_id):
     y = height - 50
 
     # --- Header: Logo & Hospital Info ---
-    if result_order.test_doctor.company.logo:
-        logo_path = os.path.join(settings.MEDIA_ROOT, str(result_order.test_doctor.company.logo))
-        if os.path.exists(logo_path):
-            pdf.drawImage(ImageReader(logo_path), 40, y - 60, width=80, height=80)
+    if result_order.test_doctor:
+        if result_order.test_doctor.company:
+            if result_order.test_doctor.company.logo:
+                logo_path = os.path.join(settings.MEDIA_ROOT, str(result_order.test_doctor.company.logo))
+                if os.path.exists(logo_path):
+                    pdf.drawImage(ImageReader(logo_path), 40, y - 60, width=80, height=80)
 
     pdf.setFont("Helvetica-Bold", 14)
     pdf.drawString(140, y - 20, str(result_order.test_doctor.company))
     pdf.setFont("Helvetica", 10)
     pdf.drawString(140, y - 35, f"Email: {result_order.test_doctor.company.email} | Phone: {result_order.test_doctor.phone}")
-    pdf.drawString(140, y - 50, f"Address: {result_order.test_doctor.location.address} | Web: {result_order.test_doctor.company.website}")
+    address = (
+    result_order.test_doctor.location.address 
+    if result_order.test_doctor.location 
+    else result_order.test_doctor.doctor_location or "N/A")
+    website = getattr(result_order.test_doctor.company, "website", "N/A")
+
+    pdf.drawString(140, y - 50, f"Address: {address}")
+    pdf.drawString(140, y - 65, f"Web: {website}")
+    #pdf.drawString(140, y - 50, f"Address: {result_order.test_doctor.location.address} | Web: {result_order.test_doctor.company.website}")
 
     y -= 100
 
@@ -373,7 +646,7 @@ def generate_test_report_pdf(request, result_order_id):
             y -= 15
             pdf.setFont("Helvetica", 10)
 
-        test_type = result.test_name.test_type
+        test_type = result.test_name.category.name
         test_name = result.test_name.test_name
         test_value = result.test_value
         standard_value = result.standard_value
@@ -415,8 +688,8 @@ def generate_test_report_pdf(request, result_order_id):
     # --- Footer Section ---
     y -= 20
     pdf.setFont("Helvetica-Bold", 10)  
-    pdf.drawString(40, y, f"Reviewed by:{medical_record.test_results.first().test_doctor}.")
-    pdf.drawString(350, y, f"Approved by:{medical_record.test_results.first().test_assistance}.")
+    pdf.drawString(40, y, f"Reviewed by:{result_order.reviewed_by}.")
+    pdf.drawString(350, y, f"Approved by:{result_order.approved_by}.")
     y -= 30
     pdf.setFont("Helvetica", 10)
     pdf.drawString(40, y, "Get well soon! Follow your doctor's advice.")
@@ -455,6 +728,14 @@ def generate_qr_code(data, filename):
 
 
 
+@login_required
+def print_lab_test_order(request, order_id):
+    order = get_object_or_404(LabTestResultOrder, id=order_id)
+    results = order.results.all().order_by('id')
+    return render(request, "lab_tests/printable_report.html", {
+        "order": order,
+        "results": results,
+    })
 
 
 
@@ -469,13 +750,27 @@ import json
 from django.db import transaction
 from django.views.generic import ListView
 from .models import ExternalLabVisit
+import logging
+logger = logging.getLogger(__name__)
 
+
+
+
+from lab_tests.models import LabTestCatalog
+import logging
+logger = logging.getLogger(__name__)
 
 
 
 @login_required
 def create_external_lab_visit(request):
-    LabTestBillFormSet = modelformset_factory(LabTestBill, form=LabTestBillForm, extra=1, can_delete=True)
+
+    LabTestBillFormSet = modelformset_factory(
+        LabTestBill,
+        form=LabTestBillForm,
+        extra=1,
+        can_delete=True
+    )
 
     if request.method == 'POST':
         lab_visit_form = ExternalLabVisitForm(request.POST, request.FILES)
@@ -483,92 +778,143 @@ def create_external_lab_visit(request):
 
         if lab_visit_form.is_valid() and formset.is_valid():
             with transaction.atomic():
-                # Save lab visit (without medical_record or invoice yet)
+           
                 lab_visit = lab_visit_form.save(commit=False)
                 patient = lab_visit.patient
+                referral_source = patient.referral_source
 
-                # Create medical record
+                # Create Medical Record
                 medical_record = MedicalRecord.objects.create(
                     patient=patient,
-                    doctor=lab_visit.doctor,  # fallback to some default if needed
+                    doctor=lab_visit.doctor if lab_visit.doctor else None,
+                    external_doctor=lab_visit.doctor_ref if lab_visit.doctor_ref else None,
                     diagnosis='External lab test request',
                     treatment_plan='',
                     date=timezone.now()
                 )
 
-                # Calculate total amount
-                total_amount = 0
-                instances = formset.save(commit=False)
-                for instance, form in zip(instances, formset.forms):
-                    if form.cleaned_data.get('DELETE'):
-                        continue
-                    total_amount += instance.lab_test.test.price or 0
+                valid_items = [
+                    instance
+                    for instance, form in zip(formset.save(commit=False), formset.forms)
+                    if not form.cleaned_data.get('DELETE')
+                ]
 
-                # Create invoice
+                total_amount = sum((item.lab_test_catelogue.price or 0) for item in valid_items)
+
                 invoice = BillingInvoice.objects.create(
                     patient=patient,
+                    medical_record=medical_record,
                     total_amount=total_amount,
                     total_paid=total_amount,
-                    medical_record=medical_record,
-                    invoice_type='External-Lab-Test'
+                    invoice_type='External-Lab-Test',
+                    is_locked = True
                 )
 
-                # Link medical record and invoice to lab visit
                 lab_visit.medical_record = medical_record
                 lab_visit.invoice = invoice
                 lab_visit.save()
+              
+                lab_test_request, _ = LabTestRequest.objects.get_or_create(
+                    medical_record=medical_record,
+                    patient_type='External-Lab-Test',
+                    requested_by=lab_visit.doctor,
+                    external_ref = lab_visit.doctor_ref,
+                    status='Unpaid'
+                )
+                lab_visit.lab_test_request = lab_test_request              
+                lab_visit.save(update_fields=['lab_test_request'])
+                
 
-                # Save lab test bills with invoice link
-                for instance, form in zip(instances, formset.forms):
-                    if form.cleaned_data.get('DELETE'):
-                        continue
-                    instance.invoice = invoice
-                    instance.save()
+                # ====================================================
+                # 4. Loop Each Test → Save + Referral Commission
+                # ====================================================
+                from accounting.utils import create_referral_commission_expense_journal
+                from billing.utils import create_referral_transaction_for_service
 
-                    # Ensure lab test request record exists
-                    LabTestRequest.objects.get_or_create(
-                        medical_record=medical_record,
-                        lab_test=instance.lab_test,
-                        patient_type='External-Lab-Test'
+                for item in valid_items:
+               
+                    item.invoice = invoice
+                    item.status = 'Paid'
+                    item.patient_type = 'External-Lab-Test'
+                    item.lab_test_request_order =lab_test_request
+                    item.save()
+                 
+                    LabTestRequestItem.objects.get_or_create(
+                        labtest_request=lab_test_request,
+                        lab_test=item.lab_test_catelogue, 
+                        notes= item.notes,                      
+                        defaults={'status': 'Pending'}
+
                     )
 
-                # Record payment
-                Payment.objects.create(
+                    tx = create_referral_transaction_for_service(
+                        invoice=invoice,
+                        service_type='lab',
+                        service_id=item.lab_test_catelogue.id,
+                        service_amount=item.lab_test_catelogue.price,
+                        referral_source= referral_source
+                    )
+
+                    # Create Journal entry for referral expense
+                    if tx:
+                        create_referral_commission_expense_journal(
+                            invoice=invoice,
+                            commission_amount=tx.commission_amount,
+                            created_by=request.user
+                        )
+
+           
+                payment = Payment.objects.create(
                     invoice=invoice,
                     amount_paid=invoice.total_amount,
                     payment_type='External-Lab-Test',
                     payment_method='Card',
-                    remarks='Payment for external patient lab test only',
+                    remarks='Payment for external patient lab tests',
                     patient_type='External-Lab-Test'
                 )
 
-                # Update invoice payment status
+           
+                from accounting.utils import create_journal_entry
+
+                create_journal_entry(
+                    payment,
+                    breakdown=[{'amount': invoice.total_amount, 'revenue_type': 'Lab'}],
+                    description=f"Direct lab test payment by {patient.name}",
+                    created_by=request.user
+                )
+
                 invoice.update_totals()
-                if invoice.total_paid >= invoice.total_amount:
-                    invoice.status = 'Paid'
-                elif invoice.total_paid == 0:
-                    invoice.status = 'Unpaid'
-                else:
-                    invoice.status = 'Partially Paid'
+                invoice.status = (
+                    'Paid' if invoice.total_paid >= invoice.total_amount else
+                    'Unpaid' if invoice.total_paid == 0 else
+                    'Partially Paid'
+                )
                 invoice.save(update_fields=['status'])
 
-                return redirect('lab_tests:external_lab_visit_detail', lab_visit.id)
+                return redirect('billing:finalize_invoice', invoice.id)
+        else:
+            logger.error("External Lab Visit Form Errors: %s", lab_visit_form.errors)
+            logger.error("External Lab Visit Formset Errors: %s", formset.errors)
+            logger.error("External Lab Visit Non-Field Errors: %s", formset.non_form_errors())
+            print(f'lab visit form error {lab_visit_form.errors}')  
+            print(f'formset form erros {formset.errors}')        
+            messages.error(request, "There were errors in the form. Please check and try again.")
 
     else:
         lab_visit_form = ExternalLabVisitForm()
         formset = LabTestBillFormSet(queryset=LabTestBill.objects.none())
 
-    lab_tests = LabTest.objects.all()
+   
+    lab_tests = LabTestCatalog.objects.all()
     test_prices = {
-        str(test.id): float(test.test.price) if test.test.price else 0
+        str(test.id): float(test.price) if test.price else 0
         for test in lab_tests
     }
-    test_prices_json = json.dumps(test_prices)
 
     return render(request, 'lab_tests/create_external_lab_visit.html', {
         'lab_visit_form': lab_visit_form,
         'formset': formset,
-        'test_prices': test_prices_json
+        'test_prices': json.dumps(test_prices)
     })
 
 
@@ -608,12 +954,6 @@ def external_lab_visit_detail(request, pk):
 
 
 
-
-
-
-
-
-
 def lab_test_status_list(request):
     result_orders = LabTestResultOrder.objects.select_related(
         'medical_record__patient'
@@ -631,33 +971,67 @@ def lab_test_status_list(request):
 
 
 @login_required
-def deliver_lab_tests(request, result_order_id):
-    result_order = get_object_or_404(LabTestResultOrder, id=result_order_id)
+def deliver_lab_tests(request, pk):
+    result_order = get_object_or_404(LabTestResultOrder, id=pk)
 
-    # Only allow delivery if already completed
-    if result_order.status == 'Completed':
-        result_order.status = 'Delivered'
-        result_order.save()
+    if request.method == "GET":
+        return render(request, "lab_tests/deliver_confirmation.html", {
+            "result_order": result_order
+        })
 
-        # Optional: Mark individual results as delivered too
-        result_order.results.update(status='Completed')  # or 'Delivered' if that’s a valid status
+    if request.method == "POST":
+        if result_order.status == 'Completed':
+            result_order.status = 'Delivered'
+            result_order.save()
+            result_order.results.update(status='Completed')
 
-    return redirect('lab_tests:lab_test_status_list')  # Update with your actual URL name
+        messages.success(request, "Lab test successfully delivered!")
+        return redirect('lab_tests:lab_test_status_list')
 
 
 
 
+
+@login_required
 def pending_lab_test_deliveries(request):
-    invoices = BillingInvoice.objects.prefetch_related('lab_test_bills', 'medical_record')\
-        .filter(lab_test_bills__status='Paid').distinct()    
+    invoice_id = request.GET.get('invoice')
+    search_query = request.GET.get('search', '')
 
+    if invoice_id:       
+        invoices = BillingInvoice.objects.filter(id=invoice_id)
+    else:       
+        invoices = BillingInvoice.objects.filter(
+            lab_test_bills__status='Paid'
+        ).exclude(
+            lab_test_bills__status='Delivered'
+        ).distinct()
+
+    if search_query:
+        invoices = invoices.filter(
+            Q(medical_record__patient__name__icontains=search_query) |
+            Q(medical_record__patient__patient_id__icontains=search_query) |
+            Q(medical_record__patient__phone__icontains=search_query) |
+            Q(lab_test_bills__lab_test_request_order__requested_lab_test_code__icontains=search_query)
+        ).distinct()
+ 
+    if not invoice_id:
+        paginator = Paginator(invoices, 5)
+        page_number = request.GET.get('page')   
+        invoices_page = paginator.get_page(page_number)
+    else:
+        invoices_page = invoices 
     invoice_data = []
-    for invoice in invoices:
-        lab_test_bills = invoice.lab_test_bills.filter(status='Paid')
+    for invoice in invoices_page:
+        lab_test_bills = invoice.lab_test_bills.exclude(status='Delivered')
         lab_test_total = sum([bill.test_fee for bill in lab_test_bills])
-        invoice_data.append((invoice, lab_test_total ))  
+        invoice_data.append((invoice, lab_test_total))
 
-    return render(request, 'lab_tests/pending_lab_test_deliveries.html', {'invoices': invoices,'invoice_data':invoice_data})
+    return render(request, 'lab_tests/pending_lab_test_deliveries.html', {
+        'invoices': invoices_page,
+        'invoice_data': invoice_data,
+        'search_query': search_query
+    })
+
 
 
 

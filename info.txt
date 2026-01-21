@@ -1,0 +1,44 @@
+
+
+importtant view and Model location:
+
+Apps:Accounting
+accounting/Utility
+- All journal entry helper functions are here
+
+Apps: Appointment:
+- General appointment/
+- booking_confirmation_payment/
+- add_medicine_to_invoice
+
+Apps: Lab_tests:
+- External_lab_visit
+
+Apps:Inventory
+- Medicine_sale_only
+- purchase_add_items_into_inventory/ views.inventory_transaction_view,
+
+Apps: Billing
+- Finalize_invoice
+- referral_payment
+- doctor_service_payment
+- emergency_visit_create view and models
+
+Billing/Utility:
+- apply_tax_to_services
+- create_referral_transactions for Service
+- create_referral_transaction_for_invoice
+
+Medical_records:
+- Prescription Model
+- PrescribedMedicine Model
+
+Patients:
+- PatientAdmission model
+- PatientReferralHistory model
+- DischargeReport Model
+
+
+
+
+

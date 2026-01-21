@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+<title>Money Receipt</title>
+
+<style>
+/* A5 LANDSCAPE PRINT */
+@page {
+    size: A5 landscape;
+    margin: 10mm;
+}
+
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    background: #f5f5f5;
+    margin: 0;
+}
+
+/* FIXED A5 LANDSCAPE WIDTH */
+.receipt-box {
+    background: #fff;
+    border: 1px solid #444;
+    padding: 15px;
+    margin: 0 auto;
+    width: 670px; /* A5 Landscape printable width */
+}
+
+/* HEADER */
+.header {
+    text-align: center;
+    margin-bottom: 10px;
+}
+.header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+.header p {
+    margin: 0;
+    font-size: 11px;
+    line-height: 1.2;
+}
+
+/* INPUT FIELDS */
+label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-right: 4px;
+}
+input, textarea {
+    border: none;
+    border-bottom: 1px solid #777;
+    font-size: 12px;
+    padding: 2px 3px;
+    background: none;
+    outline: none;
+}
+
+/* ROW LAYOUT */
+.row {
+    display: flex;
+    align-items: center;
+    margin-bottom: 6px; /* slightly increased space */
+}
+.row div {
+    display: flex;
+    align-items: center;
+    width: 33%;
+    gap: 5px;
+}
+
+/* TABLE STYLING */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 8px;
+}
+.table th, .table td {
+    border: 1px solid #444;
+    padding: 5px;
+    font-size: 12px;
+}
+.table input {
+    width: 100%;
+    border: none;
+    padding: 3px;
+}
+
+/* SIGNATURE SECTION */
+.footer {
+    margin-top: 35px; /* space for real signature writing */
+    display: flex;
+    justify-content: space-between;
+}
+
+.signature-box {
+    border-top: 1px solid #000;
+    width: 30%;
+    text-align: center;
+    padding-top: 5px;
+    font-size: 12px;
+}
+
+/* PRINT BUTTON */
+#printBtn {
+    margin: 12px auto;
+    padding: 7px 22px;
+    background: #0077cc;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    display: block;
+}
+
+@media print {
+    #printBtn { display: none; }
+    body { background: #fff; }
+    input, textarea { border-bottom: 1px solid #000 !important; }
+}
+</style>
+
+</head>
+<body>
+
+<button id="printBtn" onclick="window.print()">Print Receipt</button>
+
+<div class="receipt-box">
+
+    <!-- HEADER WITH LOGO CENTERED -->
+<div class="header" style="display: flex; align-items: center; justify-content: center; gap: 15px;">
+    <!-- Logo -->
+    <div style="flex-shrink: 0;">
+        <img src="{% static 'images/Logo.png' %}" alt="Logo" style="height:40px;">
+    </div>
+
+    <!-- Text -->
+    <div style="text-align: center;">
+        <h2 style="margin:0; font-size:18px;">MymePlus Technology</h2>
+        <p style="margin:0; font-size:11px; line-height:1.2;">
+            Corporate Office: D/123, Road # W/2 Business Park, Dhaka-1216
+        </p>
+        <p style="margin:0; font-size:11px; line-height:1.2;">
+            Phone: 01743800705 | Email: mymeplus@aiha.live
+        </p>
+    </div>
+</div>
+
+
+    <p style="text-align: center;font-weight: bold;">Money Receipt</p>
+    
+
+    <div class="row">
+        <div><label>Receipt No:</label><input type="text"></div>
+        <div><label>Date:</label><input type="date"></div>
+        <div><label>Phone:</label><input type="text"></div>
+    </div>
+
+    <div class="row">
+        <div><label>Name:</label><input type="text"></div>
+        <div><label>Address:</label><input type="text"></div>
+        <div><label>Ref/ID:</label><input type="text"></div>
+    </div>
+
+    <label style="font-size:12px;font-weight:600;">Purpose:</label>
+    <textarea style="width:100%;height:35px;"></textarea>
+
+    <table class="table">
+        <thead>
+            <tr>
+                <th>Description</th>
+                <th style="width:130px;">Amount (Tk)</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td><input type="text"></td>
+                <td><input type="number"></td>
+            </tr>
+            <tr>
+                <td><input type="text"></td>
+                <td><input type="number"></td>
+            </tr>
+            <tr>
+                <td><strong>Total Amount</strong></td>
+                <td><input type="number"></td>
+            </tr>
+            <tr>
+                <td><strong>Paid Amount</strong></td>
+                <td><input type="number"></td>
+            </tr>
+            <tr>
+                <td><strong>Due Amount</strong></td>
+                <td><input type="number"></td>
+            </tr>
+        </tbody>
+    </table>
+
+    <div class="footer">
+        <div class="signature-box">Received By</div>
+        <div class="signature-box">Authorized Signature</div>
+    </div>
+
+</div>
+
+</body>
+</html>

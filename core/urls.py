@@ -44,6 +44,10 @@ urlpatterns = [
     path('manage_doctor/', views.manage_doctor, name='manage_doctor'),
     path('update_doctor/<int:id>/', views.manage_doctor, name='update_doctor'),
     path('delete_doctor/<int:id>/', views.delete_doctor,  name='delete_doctor'),   
+    path('doctor_details/<int:pk>/', views.doctor_details,  name='doctor_details'),
+
+    path("doctors/", views.doctor_list, name="doctor_list"),
+    path("nurses/", views.nurse_list, name="nurse_list"),
 
     path('manage_nurse/', views.manage_nurse, name='manage_nurse'),
     path('update_nurse/<int:id>/', views.manage_nurse, name='update_nurse'),
@@ -85,6 +89,15 @@ urlpatterns = [
     path('create_performance_bonus/', views.manage_performance_bonus, name='create_performance_bonus'),
     path('update_performance_bonus/<int:id>/', views.manage_performance_bonus, name='update_performance_bonus'),
     path('delete_performance_bonus/<int:id>/', views.delete_performance_bonus, name='delete_performance_bonus'),   
+
+
+    path("tax-policy/", views.tax_policy_list, name="tax_policy_list"), 
+    path("tax-policy/create/", views.tax_policy_create, name="tax_policy_create"),
+    path("tax-policy/<int:pk>/edit/", views.tax_policy_edit, name="tax_policy_edit"), 
+
+    path("service-tax-policy/", views.service_tax_policy_list, name="service_tax_policy_list"),
+    path("service-tax-policy/create/", views.service_tax_policy_create, name="service_tax_policy_create"),
+    path("service-tax-policy/<int:pk>/edit/", views.service_tax_policy_edit, name="service_tax_policy_edit"),
 
 
 ]

@@ -261,4 +261,100 @@ class PurchaseStatusForm(forms.Form):
         required=False
     )
 
-##################################################################
+############################### Direct Purchase Procurement ###################################
+
+
+from. models import DirectPurchaseInvoice,DirectPurchaseInvoiceItem,PurchasePayment,GoodsReceivedItem
+from django.forms import inlineformset_factory
+
+
+class DirectPurchaseInvoiceForm(forms.ModelForm):
+    class Meta:
+        model = DirectPurchaseInvoice
+        fields = ["created_at", "due_date", "supplier_name",'AIT_rate','AIT_type', "advance_amount", "discount_amount", "notes","terms_and_conditions"]
+        widgets = {
+            "created_at": forms.DateInput(attrs={"type": "date"}),
+            "due_date": forms.DateInput(attrs={"type": "date"}),
+            "notes": forms.Textarea(attrs={"rows": 2, "style": "height:80px;"}),
+            "terms_and_conditions": forms.Textarea(attrs={"rows": 2, "style": "height:80px;"}),
+        }
+
+
+class DirectPurchaseInvoiceItemForm(forms.ModelForm):
+    class Meta:
+        model = DirectPurchaseInvoiceItem
+        fields = ["item", "product_type","description", "batch", "warehouse", "location", "quantity", "unit_price",'VAT_rate','VAT_type', "total_amount"]
+        widgets = {
+            "quantity": forms.NumberInput(attrs={"step": "any", "class": "form-control quantity-input"}),
+            "unit_price": forms.NumberInput(attrs={"step": "any", "class": "form-control unit-price-input"}),
+            "total_amount": forms.NumberInput(attrs={
+                "step": "any",
+                "readonly": "readonly",
+                "class": "form-control total-price-input",
+            }),
+            "description": forms.Textarea(attrs={"rows": 2, "style": "height:80px;"}),
+        }
+
+        
+
+
+DirectPurchaseInvoiceItemFormSet = inlineformset_factory(
+    DirectPurchaseInvoice,
+    DirectPurchaseInvoiceItem,
+    form=DirectPurchaseInvoiceItemForm,
+    extra=1,
+    can_delete=True
+)
+
+
+
+class GoodsReceivedItemForm(forms.ModelForm):
+    invoice_item = forms.ModelChoiceField(
+        queryset=DirectPurchaseInvoiceItem.objects.all(), 
+        widget=forms.Select(attrs={'class': 'form-select'})
+    )
+    class Meta:
+        model = GoodsReceivedItem
+        fields = ['invoice_item', 'warehouse', 'location', 'batch', 'quantity_received']
+        widgets = {    
+
+              
+            'warehouse': forms.Select(attrs={'class': 'form-select'}),
+            'location': forms.Select(attrs={'class': 'form-select'}),
+            'batch': forms.Select(attrs={'class': 'form-select'}),
+            'quantity_received': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
+        }
+   
+
+
+class PurchasePaymentForm(forms.ModelForm):
+    class Meta:
+        model = PurchasePayment
+        fields = [
+            'purchase_invoice','supplier_name',
+           'purchase_price', 'vat_amount', 'ait_amount','net_amount',
+            'payment_method', 'bank_account', 'asset_tag'
+        ]
+        widgets = {
+            'purchase_invoice': forms.Select(attrs={'class': 'form-control'}),          
+            'supplier_name': forms.Select(attrs={'class': 'form-control'}),           
+            'purchase_price': forms.NumberInput(attrs={'class': 'form-control'}),
+            'vat_amount': forms.NumberInput(attrs={'class': 'form-control'}),
+            'ait_amount': forms.NumberInput(attrs={'class': 'form-control'}),
+            'payment_method': forms.Select(attrs={'class': 'form-control'}),
+            'bank_account': forms.Select(attrs={'class': 'form-control'}),
+            'asset_tag': forms.TextInput(attrs={'class': 'form-control'}),
+            'net_amount': forms.TextInput(attrs={'class': 'form-control'}),
+        }
+
+
+
+
+
+
+
+
+
+
+
+

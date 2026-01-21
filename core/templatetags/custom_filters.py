@@ -6,7 +6,10 @@ import os
 from num2words import num2words
 
 
-
+@register.filter
+def not_in(value, arg):
+    items = [item.strip() for item in arg.split(',')]
+    return value not in items
 
 @register.filter
 def get_balance(balances, key):
@@ -85,12 +88,10 @@ def add_commas(value):
 
 
 
+
 @register.filter
 def in_list(value, arg):
-    if not isinstance(arg, list):
-        return False
-    return value in arg
-
+    return value in [x.strip() for x in arg.split(',')]
 
 
 @register.filter

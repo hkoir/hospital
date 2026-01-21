@@ -1,0 +1,40 @@
+
+
+<div class="container my-3">
+    <h6 class="text-center mb-3 fw-semibold">Quick Navigation</h6>
+
+    <div class="d-flex justify-content-center flex-wrap gap-2">
+     
+       <a href="{% url 'accounting:ledger_search' %}"
+           class="btn btn-sm px-3 py-1 rounded-pill btn-outline-warning"><i class="fas fa-search"></i>Ledger</a>
+
+        <a href="{% url 'accounting:balance_sheet' %}" 
+           class="btn btn-sm px-3 py-1 rounded-pill btn-primary"><i class="fas fa-chart-bar"></i>Balance Sheet</a>
+
+        <a href="{% url 'accounting:balance_sheet_quarterly' %}" 
+           class="btn btn-sm px-3 py-1 rounded-pill btn-success"><i class="fas fa-chart-bar"></i>Quarterly Sheet</a>
+
+        <a href="{% url 'accounting:trial_balance' %}" 
+           class="btn btn-sm px-3 py-1 rounded-pill btn-info text-white"><i class="fas fa-chart-bar"></i>Trial Balance</a>
+
+        <a href="{% url 'accounting:profit_loss' %}" 
+           class="btn btn-sm px-3 py-1 rounded-pill btn-warning"><i class="fas fa-chart-pie"></i>Profit & Loss</a>
+
+        <a href="{% url 'accounting:profit_loss_quarterly' %}" 
+           class="btn btn-sm px-3 py-1 rounded-pill btn-danger"><i class="fas fa-chart-line"></i>P&L Quarterly</a>
+
+        <a href="{% url 'accounting:journalentry_create' %}" 
+           class="btn btn-sm px-3 py-1 rounded-pill btn-secondary"><i class="fas fa-plus"></i>Journal Entry</a>
+
+        <a href="{% url 'accounting:journalentry_list' %}" 
+           class="btn btn-sm px-3 py-1 rounded-pill btn-dark"><i class="fas fa-list"></i>Entries</a>
+
+        <a href="{% url 'accounting:account_create' %}" 
+           class="btn btn-sm px-3 py-1 rounded-pill btn-primary"><i class="fas fa-plus"></i>Add Account</a>
+
+        <a href="{% url 'accounting:account_list' %}" 
+           class="btn btn-sm px-3 py-1 rounded-pill btn-success"><i class="fas fa-list"></i>Accounts</a>
+
+    </div>
+</div>
+

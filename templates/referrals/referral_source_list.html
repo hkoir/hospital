@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% include 'referrals/quick_access_link.html' %}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Referral Sources</h2>
+
+    <form method="get" class="row g-2 mb-3">
+        <div class="col-md-4">
+            <input type="text" name="q" value="{{ request.GET.q }}" class="form-control" placeholder="Search by patient, doctor, agent...">
+        </div>
+        <div class="col-md-2">
+            <button class="btn btn-primary w-100" type="submit">Search</button>
+        </div>
+        <div class="col-md-2 ms-auto text-end">
+            <a href="{% url 'billing:referral_source_create' %}" class="btn btn-success">Add Referral</a>
+        </div>
+    </form>
+
+    <div class="table-responsive">
+        <table class="table table-striped table-hover">
+            <thead class="table-dark">
+                <tr>
+                    <th>#</th>
+                    <th>Referal code</th>
+                    <th>Referral Type</th>
+                    <th>Internal Doctor</th>
+                    <th>Agent / Hospital / External</th>
+                    <th>Created At</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for referral in referrals %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td>{{ referral.referral_code }}</td>                   
+                        <td>{{ referral.get_referral_type_display }}</td>
+                        
+                        <td>
+                            {% if referral.internal_doctor %}
+                            {{ referral.internal_doctor.name }}</td>
+                            {% else %}
+                        NO
+                            {% endif %}
+                        <td>
+                            {% if referral.agent_name %}Agent: {{ referral.agent_name }} | {{ referral.agent_phone }}<br>{% endif %}
+                            {% if referral.hospital_name %}Hospital: {{ referral.hospital_name }} | {{referral.hospital_contact}}<br>{% endif %}
+                            {% if referral.external_name %}External: {{ referral.external_name }} | referral.external_contact{% endif %}
+                        </td>
+                        <td>{{ referral.created_at|date:"d M Y H:i" }}</td>
+                        <td>
+                            <a href="{% url 'billing:referral_source_update' referral.id %}" class="btn btn-sm btn-warning">Edit</a>
+                        </td>
+                    </tr>
+                {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">No referrals found.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    
+
+        {% if is_paginated %}
+        <nav aria-label="Page navigation">
+            <ul class="pagination justify-content-center">
+
+                {# Previous page link #}
+                {% if page_obj.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                        href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.source_type %}source_type={{ request.GET.source_type }}&{% endif %}page={{ page_obj.previous_page_number }}">
+                            Previous
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Previous</span>
+                    </li>
+                {% endif %}
+
+                {# Current page indicator #}
+                <li class="page-item disabled">
+                    <span class="page-link">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+                </li>
+
+                {# Next page link #}
+                {% if page_obj.has_next %}
+                    <li class="page-item">
+                        <a class="page-link" 
+                        href="?{% if request.GET.q %}q={{ request.GET.q }}&{% endif %}{% if request.GET.source_type %}source_type={{ request.GET.source_type }}&{% endif %}page={{ page_obj.next_page_number }}">
+                            Next
+                        </a>
+                    </li>
+                {% else %}
+                    <li class="page-item disabled">
+                        <span class="page-link">Next</span>
+                    </li>
+                {% endif %}
+
+            </ul>
+        </nav>
+        {% endif %}
+</div>
+
+{% endblock %}

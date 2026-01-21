@@ -11,11 +11,22 @@ class ConsultationBillForm(forms.ModelForm):
         exclude = ['status']
 
 
-class LabTestBillForm(forms.ModelForm):
+
+
+class LabTestBillForm(forms.ModelForm):   
     class Meta:
         model = LabTestBill
-        exclude = ['status','invoice']
+        exclude = ['status','invoice','lab_test_request_order']
 
+        widgets={
+            'notes':forms.TextInput(attrs={
+                'class':'form-control',
+                'style':'height:50px'
+            })
+        }
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['test_fee'].widget.attrs['readonly'] = True
 
 
 class BillingInvoiceForm(forms.ModelForm):
@@ -76,14 +87,16 @@ class MiscBillForm(forms.ModelForm):
 
 
 
+
+
+from django.forms import inlineformset_factory
+from facilities.models import OTBooking,OTBookingProcedure
+from billing.models import DoctorServiceRate
+
 class OTBookingForm(forms.ModelForm):
-    procedure = forms.ChoiceField(
-        choices=[],
-        widget=forms.Select(attrs={'class': 'form-control'})
-    )
     class Meta:
         model = OTBooking
-        fields = ['operation_theatre', 'patient', 'surgeon', 'booked_start', 'booked_end', 'procedure','surgery_type','notes']
+        fields = ['operation_theatre','patient','service_type','patient_type', 'surgeon', 'booked_start', 'booked_end','notes']
         widgets = {
             'operation_theatre': forms.Select(attrs={'class': 'form-control'}),
             'patient': forms.Select(attrs={'class': 'form-control'}),
@@ -94,24 +107,8 @@ class OTBookingForm(forms.ModelForm):
                 'class': 'form-control',
                'style':'height:30px; width:100%'
                 }),
+          
         }
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)  
-        raw_types = DoctorServiceRate.objects.values_list('service_type', flat=True)
-        unique_normalized = {}
-        
-        for stype in raw_types:
-            if stype:
-                normalized = stype.strip().lower()
-                if normalized not in unique_normalized:
-                    unique_normalized[normalized] = stype.strip()
-
-        # Set deduplicated and clean choices
-        self.fields['procedure'].choices = [
-            (val, val) for val in unique_normalized.values()
-        ]
-
 
 
     def clean(self):
@@ -121,6 +118,17 @@ class OTBookingForm(forms.ModelForm):
         if start and end and end <= start:
             raise forms.ValidationError("End time must be after start time.")
         return cleaned_data
+
+
+
+OTBookingProcedureFormSet = inlineformset_factory(
+    OTBooking,
+    OTBookingProcedure,
+    fields=['procedure'],
+    extra=1,
+    can_delete=True
+)
+
 
 
 
@@ -171,7 +179,10 @@ class CommonFilterForm(forms.Form):
     name = forms.CharField(required=False)
     patient_id = forms.CharField(required=False)
     service_type = forms.ChoiceField(choices=INVOICE_TYPE,required=False)
-
+    admission = forms.BooleanField(
+    required=False,
+    widget=forms.CheckboxInput(attrs={'class': 'form-check-input'})
+	)
 
 
 
@@ -188,14 +199,50 @@ class EmergencyVisitForm(forms.ModelForm):
 
 
 
-from .models import DoctorServiceRate
+
+
+from .models import DoctorServiceRate,ReferralSource,ReferralCommissionRule
 
 class DoctorServiceRateForm(forms.ModelForm):
     class Meta:
         model = DoctorServiceRate
-        fields = ['doctor', 'service_type', 'rate']
+        exclude = ['user', 'hospital_share']
         widgets = {
             'service_type': forms.Select(attrs={'class': 'form-select'}),
             'rate': forms.NumberInput(attrs={'class': 'form-control'}),
             'doctor': forms.Select(attrs={'class': 'form-select'}),
+        }
+
+
+
+
+class ReferralCommissionRuleForm(forms.ModelForm):
+    class Meta:
+        model = ReferralCommissionRule
+        fields = ['referral_source','referral_type','service_type', 'commission_type', 'value']
+        widgets = {
+            'referrer_doctor': forms.Select(attrs={'class': 'form-select'}),
+            'service_type': forms.Select(attrs={'class': 'form-select'}),
+            'commission_type': forms.Select(attrs={'class': 'form-select'}),
+            'value': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),
+        }
+
+
+class ReferralSourceForm(forms.ModelForm):
+    class Meta:
+        model = ReferralSource
+        fields = [
+            'referral_type', 'internal_doctor', 'external_name', 'external_contact',
+            'agent_name', 'agent_phone', 'hospital_name', 'hospital_contact'
+        ]
+        widgets = {
+            'referral_type': forms.Select(attrs={'class': 'form-select'}),
+            'internal_doctor': forms.Select(attrs={'class': 'form-select'}),          
+            'external_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'external_contact': forms.TextInput(attrs={'class': 'form-control'}),
+            'agent_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'agent_phone': forms.TextInput(attrs={'class': 'form-control'}),
+            'hospital_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'hospital_contact': forms.TextInput(attrs={'class': 'form-control'}),
+            
         }

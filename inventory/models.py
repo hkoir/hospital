@@ -114,11 +114,11 @@ class Inventory(models.Model):
     remarks = models.TextField(null=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    
+
     def save(self, *args, **kwargs):
         if not self.inventory_id:
             self.inventory_id= f"INVID-{uuid.uuid4().hex[:8].upper()}"
-     
+
         super().save(*args, **kwargs)
 
     def __str__(self):
@@ -173,6 +173,7 @@ class InventoryTransaction(models.Model):
 
 
 class MedicineSaleOnly(models.Model):
+    referral_source= models.ForeignKey('billing.ReferralSource',on_delete=models.CASCADE, blank=True, null=True)
     patient = models.ForeignKey('patients.Patient', on_delete=models.CASCADE,blank=True, null=True)
     doctor_ref= models.CharField(max_length=255, blank=True, null=True)      
     doctor = models.ForeignKey(Doctor,on_delete=models.CASCADE,null=True,blank=True,related_name='medicine_only_doctors')
@@ -197,6 +198,7 @@ class MedicineSaleOnly(models.Model):
 
     
 class MedicineSaleItem(models.Model):
+    category = models.ForeignKey(Category, on_delete=models.CASCADE,null=True,blank=True)
     medicine_sale_only = models.ForeignKey(MedicineSaleOnly, related_name='items', on_delete=models.CASCADE)
     medicine = models.ForeignKey(Product, on_delete=models.CASCADE,null=True,blank=True)
     batch = models.ForeignKey(Batch, on_delete=models.CASCADE)

@@ -1,0 +1,124 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% include 'referrals/quick_access_link.html' %}
+<div class="container mt-4">
+
+    <h4 class="text-center my-4">Total due amount : {{ total_due }}</h4>
+    <h2>Referral Payment</h2>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="row mb-3">
+            <div class="col-md-3 col-6">
+                <label for="referral_source">Referral Source</label>
+
+ 		<select name="referral_source" id="referral_source" class="form-control" required onchange="location = '?referral_source=' + this.value;">
+                <option value="">-- Select Referral Source --</option>
+                {% for rs in referral_sources %}
+                    <option value="{{ rs.id }}" {% if selected_referral_source and selected_referral_source.id == rs.id %}selected{% endif %}>
+                        {{ rs }}
+                    </option>
+                {% endfor %}
+            </select>
+            </div>
+             <div class="col-md-3 col-6">
+                <label for="payment_mode">Payment Mode</label>
+                <select name="payment_mode" class="form-control" required>
+                    <option value="Cash">Cash</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="bKash">bKash</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="col-md-3 col-6">
+                <label for="amount_paid">Amount Paid</label>
+                <input type="number" name="amount_paid" class="form-control" step="0.01" required value="{{ total_due }}">
+            </div>
+     
+
+         <div class="col-md-3 col-6">
+            <label for="notes">Notes</label>
+            <textarea name="notes" class="form-control" rows="2"></textarea>
+        </div>
+    </div>
+
+        <h5 class="mt-4">Pending Referrals</h5>
+        <div class="table-responsive mb-3">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select_all"></th>
+                        <th>Date</th>
+                         <th>Referral</th>                     
+                        <th>Patient</th>
+                        <th>Service Type</th>
+                        <th>Commission Amount</th>
+			<th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for r in pending_referrals %}
+                    <tr>
+                        <td><input class="service-log-check" type="checkbox" name="referrals" value="{{ r.id }}"data-amount="{{ r.commission_amount }}" ></td>
+                        <td>{{ r.created_at|date:"Y-m-d" }}</td>
+                        <td>{{ r.referral_source.display_name }}</td>                        
+                        <td>{{ r.invoice.patient.name }}</td>
+                        <td>{{ r.service_type }}</td>
+                        <td>{{ r.commission_amount }}</td>
+		       <td>
+                            {% if r.status == "Paid" %}
+                                <span class="badge bg-success">{{ r.status }}</span>
+                            {% elif r.status == "Approved" %}
+                                <span class="badge bg-info">{{ r.status }}</span>
+                            {% else %}
+                                <span class="badge bg-warning">{{ r.status }}</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No pending referrals for this source.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <button type="submit" class="btn btn-success">Pay Selected Referrals</button>
+    </form>
+</div>
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const selectAllCheckbox = document.getElementById("select_all");
+    const amountPaidInput = document.querySelector("input[name='amount_paid']");
+    const checkboxes = document.querySelectorAll(".service-log-check");
+ 
+    function updateTotal() {
+        let total = 0;
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                total += parseFloat(cb.dataset.amount || 0);
+            }
+        });
+        amountPaidInput.value = total.toFixed(2);
+    }
+ 
+    selectAllCheckbox.addEventListener("change", function () {
+        checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+        updateTotal();
+    });
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener("change", updateTotal);
+    });
+
+});
+</script>
+
+{% endblock %}

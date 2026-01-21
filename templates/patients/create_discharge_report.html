@@ -17,14 +17,16 @@
                 <h5 class="mb-3">Patient Information</h5>
                 <ul class="list-group list-group-flush">
                   <li class="list-group-item">
-                    <strong>Patient:</strong> {{ admission.patient }} |
-                    <strong>PID:</strong> {{ admission.patient.patient_id }} |
-                    <strong>Admission Date:</strong> {{ admission.admission_date|date:"d M Y" }} |
-                    <strong>Doctor:</strong> {{ admission.admitting_doctor.name }}
+		 <li class="list-group-item">
+                    <strong>Patient:</strong> {{ admission.patient }} | {{ emergency_visit.patient }} <br>
+                    <strong>PID:</strong> {{ admission.patient.patient_id }} | {{ emergency_visit.patient.patient_id }} <br>
+                    <strong>Admission Date:</strong> {{ admission.admission_date|date:"d M Y" }} | {{ emergency_visit.created_at|date:"d M Y" }} <br>
+                    <strong>Doctor:</strong> {{ admission.admitting_doctor.name }} | {{ emergency_visit.treated_by.name }} <br>
                   </li>
                   <li class="list-group-item">
-                    <strong>Patient Age:</strong> {{ admission.patient.calculate_age }} years
+                    <strong>Patient Age:</strong> {{ admission.patient.calculate_age }} | {{ emergency_visit.patient.calculate_age }} years
                   </li>
+		
                 </ul>
               </div>
             </div>
@@ -44,9 +46,16 @@
           
               <!-- Action Buttons -->
               <div class="d-flex justify-content-between mt-4">
+		 {% if admission %}
                 <a href="{% url 'patients:patient_admission_list' %}" class="btn btn-secondary">
                   <i class="bi bi-arrow-left-circle"></i> Back
                 </a>
+                {% else %}
+                 <a href="{% url 'billing:emergency_visit_list' %}" class="btn btn-secondary">
+                  <i class="bi bi-arrow-left-circle"></i> Back
+                </a>
+                {% endif %}
+
                 <button type="submit" class="btn btn-success">
                   <i class="bi bi-check-circle"></i> Create Discharge Report
                 </button>

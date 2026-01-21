@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% load static %}
+{% block content %}
+
+<div class="container mt-4">
+
+    <!-- Back Button -->
+    <div class="mb-3">
+        <a href="" class="btn btn-secondary btn-sm">
+            &larr; Back to Doctors
+        </a>
+    </div>
+
+    <div class="row">
+        <!-- Doctor Photo & Basic Info -->
+        <div class="col-md-4">
+            <div class="card shadow-sm text-center">
+                {% if doctor.user.photo_id %}
+                    <img src="{{ doctor.user.photo_id.url }}" class="card-img-top" alt="{{ doctor.get_full_name }}">
+                {% else %}
+                    <img src="{% static 'images/default_doctor.png' %}" class="card-img-top" alt="No Photo">
+                {% endif %}
+                <div class="card-body">
+                    <h4 class="card-title">{{ doctor.get_full_name }}</h4>
+                    <p class="text-muted mb-1">{{ doctor.specialization.name|default:"N/A" }}</p>
+                    {% if doctor.medical_license_number %}
+                    <p class="text-muted mb-1">License: {{ doctor.medical_license_number }}</p>
+                    {% endif %}
+                    {% if doctor.language %}
+                    <p class="text-muted mb-1">Languages: {{ doctor.language }}</p>
+                    {% endif %}
+                    {% if doctor.doctor_location %}
+                    <p class="text-muted mb-1">Location: {{ doctor.doctor_location }}</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Doctor Detailed Info -->
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    Doctor Profile
+                </div>
+                <div class="card-body">
+
+                    {% if doctor.description %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Bio / Description</h6>
+                        <p>{{ doctor.description }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if doctor.education %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Education & Certifications</h6>
+                        <p>{{ doctor.education }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if doctor.experience_years %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Experience</h6>
+                        <p>{{ doctor.experience_years }} years</p>
+                    </div>
+                    {% endif %}
+
+                    {% if doctor.hospital_affiliations %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Hospital Affiliations</h6>
+                        <p>{{ doctor.hospital_affiliations }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if doctor.memberships %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Memberships</h6>
+                        <p>{{ doctor.memberships }}</p>
+                    </div>
+                    {% endif %}
+
+                    {% if doctor.awards %}
+                    <div class="mb-3">
+                        <h6 class="text-muted">Awards & Achievements</h6>
+                        <p>{{ doctor.awards }}</p>
+                    </div>
+                    {% endif %}
+
+                    <div class="row mb-2">
+                        <div class="col-sm-6 text-muted">Working Hours:</div>
+                        <div class="col-sm-6">
+                            {% if doctor.start_time and doctor.end_time %}
+                                {{ doctor.start_time|time:"H:i" }} - {{ doctor.end_time|time:"H:i" }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div class="row mb-2">
+                        <div class="col-sm-6 text-muted">Consultation Fees:</div>
+                        <div class="col-sm-6">
+                            {% if doctor.consultation_fees %}
+                                ${{ doctor.consultation_fees }}
+                            {% else %}
+                                N/A
+                            {% endif %}
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="card-footer text-end">
+                    <a href="{% url 'core:update_doctor' doctor.id %}" class="btn btn-sm btn-primary">
+                        Edit Profile
+                    </a>
+                     <a href="{% url 'core:delete_doctor' doctor.id %}" class="btn btn-sm btn-primary">
+                        Delete Profile
+                    </a>
+                    <a href="" class="btn btn-sm btn-secondary">
+                        Back to List
+                    </a>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+</div>
+
+{% endblock %}

@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+ 
+ 
+<style>
+
+.dashboard-wrapper {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 15px;
+}
+
+/* Left Panel Styling */
+.left-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    height: auto;
+    position: static;
+    top: 0px;
+}
+
+/* ===== Responsive Mobile Layout ===== */
+@media (max-width: 992px) {
+
+    .dashboard-wrapper {
+        grid-template-columns: 1fr;  /* stacked vertically */
+    }
+
+    .left-panel {
+        position: relative;          /* disable sticky */
+        top: 0;
+        margin-bottom: 20px;
+    }
+
+    .kpi-card {
+        padding: 18px;
+    }
+}
+
+    .left-panel h5 {
+        font-weight: 700;
+        margin-bottom: 18px;
+        color: #003c82;
+    }
+
+    .quick-link {
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        background: #f7faff;
+        border-radius: 10px;
+        border: 1px solid #e1ecf9;
+        text-decoration: none;
+        display: block;
+        font-weight: 600;
+        color: #003c82;
+        transition: 0.2s;
+    }
+
+    .quick-link:hover {
+        background: #e8f1ff;
+        border-color: #d7e5ff;
+        transform: translateX(5px);
+    }
+
+    .right-panel h3 {
+        font-weight: 700;
+        color: #003c82;
+    }
+
+    .kpi-card {
+        padding: 10px;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        text-align: center;
+        height: 80px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 14px;
+        color: #003c82;
+    }
+
+    .list-group-item {
+        border-radius: 12px !important;
+        margin-bottom: 8px;
+        border: 1px solid #eaeaea;
+    }
+</style>
+
+
+
+<div class="container-fluid">
+    <div class="dashboard-wrapper">      
+        <div class="left-panel mt-0">      
+            {% include 'workspace/staff_quick_access_link.html' %}
+        </div>
+       
+        <div class="right-panel">
+
+            <div class="card shadow-sm">
+                <div class="card-header bg-white">
+                    <h5 class="fw-semibold">Collect Payment</h5>
+                </div>
+
+                <div class="card-body">
+
+                    <form method="get" class="row g-3 mb-3">
+                        <div class="col-md-10">
+                            <input type="text" name="q" class="form-control"
+                                value="{{ query|default:'' }}" placeholder="Search patient name or invoice number...">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-primary w-100">Search</button>
+                        </div>
+                    </form>
+
+                    {% if invoices %}
+                    <table class="table table-bordered">
+                        <thead>
+                            <tr>
+                                <th>Invoice ID</th>
+                                <th>Patient</th>
+                                <th>Total</th>
+                                <th>Paid</th>
+                                <th>Due</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for inv in invoices %}
+                            <tr>
+                                <td>#{{ inv.invoice_id }}</td>
+                                <td>{{ inv.patient.name }}</td>
+                                <td>{{ inv.total_amount }}</td>
+                                <td>{{ inv.total_paid }}</td>
+                                <td>{{ inv.remaining_amount }}</td>
+                                <td>
+                                    <a href="{% url 'billing:add_payment' inv.id %}" 
+                                    class="btn btn-success btn-sm">
+                                        Make Payment
+                                    </a>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% elif query %}
+                    <p class="text-danger">No invoices found.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

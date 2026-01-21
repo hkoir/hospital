@@ -4,91 +4,234 @@
 {% block content %}
 
 
+<style>
+
+.dashboard-wrapper {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 15px;
+}
+
+/* Left Panel Styling */
+.left-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    height: auto;
+    position: static;
+    top: 0px;
+}
+
+/* ===== Responsive Mobile Layout ===== */
+@media (max-width: 992px) {
+
+    .dashboard-wrapper {
+        grid-template-columns: 1fr;  /* stacked vertically */
+    }
+
+    .left-panel {
+        position: relative;          /* disable sticky */
+        top: 0;
+        margin-bottom: 20px;
+    }
+
+    .kpi-card {
+        padding: 18px;
+    }
+}
+
+    .left-panel h5 {
+        font-weight: 700;
+        margin-bottom: 18px;
+        color: #003c82;
+    }
+
+    .quick-link {
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        background: #f7faff;
+        border-radius: 10px;
+        border: 1px solid #e1ecf9;
+        text-decoration: none;
+        display: block;
+        font-weight: 600;
+        color: #003c82;
+        transition: 0.2s;
+    }
+
+    .quick-link:hover {
+        background: #e8f1ff;
+        border-color: #d7e5ff;
+        transform: translateX(5px);
+    }
+
+    .right-panel h3 {
+        font-weight: 700;
+        color: #003c82;
+    }
+
+    .kpi-card {
+        padding: 10px;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        text-align: center;
+        height: 80px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 14px;
+        color: #003c82;
+    }
+
+    .list-group-item {
+        border-radius: 12px !important;
+        margin-bottom: 8px;
+        border: 1px solid #eaeaea;
+    }
+</style>
 
 
 
-<div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-12">
-      <div class="card shadow-lg">
-        <div class="card-header bg-primary text-white text-center">
-          <h5 class="mb-0">Book Appointment</h5>
+<div class="container-fluid">
+    <div class="dashboard-wrapper">      
+        <div class="left-panel mt-0">      
+            {% include 'workspace/staff_quick_access_link.html' %}          
         </div>
-        <div class="card-body">
+       
+        <div class="right-panel">   
 
-          <!-- Show Messages -->
-          {% if messages %}
-            {% for message in messages %}
-              <div class="alert alert-{{ message.tags }}">{{ message }}</div>
-            {% endfor %}
-          {% endif %}
-
-          <form method="POST">
-            {% csrf_token %}
-
-            <div class="row">           
-
-            <div class="col-6 col-md-3">
-              <label for="patientTypeSelect" class="form-label">Patient Type</label>
-              <select class="form-select" name="patient_type" id="patientTypeSelect" required>
-                <option value="">-- Select Patient Type --</option>
-                <option value="OPD">OPD</option>
-                <option value="IPD">IPD</option>
-                <option value="Emergency">Emergency</option>
-              </select>
+      {% include 'appointments/quick_access_link.html' %}
+      <div class="row justify-content-center">
+        <div class="col-12">
+          <div class="card shadow-lg">
+            <div class="card-header bg-primary text-white text-center">
+              <h5 class="mb-0">Book Appointment</h5>
             </div>
+            <div class="card-body">
 
-             <div class="col-6 col-md-3">
-              <label for="patientSelect" class="form-label">Select Patient</label>
-              <select class="form-select" name="patient_id" id="patientSelect" required>
-                <option value="">-- Select Patient --</option>
-                {% for patient in patients %}
-                  <option value="{{ patient.id }}">{{ patient.name }}</option>
+              <!-- Show Messages -->
+              {% if messages %}
+                {% for message in messages %}
+                  <div class="alert alert-{{ message.tags }}">{{ message }}</div>
                 {% endfor %}
-              </select>
-            </div>
+              {% endif %}
 
-             <div class="col-6 col-md-3">
-              <label for="doctorSelect" class="form-label">Select Doctor</label>
-              <select class="form-select" name="doctor_id" id="doctorSelect" required>
-                <option value="">-- Select Doctor --</option>
-                {% for doctor in doctors %}
-                  <option value="{{ doctor.id }}">{{ doctor.name }}</option>
-                {% endfor %}
-              </select>
-            </div>
+              <form method="POST">
+                {% csrf_token %}
 
-              <div class="col-6 col-md-3">
-              <label for="dateSelect" class="form-label">Appointment Date</label>
-              <input type="date" class="form-control" name="appointment_date" id="dateSelect" required>
-            </div>
+                <div class="row">           
 
-              <div class="col-6 col-md-3">
-              <label for="slotSelect" class="form-label">Available Time Slot</label>
-              <select class="form-select" name="slot_id" id="slotSelect" required>
-                <option value="">-- Select Slot --</option>
-              </select>
-            </div>
+                <div class="col-6 col-md-3">
+                  <label for="patientTypeSelect" class="form-label">Patient Type</label>
+                  <select class="form-select" name="patient_type" id="patientTypeSelect" required>
+                    <option value="">-- Select Patient Type --</option>
+                    <option value="OPD">OPD</option>
+                    <option value="IPD">IPD</option>
+                    <option value="Emergency">Emergency</option>
+                  </select>
+                </div>
+          
 
-             <div class="col-6 col-md-3">
-              <label for="feeInput" class="form-label">Consultation Fee</label>
-              <input type="number" class="form-control" name="consultation_fee" id="feeInput" step="0.01" required readonly>
-            </div>
+                <div class="col-6 col-md-3">
+                  <label for="patientSelect" class="form-label">Select Patient</label>
+		 <select id="patientSelect" class="form-select" name="patient_id" required></select>		
+                </div>
 
-             <div class="col-6 col-md-3 mt-4">
-              <button type="submit" class="btn btn-success">Confirm Booking</button>
+                <div class="col-6 col-md-3">
+                  <label for="doctorSelect" class="form-label">Select Doctor</label>
+		   <select id="doctorSelect" class="form-select" name="doctor_id" required></select>		
+                </div>
+
+                  <div class="col-6 col-md-3">
+                  <label for="dateSelect" class="form-label">Appointment Date</label>
+                  <input type="date" class="form-control" name="appointment_date" id="dateSelect" required>
+                </div>
+
+                  <div class="col-6 col-md-3">
+                  <label for="slotSelect" class="form-label">Available Time Slot</label>
+                  <select class="form-select" name="slot_id" id="slotSelect" required>
+                    <option value="">-- Select Slot --</option>
+                  </select>
+                </div>
+
+                <div class="col-6 col-md-3">
+                  <label for="feeInput" class="form-label">Consultation Fee</label>
+                  <input type="number" class="form-control" name="consultation_fee" id="feeInput" step="0.01" required readonly>
+                </div>
+
+                <div class="col-6 col-md-3 mt-4">
+                  <button type="submit" class="btn btn-success">Confirm Booking</button>
+                </div>
+                </div>
+              </form>
+              <p class="text-center text-primary"> Do not have patient ID?,
+                <a href="{% url 'accounts:direct_patient_registration' %}" class="btn btn-sm btn-primary my-2"> Register as new Patient</a>
+              </p>
             </div>
-             </div>
-          </form>
-          <p class="text-center text-primary"> Do not have patient ID?,
-            <a href="{% url 'accounts:direct_patient_registration' %}" class="btn btn-sm btn-primary my-2"> Register as new Patient</a>
-          </p>
+          </div>
         </div>
       </div>
     </div>
-  </div>
+
+    </div>
 </div>
 
+
+
+  <script>
+$(document).ready(function () {
+    $('#doctorSelect').select2({
+        placeholder: "Search doctor...",
+        minimumInputLength: 2,  // start typing after 2 characters
+        ajax: {
+            url: "{% url 'patients:search_doctors' %}",
+            dataType: 'json',
+            delay: 300,
+            data: function (params) {
+                return {
+                    q: params.term  // search term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results
+                };
+            }
+        }
+    });
+});
+</script>
+
+
+
+
+  <script>
+$(document).ready(function () {
+    $('#patientSelect').select2({
+        placeholder: "Search patient...",
+        minimumInputLength: 2,  // start typing after 2 characters
+        ajax: {
+            url: "{% url 'patients:search_patients' %}",
+            dataType: 'json',
+            delay: 300,
+            data: function (params) {
+                return {
+                    q: params.term  // search term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: data.results
+                };
+            }
+        }
+    });
+});
+</script>
 
 
 <!-- JavaScript to fetch slots -->

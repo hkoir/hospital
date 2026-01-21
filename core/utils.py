@@ -1,5 +1,7 @@
 
 
+
+
 LOCATION_CHOICES=[
     ('',''),
     ('DHAKA','Dhaka'),
@@ -238,3 +240,47 @@ SPECIALIZATION_CHOICES = [
     ('Vascular Surgery', 'Vascular Surgery'),
     ('Maxillofacial Surgery', 'Maxillofacial Surgery'),
 ]
+
+
+
+
+
+
+SERVICE_TYPE_CHOICES = [
+    ('Consultation', 'Consultation'),
+    ('Followup_Consultation', 'Follow-up Consultation'),
+    ('Lab_Test', 'Lab / Diagnostic Test'),
+    ('Radiology', 'Radiology / Imaging (X-ray, USG, CT, MRI)'),
+    ('ECG', 'ECG / EEG / EMG'),
+    ('Procedure', 'Minor Procedures'),
+    ('Operation_Theatre', 'Operation Theatre Charges'),
+    ('Surgery', 'Surgical Charges'),
+    ('Ward_Bed', 'Ward / Bed Charge'),
+    ('Cabin', 'Cabin Charge'),
+    ('ICU', 'ICU Charges'),
+    ('CCU', 'CCU Charges'),
+    ('NICU', 'NICU Charges'),
+    ('PICU', 'PICU Charges'),
+    ('OT', 'Operation Theatre'),
+    ('OT_Consumables', 'OT Consumables'),
+    ('Medicine_Sale', 'Medicine / Pharmacy Sale'),
+    ('Injection', 'Injection / IV / Medication Service'),
+    ('Nursing', 'Nursing Service Charge'),
+    ('Emergency', 'Emergency Service'),
+    ('Ambulance', 'Ambulance Charge'),
+    ('Dialysis', 'Dialysis Charge'),
+    ('Physiotherapy', 'Physiotherapy'),
+    ('Blood_Bank', 'Blood Bank Services'),
+    ('Vaccination', 'Vaccination'),
+    ('Dental', 'Dental Services'),
+    ('ENT', 'ENT Procedures'),
+    ('Eye', 'Eye / Ophthalmology Procedures'),
+    ('Consultation_Discount', 'Consultation Discount'),
+    ('Hospital_Package', 'Hospital Packages'),
+]
+
+
+
+
+
+

@@ -5,8 +5,35 @@ from django.core.exceptions import PermissionDenied
 from clients.models import Client
 User = get_user_model()
 
+UserModel = get_user_model()
 
-class TenantAuthenticationBackend(ModelBackend):
+
+
+class TenantAuthenticationBackend(ModelBackend):   
+    def authenticate(self, request, username=None, password=None, **kwargs):
+        user = None
+        if username is None or password is None:
+            return None
+        try:         
+            user = UserModel.objects.get(phone_number=username)
+        except UserModel.DoesNotExist:
+            try:              
+                user = UserModel.objects.get(email=username)
+            except UserModel.DoesNotExist:
+                try:                   
+                    user = UserModel.objects.get(username=username)
+                except UserModel.DoesNotExist:
+                    return None
+        if user and user.check_password(password):
+            return user
+        return None
+
+        
+
+
+
+
+class TenantAuthenticationBackend2(ModelBackend):
     def authenticate(self, request, username=None, password=None, **kwargs):
         if request is None:
             return None
@@ -21,9 +48,11 @@ class TenantAuthenticationBackend(ModelBackend):
                 return user
         except User.DoesNotExist:
             return None
-        
 
-        
+
+
+
+
 # class TenantAuthenticationBackend(ModelBackend):
 #     def authenticate(self, request, username=None, password=None, tenant=None, **kwargs):
 #         if request is None or tenant is None:

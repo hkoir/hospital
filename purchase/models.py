@@ -627,3 +627,252 @@ class ReceiveGoods(models.Model):
 
     def __str__(self):
         return f"{self.quantity_received} of {self.product.name} received at {self.warehouse.name}"
+
+
+
+
+################################# Direct Purchase ###############################
+
+from decimal import Decimal, ROUND_HALF_UP
+from django.utils import timezone
+from django.conf import settings
+
+class DirectPurchaseInvoice(models.Model):   
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name="direct_purchase_invoices")
+    invoice_number = models.CharField(max_length=40, unique=True)  
+    due_date = models.DateTimeField(null=True, blank=True)
+    supplier_name = models.ForeignKey("supplier.Supplier",on_delete=models.CASCADE,related_name="direct_invoice_supplier",null=True, blank=True)
+    advance_amount = models.DecimalField(max_digits=30, decimal_places=2, default=0,null=True,blank=True) 
+    discount_amount = models.DecimalField(max_digits=30, decimal_places=2, default=0)
+    final_amount = models.DecimalField(max_digits=30, decimal_places=2, default=0)
+
+    AIT_rate = models.DecimalField(max_digits=5, decimal_places=2, blank=True, null=True, help_text="Overall AIT (%)")
+    AIT_type = models.CharField(
+        max_length=50,
+        choices=[('inclusive', 'Inclusive'), ('exclusive', 'Exclusive')],
+        null=True, blank=True, default='exclusive'
+    )
+    # ===== AMOUNTS =====
+    subtotal = models.DecimalField(max_digits=15, decimal_places=2, default=0)  # Before VAT/AIT
+    vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    ait_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    total_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)  # Subtotal + VAT
+    net_due_amount = models.DecimalField(max_digits=15, decimal_places=2, blank=True, null=True)
+    notes = models.TextField(blank=True)
+    terms_and_conditions = models.TextField(
+        blank=True, 
+        null=True, 
+        help_text="Write custom terms & conditions for this invoice"
+    )
+    STATUS_CHOICES = [
+        ('DRAFT', 'Draft'),
+        ('CONFIRMED', 'Confirmed'),
+        ('CANCELLED', 'Cancelled'),
+        ('UPDATED', 'Updated'),
+        ('PAID', 'Paid'),
+    ]    
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='DRAFT')  
+    is_goods_received = models.BooleanField(default=False) 
+    created_at = models.DateTimeField(default=timezone.now)
+    updated_at = models.DateTimeField(auto_now=True,null=True,blank=True)
+
+
+    @property
+    def all_items_received(self):
+        return not self.direct_purchase_items.filter(is_received=False).exists()
+    
+    def calculate_totals(self):     
+        from decimal import Decimal, ROUND_HALF_UP
+
+        subtotal = Decimal('0.00')
+        vat_total = Decimal('0.00')
+
+        # --- Item-wise VAT calculation ---
+        for item in self.direct_purchase_items.all():
+            qty = Decimal(item.quantity or 0)
+            price = Decimal(item.unit_price or 0)
+            line_total = qty * price
+
+            vat_rate = Decimal(item.VAT_rate or 0) / 100
+            vat_type = (item.VAT_type or 'exclusive').lower()
+
+            if vat_type == 'inclusive' and vat_rate > 0:
+                item_vat = (line_total - (line_total / (1 + vat_rate))).quantize(Decimal("0.01"), ROUND_HALF_UP)
+                item_base = line_total - item_vat
+            else:
+                item_vat = (line_total * vat_rate).quantize(Decimal("0.01"), ROUND_HALF_UP)
+                item_base = line_total
+
+            # Save item-level VAT and total for clarity
+            item.vat_amount = item_vat
+            item.total_amount = (item_base + item_vat).quantize(Decimal("0.01"), ROUND_HALF_UP)
+            item.save(update_fields=['vat_amount', 'total_amount'])
+
+            subtotal += item_base
+            vat_total += item_vat
+
+        self.subtotal = subtotal.quantize(Decimal("0.01"), ROUND_HALF_UP)
+        self.vat_amount = vat_total.quantize(Decimal("0.01"), ROUND_HALF_UP)
+        self.total_amount = (self.subtotal + self.vat_amount).quantize(Decimal("0.01"), ROUND_HALF_UP)
+
+        # --- AIT Calculation (applied on overall subtotal) ---
+        ait_rate = Decimal(self.AIT_rate or 0) / 100
+        ait_type = (self.AIT_type or 'exclusive').lower()
+
+        if ait_rate > 0:
+            if ait_type == 'inclusive':
+                self.ait_amount = (self.subtotal - (self.subtotal / (1 + ait_rate))).quantize(Decimal("0.01"), ROUND_HALF_UP)
+            else:
+                self.ait_amount = (self.subtotal * ait_rate).quantize(Decimal("0.01"), ROUND_HALF_UP)
+        else:
+            self.ait_amount = Decimal('0.00')
+
+        # --- Final payable ---
+        if ait_type == 'inclusive':
+            # AIT already included in subtotal
+            self.net_due_amount = (self.total_amount).quantize(Decimal("0.01"), ROUND_HALF_UP)
+        else:
+            # Deduct AIT from total
+            self.net_due_amount = (self.total_amount - self.ait_amount).quantize(Decimal("0.01"), ROUND_HALF_UP)
+
+    def save(self, *args, **kwargs):
+        if not self.invoice_number:
+            today = timezone.now().date()
+            date_str = today.strftime("%Y%m%d")
+            last_invoice = DirectPurchaseInvoice.objects.filter(created_at__date=today).order_by('id').last()
+            seq = 1
+            if last_invoice:
+                last_number = last_invoice.invoice_number.split("-")[-1]
+                try:
+                    seq = int(last_number) + 1
+                except ValueError:
+                    seq = 1
+            self.invoice_number = f"INV-{date_str}-{seq:04d}"  # e.g., INV-20251027-0001
+        super().save(*args, **kwargs)    
+        self.calculate_totals()
+        super().save(update_fields=['subtotal', 'vat_amount', 'ait_amount', 'total_amount', 'net_due_amount'])
+
+
+    def __str__(self):
+        return f"Invoice {self.invoice_number} for {self.supplier_name}"
+
+
+class DirectPurchaseInvoiceItem(models.Model):
+    VAT_TYPE_CHOICES = [
+        ('inclusive', 'Inclusive'),
+        ('exclusive', 'Exclusive'),
+    ]
+    invoice = models.ForeignKey(DirectPurchaseInvoice, on_delete=models.CASCADE, related_name="direct_purchase_items")
+    item= models.ForeignKey('product.Product',on_delete=models.CASCADE,related_name="direct_purchase_invoice_items",null=True,blank=True)
+    product_type = models.CharField(
+        max_length=50,
+        choices=[
+            ('raw_materials', 'raw_materials'),
+            ('finished_product', 'finished_product'),
+            ('component', 'component'),
+            ('BOM', 'BOM')
+        ],
+        null=True,
+        blank=True
+    )
+    batch= models.ForeignKey('purchase.Batch',on_delete=models.CASCADE,related_name="direct_purchase_invoice_batches",null=True,blank=True)
+    warehouse = models.ForeignKey('inventory.Warehouse',on_delete=models.CASCADE,null=True,blank=True)
+    location = models.ForeignKey('inventory.Location',on_delete=models.CASCADE,null=True,blank=True)
+    description = models.CharField(max_length=255,null=True,blank=True)
+    quantity = models.PositiveIntegerField()
+    confirmed_quantity = models.FloatField(default=0)
+    unit_price = models.DecimalField(max_digits=30, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=14, decimal_places=2, blank=True)    
+    VAT_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0)
+    VAT_type = models.CharField(max_length=20, choices=VAT_TYPE_CHOICES, default='exclusive')
+    vat_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    net_amount = models.DecimalField(max_digits=14, decimal_places=2,null=True, blank=True)
+    is_received =models.BooleanField(default=False)
+    created_at = models.DateField(auto_now_add=True,null=True,blank=True)
+    updated_at = models.DateTimeField(auto_now=True,null=True,blank=True)
+
+  
+
+    def save(self, *args, **kwargs):
+        qty = Decimal(self.quantity or 0)
+        unit_price = Decimal(self.unit_price or 0)
+        line_total = qty * unit_price
+        self.total_amount = unit_price * qty
+        vat_rate = Decimal(self.VAT_rate or 0) / 100
+
+        if self.VAT_type == 'inclusive' and vat_rate > 0:
+            vat_amt = (line_total - (line_total / (1 + vat_rate))).quantize(Decimal("0.01"), ROUND_HALF_UP)
+            base_amount = line_total - vat_amt
+        else:
+            vat_amt = (line_total * vat_rate).quantize(Decimal("0.01"), ROUND_HALF_UP)
+            base_amount = line_total
+        self.vat_amount = vat_amt
+        self.total_price = (base_amount + vat_amt).quantize(Decimal("0.01"), ROUND_HALF_UP)
+        super().save(*args, **kwargs)
+
+
+    def __str__(self):
+        return f"{self.item} x {self.quantity}"
+
+
+
+class GoodsReceivedItem(models.Model):
+    purchase_invoice = models.ForeignKey(
+        DirectPurchaseInvoice,
+        on_delete=models.CASCADE,
+        related_name="invoice_received_items",null=True,blank=True
+    )
+    invoice_item = models.ForeignKey(
+        DirectPurchaseInvoiceItem,
+        on_delete=models.CASCADE,
+        related_name="received_items"
+    )
+    warehouse = models.ForeignKey('inventory.Warehouse', on_delete=models.CASCADE)
+    location = models.ForeignKey('inventory.Location', on_delete=models.CASCADE)
+    batch = models.ForeignKey('purchase.Batch', on_delete=models.SET_NULL, null=True, blank=True)
+    quantity_received = models.DecimalField(max_digits=12, decimal_places=2)
+    received_at = models.DateTimeField(auto_now_add=True)
+    received_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
+
+    class Meta:
+        unique_together = ('invoice_item', 'warehouse', 'location', 'batch')
+
+    def __str__(self):
+        return f"{self.invoice_item.item.name} - {self.quantity_received} units"
+
+
+
+class PurchasePayment(models.Model):   
+    purchase_invoice = models.ForeignKey(DirectPurchaseInvoice,on_delete=models.CASCADE,related_name='payment_invoices')
+    PAYMENT_METHODS = (
+        ('CASH', 'Cash'),
+        ('BANK', 'Bank'),
+        ('CREDIT', 'Credit / Accounts Payable')
+    )    
+    supplier_name = models.ForeignKey("supplier.Supplier",on_delete=models.CASCADE,related_name="direct_payment_supplier",null=True, blank=True)  
+    
+    purchase_price = models.DecimalField(max_digits=12, decimal_places=2)
+    total_amount = models.DecimalField(max_digits=14, decimal_places=2, blank=True)
+    
+    vat_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    ait_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    net_amount = models.DecimalField(max_digits=14, decimal_places=2, blank=True)
+    
+    payment_method = models.CharField(max_length=10, choices=PAYMENT_METHODS, default='CASH')
+    bank_account = models.ForeignKey('accounting.BankAccount', on_delete=models.SET_NULL, null=True, blank=True)
+    payment_date = models.DateField(auto_now_add=True)
+    asset_tag = models.CharField(max_length=50, blank=True, null=True, help_text="Asset identifier if product is equipment/furniture")
+    created_by = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    
+    class Meta:
+        verbose_name = "Purchase Payment"
+        verbose_name_plural = "Purchase Payments"
+        ordering = ['-payment_date']
+
+    def save(self, *args, **kwargs):      
+        self.total_amount = self.purchase_price
+        super().save(*args, **kwargs)
+
+    def __str__(self):
+        return f"({self.supplier_name}) - {self.total_amount}"

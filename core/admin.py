@@ -4,7 +4,7 @@ from django.contrib import admin
 from .models import Company,Location,Employee,Notice,EmployeeRecordChange,MonthlySalaryReport
 from.models import SalaryIncrementAndPromotion,CompanyPolicy,SalaryStructure,Position,Employeelevel,JobDescription,JobRequirement
 
-from.models import Doctor,Nurse,Specialization,Shareholder
+from.models import Doctor,Nurse,Specialization,Shareholder,ServiceTaxPolicy,TaxPolicy
 
 
 admin.site.register(Company)
@@ -30,3 +30,8 @@ admin.site.register(Doctor)
 admin.site.register(Nurse)
 admin.site.register(Specialization)
 admin.site.register(Shareholder)
+
+admin.site.register(TaxPolicy)
+admin.site.register(ServiceTaxPolicy)
+
+

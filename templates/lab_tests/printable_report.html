@@ -1,0 +1,288 @@
+
+<!DOCTYPE html>
+{% load static %}
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Lab Test Report - {{ order.medical_record.patient.name }}</title>
+
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+
+    <style>
+        body {
+            font-family: "Helvetica", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f8f8;
+        }
+
+        .page {
+            width: 800px;                /* same as prescription */
+            margin: 0 auto;
+            background: #fff;
+            padding: 25px 40px;
+            border: 1px solid #ddd;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+
+        .header img {
+            height: 80px;
+        }
+
+        .clinic-info h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .clinic-info p {
+            margin: 3px 0;
+            font-size: 14px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 5px;
+            font-size: 17px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 3px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+
+        table th, table td {
+            border: 1px solid #999;
+            padding: 6px;
+            word-wrap: break-word;
+        }
+
+        /* Info row for patient + doctor */
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 40px;
+        }
+
+        .patient-block,
+        .doctor-block {
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+
+        .profile-img {
+            width: 50px;
+            height: 50px;
+            object-fit: cover;
+            border-radius: 8px;
+            border: 1px solid #bbb;
+        }
+
+        .doctor-block {
+            text-align: right;
+        }
+
+        .doctor-block img {
+            order: 2;
+        }
+
+        /* Footer */
+        .footer {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature {
+            margin-top: 40px;
+            font-size: 14px;
+            text-align: left;
+        }
+
+        /* PRINT FIXES */
+        @page {
+            size: A4;
+            margin: 10mm;
+        }
+
+        @media print {
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            table {
+                width: 100%;
+                table-layout: fixed;
+            }
+        }
+
+        /* Print button */
+        .no-print {
+            display: block;
+            text-align: right;
+            margin-bottom: 10px;
+        }
+
+        .print-btn {
+            padding: 10px 18px;
+            background: #0080ff;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+
+
+
+ .floating-home-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 55px;
+    height: 55px;
+    background: #007bff;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    text-decoration: none;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+    z-index: 1005;
+    transition: 0.25s ease-in-out;
+}
+
+.floating-home-btn:hover {
+    background: #0056b3;
+    transform: scale(1.08);
+}
+
+
+
+    </style>
+</head>
+
+<body>
+<div class="page">
+
+    <div class="no-print">
+        <button class="print-btn" onclick="window.print()">Print</button>
+    </div>
+
+    <!-- Header -->
+    <div class="header">
+        {% if order.test_doctor.company.logo %}
+            <img src="{{ order.test_doctor.company.logo.url }}" alt="Logo">
+        {% endif %}
+        <div class="clinic-info">
+            <h2>{{ order.test_doctor.company.name }}</h2>
+            <p>Email: {{ order.test_doctor.company.email }} | Phone: {{ order.test_doctor.phone }}</p>
+            <p>Address: {{ order.test_doctor.location.address }}</p>
+            <p>Website: {{ order.test_doctor.company.website }}</p>
+        </div>
+    </div>
+
+    <!-- Patient & Doctor Info -->
+    <div class="info-row">
+        <div class="patient-block">
+            {% if order.medical_record.patient.user.photo_id %}
+                <img src="{{ order.medical_record.patient.user.photo_id.url }}" class="profile-img">
+            {% endif %}
+            <div>
+                <div class="section-title">Patient Information</div>
+                <p>
+                    <strong>Name:</strong> {{ order.medical_record.patient.name }}<br>
+                    <strong>Phone:</strong> {{ order.medical_record.patient.phone }}<br>
+                    <strong>DOB:</strong> {{ order.medical_record.patient.date_of_birth|date:"d-M-Y" }}<br>
+                    <strong>Age:</strong> {{ order.medical_record.patient.calculate_age }} | <strong>Gender:</strong> {{ order.medical_record.patient.gender }}<br>
+                    <strong>UUID:</strong> {{ order.medical_record.patient.patient_id }}<br>
+                    <strong>Order Code:</strong> {{ order.lab_test_result_oder_code }}
+                </p>
+            </div>
+        </div>
+
+        <div class="doctor-block">
+            <div>
+                <div class="section-title">Lab Technician / Doctor</div>
+                <p>
+                    <strong>Doctor:</strong> {{ order.test_doctor.name }}<br>
+                    <strong>Specialization:</strong> {{ order.test_doctor.specialization }}<br>
+                    <strong>Date:</strong> {{ order.recorded_at|date:"d-M-Y" }}
+                </p>
+            </div>
+            {% if order.test_doctor.user.photo_id %}
+                <img src="{{ order.test_doctor.user.photo_id.url }}" class="profile-img">
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Test Results -->
+    <div class="section-title">Lab Test Results</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Test Name</th>
+                <th>Result</th>
+                <th>Reference Range</th>
+                <th>Findings</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in results %}
+            <tr>
+                <td>{{ r.test_name.test_name }}</td>
+                <td>{{ r.test_value }}</td>
+                <td>{{ r.standard_value }}</td>
+                <td>{{ r.findings }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    {% if order.summary_report %}
+    <div class="section-title">Summary / Comments</div>
+    <p>{{ order.summary_report }}</p>
+    {% endif %}
+
+    <!-- Footer / Signatures -->
+    <div class="footer">
+        <div class="signature">
+            ____________________________<br>
+            Lab Technician / Doctor<br>
+            {{ order.test_doctor.name }}
+        </div>
+        <div class="signature">
+            ____________________________<br>
+            Approved By<br>
+            {{ order.approved_by.name|default:"" }}
+        </div>
+    </div>
+
+</div>
+
+{% if request.user.role == 'staff' %}
+<a href="{% url 'workspace:staff_dashboard' %}" class="floating-home-btn">
+    <i class="fa fa-home"></i>
+</a>
+{% endif %}
+</body>
+</html>

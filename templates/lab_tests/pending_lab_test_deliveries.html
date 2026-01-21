@@ -1,22 +1,45 @@
 {% extends 'base.html' %}
 {% block content %}
 
-
+{% include 'lab_tests/quick_access_link.html' %}
 
 <div class="container-fluid">
+
+<div class="row">
+        <form method="get" class="my-4">
+            <div class="input-group">
+                <input type="text" 
+                    id="searchInput" 
+                    name="search" 
+                    placeholder="Search Lab test by patient, MR Code, phone etc"
+                    class="form-control p-2" 
+                    value="{{ request.GET.search }}">
+
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search"></i> Search
+                </button>
+            </div>
+        </form>
+    </div>
+
     <div class="row">
         <div class="col-12 table-responsive">
 
 
 <h2>Pending Lab Test Deliveries</h2>
 <table class="table">
-    <thead>
+    <thead class="table-dark">
         <tr>
+	   
             <th>Invoice ID</th>
-            <th>Patient Name</th>
+	    <th>Lab Request ID</th>
+	    <th>Medical record </th>
+	    <th>Doctor</th>
+            <th>Patient</th>
 	    <th>Patient Type</th>
-	   <th>Patient ID </th>
+	    <th>Patient ID </th>
             <th>Total Amount</th>
+	    <th>Test Items</th>
             <th>Actions</th>
         </tr>
     </thead>
@@ -25,18 +48,61 @@
 	{% for invoice, lab_test_total in invoice_data %}
         <tr>
             <td>{{ invoice.invoice_id }}</td>
-            <td>{{ invoice.patient.name }}</td>
+            <td>
+               {% if invoice.lab_test_bills.exists %}
+                 {{ invoice.lab_test_bills.first.lab_test_request_order.requested_lab_test_code|default:"-" }}
+               {% else %}
+              <span class="badge bg-info">No code</span>
+              {% endif %}
+            </td>
+	    <td>{{ invoice.medical_record.medical_record_code }}</td>
+	    <td>{{ invoice.medical_record.doctor.name }} | {{ invoice.medical_record.doctor.specialization }}</td>
+            <td>{{ invoice.patient.name }} | {{invoice.patient.patient_id}} | {{invoice.patient.calculate_age}} 
+		| {{invoice.patient.gender}}</td>
+	   
 	   <td>{{ invoice.invoice_type }}</td> 
 	   <td>{{ invoice.patient.patient_id }}</td>  
 	    <td>{{ lab_test_total|floatformat:'2' }}</td>
-            <td>
-                <!-- Button to trigger modal -->
-                <button class="btn btn-info btn-sm" data-bs-toggle="modal" data-bs-target="#labTestModal{{ invoice.id }}">
-                    View
-                </button>
-                <a href="{% url 'lab_tests:deliver_lab_tests' invoice.id %}" class="btn btn-primary btn-sm">Deliver</a>
-            </td>
-        </tr>
+	    <td>
+                <!-- View Items Modal Button -->
+                 <button class="btn btn-info btn-sm me-1 mb-1" 
+                  data-bs-toggle="modal" 
+                  data-bs-target="#labTestModal{{ invoice.id }}">
+                  View Items
+                 </button>
+                </td>
+            	
+		<td>
+			 <!-- List of test result reports -->
+                        {% if invoice.medical_record and invoice.medical_record.test_results.exists %}
+                            <div class="mb-2">
+                                <strong>Reports:</strong>
+                                <ul class="list-unstyled ms-2">
+                                    {% for report in invoice.medical_record.test_results.all %}
+                                        <li class="mb-1">
+                                            <a href="{% url 'lab_tests:print_lab_test_order' report.id %}" 
+                                            class="text-decoration-none">
+                                            ➤ Check report
+                                            </a>
+					     {% if report.status != 'Delivered' and report.status == 'Completed' %}
+					    <a href="{% url 'lab_tests:deliver_lab_tests' report.id %}"
+                                                 class="btn btn-success btn-sm mb-1">
+						Deliver Now </a>
+					      {% elif report.status == 'Delivered' %}
+						 <span class="badge bg-success">Delivered</span>
+					      {% else %}
+					       <span class="badge bg-warning">Processing</span>
+					    {% endif %}
+                                        </li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
+			{% else %}
+			<span class="badge bg-info">No report yet</span>
+                        {% endif %}
+
+                 </td>
+            </tr>
 
         <!-- Modal -->
         <div class="modal fade" id="labTestModal{{ invoice.id }}" tabindex="-1" aria-labelledby="labModalLabel{{ invoice.id }}" aria-hidden="true">
@@ -76,7 +142,15 @@
 		 <p><strong>Total:</strong> {{ lab_test_total }}</p>
               </div>
               <div class="modal-footer">
-                <a href="{% url 'lab_tests:deliver_lab_tests' invoice.id %}" class="btn btn-success">Deliver Now</a>
+                {% if invoice.medical_record and invoice.medical_record.test_results.exists %}
+    			<a href="{% url 'lab_tests:deliver_lab_tests' invoice.medical_record.test_results.first.id %}"
+       			class="btn btn-success">
+       			Deliver Now
+    			</a>
+		{% else %}
+    			<span class="badge bg-secondary">No Results</span>
+		{% endif %}
+
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
               </div>
             </div>
@@ -86,6 +160,33 @@
     {% endfor %}
     </tbody>
 </table>
+<div class="pagination justify-content-center mt-3">
+    <ul class="pagination">
+
+        {% if invoices.has_previous %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ invoices.previous_page_number }}&search={{ search_query }}">Previous</a>
+            </li>
+        {% endif %}
+
+        <li class="page-item active">
+            <span class="page-link">
+                Page {{ invoices.number }} of {{ invoices.paginator.num_pages }}
+            </span>
+        </li>
+
+        {% if invoices.has_next %}
+            <li class="page-item">
+                <a class="page-link" href="?page={{ invoices.next_page_number }}&search={{ search_query }}">Next</a>
+            </li>
+        {% endif %}
+
+    </ul>
+</div>
+
+
+
+
 
         </div>
     </div>

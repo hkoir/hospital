@@ -23,18 +23,38 @@ urlpatterns = [
  path('invoice/<int:invoice_id>/delete/', views.delete_invoice, name='delete_invoice'),
 
  path('invoice/<int:invoice_id>/add-payment/', views.add_payment, name='add_payment'),
+ path("payment/", views.payment_landing, name="payment_landing"),
  path('finalize_invoice/<int:invoice_id>/', views.finalize_invoice, name='finalize_invoice'),
  path('ajax/get-batch-price/', views.get_batch_price, name='ajax_get_batch_price'),
 path('download_invoice/<int:invoice_id>/', views.download_invoice, name='download_invoice'),
 
 path('emergency/create/', views.emergency_visit_create, name='emergency_visit_create'),
+path('emergency/<int:visit_id>/edit/', views.emergency_visit_edit, name='emergency_visit_edit'),
+path('emergency/list/', views.emergency_visit_list, name='emergency_visit_list'),
 
  path('doctor-service-rates/', views.doctor_service_rate_list, name='doctor_service_rate_list'),
  path('doctor-service-rates/add/', views.doctor_service_rate_create, name='doctor_service_rate_create'),
  path('doctor_payment_summary/<int:doctor_id>/', views.doctor_payment_summary, name='doctor_payment_summary'),
 path('add_doctor_payment/<int:doctor_id>/', views.add_doctor_payment, name='add_doctor_payment'),
+path('doctor_service_log_list/', views.doctor_service_log_list, name='doctor_service_log_list'),
+path('create_doctor_service_log_payment/', views.create_doctor_service_log_payment, name='create_doctor_service_log_payment'),
 path("ipd-followup/<int:patient_id>/<int:invoice_id>/", views.ipd_followup_booking, name="ipd_followup_booking"),
+path("ipd_followup_confirm_visit/<int:appointment_id>/", views.ipd_followup_confirm_visit, name="ipd_followup_confirm_visit"),
 
 
+path('referal_rule_list/', views.ReferralCommissionRuleListView.as_view(), name='referral_rule_list'),
+path('referral_rule_create/', views.ReferralCommissionRuleCreateView.as_view(), name='referral_rule_create'),
+path('referral_rule_update/<int:pk>/', views.ReferralCommissionRuleUpdateView.as_view(), name='referral_rule_update'),
+   
+path('referal_source_list/', views.ReferralSourceListView.as_view(), name='referral_source_list'),
+path('referral_source_create/', views.ReferralSourceCreateView.as_view(), name='referral_source_create'),
+path('referral_source_update/<int:pk>/', views.ReferralSourceUpdateView.as_view(), name='referral_source_update'),
+ path('referral_source/<int:pk>/',views.referral_source_detail, name='referral_source_detail'),
+   
+path('referral_report/', views.referral_report, name='referral_report'),
+path('stakeholder_referral_report/', views.stakeholder_referral_report, name='stakeholder_referral_report'),
+   
+path('create_referral_payment/', views.create_referral_payment, name='create_referral_payment'),
+path('referral_payment_list/', views.referral_payment_list, name='referral_payment_list'),
    
 ]

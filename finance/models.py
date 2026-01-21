@@ -235,9 +235,10 @@ class AssetDepreciationRecord(models.Model):
 
 
 class AllExpenses(models.Model):
-    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE)
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE,null=True,blank=True)
     expense_code = models.CharField(max_length=30, unique=True, blank=True)
     expense_head = models.CharField(max_length=50, null=True, blank=True)   
+    expense_type = models.CharField(max_length=50, null=True, blank=True)   
     amount = models.DecimalField(max_digits=20, decimal_places=2)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

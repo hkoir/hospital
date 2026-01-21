@@ -6,14 +6,22 @@
 {% block content %}
 
 
-<div class="container">       
 
- <form id="external-lab-visit-form" method="post" enctype="multipart/form-data">
+<div class="container-fluid">
+    <div class="dashboard-wrapper">      
+        <div class="left-panel mt-0">      
+            {% include 'workspace/staff_quick_access_link.html' %}
+        </div>
+       
+        <div class="right-panel">  
+            {% include 'lab_tests/quick_access_link.html' %} 
+
+       <form id="external-lab-visit-form" method="post" enctype="multipart/form-data">
             {% csrf_token %}
             {{ formset.management_form }}
         <div class="row">
             <!-- External Lab Visit Details -->
-            <div class="col-12 col-md-6">
+            <div class="col-12">
                 <div class="card shadow-lg border-0 mb-4">
                     <div class="card-header bg-primary text-white text-center">
                         <h4>External Lab Visit Details</h4>
@@ -37,17 +45,20 @@
             </div>
 
             <!-- Lab Test Selection -->
-        <div class="col-12 col-md-6">
+        <div class="col-12">
             <div class="card shadow-lg border-0 mb-4">
                 <div class="card-header bg-primary text-white text-center">
                     <h4>Lab Tests</h4>
                 </div>
                     <div class="card-body">
+		     <div class="table-responsive">
                         <table class="table" id="formset_table">
                             <thead>
                                 <tr>
                                     <th>Lab Test</th>
                                     <th>Test Fee</th>
+				    <th>Service type</th>
+				     <th>Notes</th>
                                     <th>Action</th>
                                 </tr>
                             </thead>
@@ -56,8 +67,10 @@
                                     <tr class="formset_row">
                                         {{ form.id }}
                                         <div style="display: none;">{{ form.DELETE }}</div>
-                                        <td>{{ form.lab_test }}</td>
+                                        <td>{{ form.lab_test_catelogue }}</td>
                                         <td>{{ form.test_fee }}</td>
+					<td>{{ form.service_type }}</td>
+					 <td>{{ form.notes }}</td>
                                         <td>
                                             <button type="button" class="remove-form-btn btn btn-danger btn-sm">Remove</button>
                                         </td>
@@ -65,6 +78,7 @@
                                 {% endfor %}
                             </tbody>
                         </table>
+			</div>
                         <button type="button" id="add-form-btn" class="btn btn-primary mt-2">Add Another Lab Test</button>
 
                         <div class="mt-3">
@@ -88,8 +102,10 @@
                 <tr class="formset_row">
                     {{ formset.empty_form.id }}
                    <div style="display: none;">{{ formset.empty_form.DELETE }}</div>
-                    <td>{{ formset.empty_form.lab_test }}</td>
+                    <td>{{ formset.empty_form.lab_test_catelogue }}</td>
                     <td>{{ formset.empty_form.test_fee }}</td>
+		   <td>{{ formset.empty_form.service_type }}</td>
+		    <td>{{ formset.empty_form.notes }}</td>
                     <td>
                         <button type="button" class="remove-form-btn btn btn-danger btn-sm">Remove</button>
                     </td>
@@ -97,7 +113,8 @@
             </table>
         </div>
 
-
+</div>
+</div>
 
   
 </div>
@@ -116,7 +133,7 @@ document.addEventListener('DOMContentLoaded', function() {
     function updateFeesAndTotal() {
         let total = 0;
         document.querySelectorAll('.formset_row').forEach(row => {
-            const testSelect = row.querySelector('select[name$="-lab_test"]');
+            const testSelect = row.querySelector('select[name$="-lab_test_catelogue"]');
             const feeInput = row.querySelector('input[name$="-test_fee"]');
 
             if (testSelect && feeInput) {

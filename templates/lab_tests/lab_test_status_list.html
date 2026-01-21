@@ -1,6 +1,9 @@
 {% extends 'base.html' %}
 
 {% block content %}
+
+{% include 'lab_tests/quick_access_link.html' %}
+
 <div class="container mt-4 table-responsive">
   <h2 class="mb-4">Lab Test Report (Draft)</h2>
   <table class="table table-bordered table-hover">
@@ -27,11 +30,11 @@
           </td>
           <td>{{ order.recorded_at|date:"d M Y, h:i A" }}</td>
           <td>
-            {% if order.status == 'Completed' and not order.delivery %}
+            {% if order.status == 'Completed' and order.status != Delivered %}
               <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#labModal{{ order.id }}">
                 Review & Deliver
               </button>
-            {% elif order.status == 'Delivered' or order.delivery %}
+            {% elif order.status == 'Delivered' %}
               <span class="badge bg-success">Delivered</span>
             {% else %}
               <span class="text-muted">No action</span>

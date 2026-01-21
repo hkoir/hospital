@@ -1,242 +1,270 @@
-
-
 {% extends 'base.html' %}
 {% load custom_filters %}
 
 
 {% block content %}
-
-
 <style>
-    /* General Screen Styles */
-    .invoice-container {
-      background: #ffffff;
-      padding: 30px;
-      border: 1px solid #ccc;
-      margin: 20px auto;
-      max-width: 900px;
-      font-family: 'Arial', sans-serif;
-    }
-    
-    .invoice-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-    
-    .invoice-header img {
-      width: 100px;
-      max-width: 100%;
-    }
-    
-    .invoice-header h2 {
-      text-align: center;
-      margin-bottom: 10px;
-    }
-    
-    .invoice-table {
-      width: 100%;
-      margin-top: 20px;
-      border-collapse: collapse;
-    }
-    
-    .invoice-table th, .invoice-table td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      text-align: left;
-    }
-    
-    .total-section {
-      margin-top: 30px;
-      font-size: 18px;
-    }
-    
-    .signature {
-      margin-top: 50px;
-      text-align: right;
-      font-size: 16px;
-    }
-    
-    /* Print-specific adjustments */
-    @media print {
-      body {
-        margin: 0;
-        padding: 0;
-      }
-    
-      /* Hide buttons and no-print elements */
-      button, .no-print {
-        display: none !important;
-      }
-    
-      /* Flexbox adjustments */
-      .print-flex {
-        display: flex !important;
-        flex-direction: row !important;
-        justify-content: space-between !important;
-        align-items: center !important;
-        text-align: center;
-      }
-    
-      .print-flex > div {
-        flex: 1;
-        text-align: center;
-        margin: 10px;
-      }
-    
-      /* Page-break protection */
-      .invoice-header,
-      .grand-total-section,
-      .payment-status-section,
-      .signature-section,
-      .invoice-container,
-      .invoice-table,
-      .row {
-        page-break-inside: avoid !important;
-        break-inside: avoid !important;
-      }
-    
-      .grand-total-section {
-        page-break-before: always;
-      }
-    
-      /* Row and column flex layout */
-      .row {
-        display: flex !important;
-        flex-wrap: wrap !important;
-      }
-    
-      .col-md-2 {
-        flex: 0 0 16.66666667% !important;
-        max-width: 16.66666667% !important;
-      }
-    
-      .col-md-6 {
-        flex: 0 0 50% !important;
-        max-width: 50% !important;
-      }
-    
-      .col-md-10 {
-        flex: 0 0 83.33333333% !important;
-        max-width: 83.33333333% !important;
-      }
-    
-      /* Ensure images fit nicely */
-      img {
-        max-width: 100%;
-        height: auto;
-      }
-    
-      /* Signature adjustment in print */
-      .signature {
-        text-align: center;
-        font-size: 16px;
-        margin-top: 30px;
-      }
-    }
+/* -------------------- GENERAL STYLES -------------------- */
+body {
+    font-family: 'Arial', sans-serif;
+    color: #333;
+    background: #f8f9fa;
+}
 
+.invoice-container {
+    background: #fff;
+    padding: 30px;
+    border: 1px solid #ddd;
+    margin: 20px auto;
+    max-width: 900px;
+}
 
+/* Invoice Title Centered */
+.invoice-title {
+    text-align: center;
+    font-size: 1.8rem;
+    font-weight: 700;
+    color: #0B3D91;
+    margin-bottom: 30px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
 
-  .print-flex {
+/* -------------------- HOSPITAL INFO -------------------- */
+.hospital-header-left {
+    text-align: left;
+    margin-bottom: 30px;
+}
+
+.hospital-logo {
+    width: 70px;
+    height: 70px;
+    object-fit: contain;
+    margin-bottom: 10px;
+}
+
+.hospital-name {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: #0B3D91;
+    margin-bottom: 2px;
+}
+
+.hospital-address {
+    font-size: 0.9rem;
+    color: #555;
+    line-height: 1.4;
+    margin: 0;
+}
+
+/* -------------------- PATIENT INFO -------------------- */
+.patient-photo {
+    width: 100px;
+    height: 100px;
+    object-fit: cover;
+    border-radius: 50%;
+    margin-bottom: 10px;
+}
+
+/* -------------------- TABLE -------------------- */
+.invoice-table {
+    width: 100%;
+    margin-top: 20px;
+    border-collapse: collapse;
+}
+
+.invoice-table th, .invoice-table td {
+    border: 1px solid #ccc;
+    padding: 10px;
+    text-align: left;
+    font-size: 0.9rem;
+}
+
+.total-section {
+    margin-top: 20px;
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+/* -------------------- SIGNATURE -------------------- */
+.signature {
+    margin-top: 50px;
+    text-align: right;
+    font-size: 0.9rem;
+}
+
+/* -------------------- FLEX LAYOUT -------------------- */
+.print-flex {
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
     align-items: center;
-  }
+}
 
-  .print-flex > div {
-    flex: 0 0 33.33%;
-    max-width: 33.33%;
+.print-flex > div {
+    flex: 1;
     text-align: center;
-  }
+}
+
+/* -------------------- PRINT SPECIFIC -------------------- */
+@media print {
+    body {
+        margin: 0;
+        padding: 0;
+        background: #fff;
+    }
+
+    /* Hide buttons / UI controls */
+    .no-print, button, .btn {
+        display: none !important;
+        margin: 0 !important;      /* Remove margin */
+         padding: 0 !important;   
+    }
+
+    /* Keep sections together */
+    .invoice-container, .invoice-header, .invoice-table, .signature {
+        page-break-inside: avoid !important;
+        break-inside: avoid !important;
+    }
+
+    .invoice-title {
+        margin-top: 0;
+        margin-bottom: 20px;
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+}
+</style>
 
 
-
-
-    </style>
-    
 
 <div class="invoice-container" id="invoice">
     <div class="row">
-      <div class="invoice-header d-flex align-items-center mb-4">
-        <!-- Logo and Company Name -->
-        <div class="me-3 text-center">
-            <img src="/static/images/Logo.png" alt="Hospital Logo" style="width:60px; height:60px;">
-            <div style="font-weight: bold; margin-top: 5px;">MyMePlus</div>
+
+      <!-- LEFT-ALIGNED HOSPITAL INFO BELOW LOGO -->
+    <div class="d-flex justify-content-between">
+        <div class="hospital-header-left">
+            <img src="/static/images/Logo.png" alt="Hospital Logo" class="hospital-logo">
+            <div class="hospital-name">MyMePlus Hospital</div>
+            <p class="hospital-address">
+              <i class="fas fa-map-marker-alt text-success"></i>&nbsp;{{ hospital.city }} - {{ hospital.postal_code }} <br>        
+              <i class="fas fa-globe text-primary"></i>&nbsp; {{ hospital.company.website}}
+            </p>
         </div>
-    
-        <!-- Invoice Title and Address -->
-        <div>
-            <h2 class="mb-1">Patient Invoice</h2>
-            <p class="mb-0">{{ hospital.address }} | {{ hospital.company.phone }}</p>
-        </div>
-    </div>
+            <div class="invoice-title">Invoice</div>
+     </div>
+
     
         <div class="card mb-4 shadow-sm">
             <div class="card-body">
-              <h3 class="card-title text-center mb-4">🧾 Provisional Bill</h3>
-          
-              <div class="row">
-                <div class="col-md-2 text-center">                
-                    {% if invoice.patient.patient_photo %}
-                      <img src="{{ invoice.patient.patient_photo.url }}" alt="Patient Photo" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+              <div class="d-flex justify-content-between align-items-center mb-3">
+                <!-- Title -->
+                <div>
+                    {% if invoice.is_locked %}
+                        <h3 class="card-title mb-0 text-success">🧾 Final Bill</h3>
                     {% else %}
-                      <img src="/static/images/patient.png" alt="Patient Photo" class="img-fluid rounded-circle mb-2" style="width: 100px; height: 100px; object-fit: cover;">
+                        <h3 class="card-title mb-0 text-primary">🧾 Provisional Bill</h3>
                     {% endif %}
-                 
                 </div>
-          
-                <div class="col-md-10">
-                  {% if invoice.invoice_type == 'OPD' %}
-                    <div class="row mb-2">
-                      <div class="col-md-6"><strong>Patient ID:</strong> {{ invoice.patient.patient_id }}</div>
-                      <div class="col-md-6"><strong>Name:</strong> {{ invoice.patient.name }}</div>
-                    </div>
-                    <div class="row mb-2">
-                      <div class="col-md-6"><strong>Doctor:</strong> {{ invoice.patient.patient_appointments.first.doctor }}</div>
-                      <div class="col-md-6"><strong>Invoice No:</strong> {{ invoice.invoice_id }}</div>
-                    </div>                   
-          
-                 {% elif invoice.invoice_type == 'IPD' %}
-                    <div class="row mb-2">
-                      <div class="col-md-6"><strong>Patient ID:</strong> {{ invoice.admission.patient.patient_id }}</div>
-                      <div class="col-md-6"><strong>Name:</strong> {{ invoice.admission.patient.name }}</div>
-                    </div>
-                   
-                    <div class="row mb-2">
-                      <div class="col-md-6"><strong>Doctor:</strong> {{ invoice.admission.admitting_doctor }}</div>
-                      <div class="col-md-6"><strong>Admission No:</strong> {{ invoice.admission.admission_code }}</div>
-                    </div>
-                  
-                    <div class="row mb-2">
-                      <div class="col-md-6"><strong>Ward:</strong> {{ invoice.admission.assigned_ward.name }}</div>
-                      <div class="col-md-6"><strong>Bed / Room:</strong> {{ invoice.admission.assigned_bed.bed_number }} / {{ invoice.admission.assigned_room.number }}</div>                                    
-                   </div>
-                   
-                   <div class="row mb-2">   
-                        <div class="col-md-6"><strong>Invoice No:</strong> {{ invoice.invoice_id }}</div>                 
-                        <div class="col-md-6"><strong>Patient Contact:</strong>{{ invoice.patient.email }}</div>                                         
-                        
-                   </div>
-                   {% else %}
 
-                    <div class="row mb-2">
-                      <div class="col-md-6"><strong>Patient ID:</strong> {{ invoice.patient.patient_id }}</div>
-                      <div class="col-md-6"><strong>Name:</strong> {{ invoice.patient.name }}</div>
-                    </div>
-                    <div class="row mb-2">
-                      <div class="col-md-6"><strong>Doctor:</strong> {{ invoice.emergergency_visit_invoices.treated_by }}|
-                        {{invoice.external_lab_visit_invoices.doctor.name}}
-                      </div>
-                      <div class="col-md-6"><strong>Invoice No:</strong> {{ invoice.invoice_id }}</div>
-                    </div>     
-                                       
-                  {% endif %}
+                <!-- Lock Invoice Button / Locked Badge -->
+                <div>
+
+		<form method="post">
+                        {% csrf_token %}
+
+                        {% if not invoice.is_locked %}
+                            {% if not invoice.admission and not invoice.emergency_visit_invoice %}
+                                <button class="btn btn-danger"
+                                        type="submit"
+                                        name="lock_invoice"
+                                        value="1"
+                                        onclick="return confirm('⚠️ Are you sure you want to finalize and lock this invoice? Once locked, changes cannot be made.')">
+                                    Finalize & Lock Invoice
+                                </button>
+                            {% else %}
+                                {% if invoice.admission %}
+                                    {% if invoice.admission.discharge_approved %}
+                                        <button class="btn btn-danger"
+                                                type="submit"
+                                                name="lock_invoice"
+                                                value="1"
+                                                onclick="return confirm('⚠️ Are you sure you want to finalize and lock this invoice? Once locked, changes cannot be made.')">
+                                            Finalize & Lock Invoice
+                                        </button>
+					 {% else %}
+                                        <span class="badge bg-info"> Service Continuing</span>
+                                    {% endif %}
+
+                                {% elif invoice.emergency_visit_invoice %}
+                                    {% if invoice.emergency_visit_invoice.discharge_approved %}
+                                        <button class="btn btn-danger"
+                                                type="submit"
+                                                name="lock_invoice"
+                                                value="1"
+                                                onclick="return confirm('⚠️ Are you sure you want to finalize and lock this invoice? Once locked, changes cannot be made.')">
+                                            Finalize & Lock Invoice
+                                        </button>
+					 {% else %}
+                                        <span class="badge bg-info"> Service Continuing</span>
+                                    {% endif %}
+                                {% endif %}
+                            {% endif %}
+                        {% else %}
+                            <span class="badge bg-success p-2 no-print">
+                                Invoice locked on {{ invoice.locked_at|date:"d M Y, h:i A" }}
+                            </span>
+                        {% endif %}
+
+                    </form>
+
                 </div>
-              </div>
-          
+
             </div>
-          </div>
+          
+        <div class="row align-items-center mb-3">
+  
+            <!-- Left: Patient Photo -->
+            <div class="col-auto text-center">
+              {% if invoice.patient.user.photo_id %}
+                <img src="{{ invoice.patient.user.photo_id.url }}" 
+                    alt="Patient Photo" 
+                    class="img-fluid rounded-circle"
+                    style="width: 80px; height: 80px; object-fit: cover;">
+              {% else %}
+                <img src="/static/images/patient.png" 
+                    alt="Patient Photo" 
+                    class="img-fluid rounded-circle"
+                    style="width: 80px; height: 80px; object-fit: cover;">
+              {% endif %}
+            </div>
+
+            <!-- Middle: Patient Info -->
+            <div class="col d-flex flex-column justify-content-center">
+              {% if invoice.invoice_type == 'OPD' %}
+                <div><strong>Patient ID:</strong> {{ invoice.patient.patient_id }} | <strong>Name:</strong> {{ invoice.patient.name }}</div>
+                <div><strong>Doctor:</strong> {{ invoice.patient.patient_appointments.first.doctor }} | <strong>Invoice No:</strong> {{ invoice.invoice_id }}</div>
+              {% elif invoice.invoice_type == 'IPD' %}
+                <div><strong>Patient ID:</strong> {{ invoice.admission.patient.patient_id }} | <strong>Name:</strong> {{ invoice.admission.patient.name }}</div>
+                <div><strong>Doctor:</strong> {{ invoice.admission.admitting_doctor }} | <strong>Admission No:</strong> {{ invoice.admission.admission_code }}</div>
+                <div><strong>Ward / Bed:</strong> {{ invoice.admission.assigned_ward.name }} / {{ invoice.admission.assigned_bed.bed_number }} / {{ invoice.admission.assigned_room.number }}</div>
+                <div><strong>Contact:</strong> {{ invoice.patient.email }} | <strong>Invoice No:</strong> {{ invoice.invoice_id }}</div>
+                 {% elif invoice.invoice_type == 'Emergency' %}
+                <div><strong>Patient ID:</strong> {{ invoice.emergency_visit_invoice.patient.patient_id }} | <strong>Name:</strong> {{ invoice.emergency_visit_invoice.patient.name }}</div>
+                <div><strong>Doctor:</strong> {{ invoice.emergency_visit_invoice.treated_by }} | <strong>Emergency No:</strong> {{ invoice.emergency_visit_invoice.admission_code }}</div>
+                <div><strong>Ward / Bed:</strong> {{ invoice.emergency_visit_invoice.assigned_ward.name }} / {{ invoice.emergency_visit_invoice.assigned_bed.bed_number }} / {{ invoice.emergency_visit_invoice.assigned_room.number }}</div>
+                <div><strong>Contact:</strong> {{ invoice.patient.email }} | <strong>Invoice No:</strong> {{ invoice.invoice_id }}</div>
+		{% else %}
+                <div><strong>Patient ID:</strong> {{ invoice.patient.patient_id }} | <strong>Name:</strong> {{ invoice.patient.name }}</div>
+                <div><strong>Doctor:</strong> {{ invoice.emergergency_visit_invoices.treated_by }} | {{invoice.external_lab_visit_invoices.doctor.name}} | <strong>Invoice No:</strong> {{ invoice.invoice_id }}</div>
+              {% endif %}
+            </div>
+          </div>          
+        </div>
+      </div>
           
           
           {% if invoice.consultation_bills.exists %}
@@ -245,10 +273,10 @@
                 <div class="card-body"> 
                     <h3>Consultation Bills</h3>
                   <div class="table-responsive">
-                    <table class="table table-bordered">
-                        <thead>
+                    <table class="table">
+                        <thead class="table-dark">
                             <tr>
-                                <th>Appointment/Admission</th>
+                                <th>Appointment</th>
                                 <th>Doctor</th>
                                 <th>Consultation date</th>
                                 <th>Patient Type</th>
@@ -257,14 +285,15 @@
                         </thead>
                         <tbody>
                             {% for bill in invoice.consultation_bills.all %}
-                            <tr>
-				 <td>
+                            <tr>                           
+                                <td>
                                   {% if bill.appointment %}
                                   {{ bill.appointment.appointment_code}}
                                   {% elif bill.invoice.admission %}
                                    {{ bill.invoice.admission.admission_code}}
                                   {% endif %}
                                 </td>
+                             
                                 <td>{{ bill.doctor }}</td>
                                 <td>{{ bill.consultation_date }}</td>
                                 <td>{{ bill.patient_type }}</td>
@@ -291,25 +320,25 @@
             <div class="card">
                 <div class="card-body"> 
                     <h3>Lab test Bills</h3>
-                    <div class="table-responsive">  
+                   <div class="table-responsive">
                     <table class="table table-bordered">
         
-                        <thead>
+                        <thead class="table-dark">
                             <tr>
                                 <th>Lab test name</th>
                                 <th>Test Date</th>
                                 <th>Test Charge</th>
-                                <th>Status</th>
+                                
                                                 
                             </tr>
                         </thead>
                         <tbody>
                             {% for bill in invoice.lab_test_bills.all %}
                             <tr>
-                                <td>{{ bill.lab_test}}</td>
+                                <td>{{ bill.lab_test_catelogue.test_name }}</td>
                                 <td>{{ bill.test_date }}</td>
                                 <td>{{ bill.test_fee }}</td>
-                                <td>{{ bill.status}}</td>
+                                
                             
                             
                             </tr>
@@ -317,12 +346,12 @@
                         </tbody>
                         <tfoot>
                             <tr>
-                                <th colspan="3">Subtotal</th>
+                                <th colspan="2">Subtotal</th>
                                 <th>{{ lab_subtotal }}</th>
                             </tr>
                         </tfoot>
                     </table>
-		   </div>
+		  </div>
                   </div>
             </div>
         </div>
@@ -335,21 +364,23 @@
                    <div class="table-responsive">
                     <table class="table table-bordered">
         
-                        <thead>
+                        <thead class="table-dark">
                             <tr>
                               <th>Patient Admission</th>
                                 <th>Ward</th>
                                 <th>Room/Bed</th>
                                 <th>Charge Per day</th>                              
                                 <th>Days Stayed</th>
-                                <th>Total Charge</th>
-                                                
+                                <th>Total Charge</th>                                                
                             </tr>
                         </thead>
                         <tbody>
                             {% for bill in invoice.ward_bills.all %}
                             <tr>
-                              <td>{{ bill.patient_admission.admission_code}}</td>
+                              <td>
+				{{ bill.patient_admission.admission_code}}
+				| {{ bill.patient_emergency.admission_code}}
+				</td>
                                 <td>{{ bill.ward.name}}</td>
                                 <td>{{ bill.bed.bed_number }}||{{ bill.room.number }}</td>
                                 <td>{{ bill.bed.daily_charge }}</td>                            
@@ -367,20 +398,20 @@
                         </tfoot>
                         
                     </table>
-		    <p class="text-center text-primary fw-bold"> Unbilled/Running ward bill:{{ ward_running_bill }}</p>
-		   </div>
+		    </div>
+                    <p class="text-center text-primary fw-bold"> Unbilled/Running ward bill:{{ ward_running_bill }}</p>
                 </div>
             </div>
         </div>
         {% endif %}
         {% if invoice.medicine_bills.exists %}
-        <div class="col-12 table-responsive">        
+        <div class="col-12">        
             <div class="card">
                 <div class="card-body">     
                     <h3>Medicine Bills</h3>
-                    <div class="table-responsive">
+                      <div class="table-responsive">
                         <table class="table table-bordered">
-                            <thead>
+                            <thead class="table-dark">
                                 <tr>
                                     <th>Medicine</th>
                                     <th>Unit Price</th>
@@ -408,44 +439,57 @@
                                 </tr>
                             </tfoot>
                         </table>                    
-                       </div>                  
+                     </div>               
                 </div>
             </div>
         </div>
         {% endif %}
-        {% if invoice.ot_bills.exists %}
-        <div class="col-12">
-            <div class="card">
-                <div class="card-body">   
+
+ {% if invoice.ot_bills.exists %}
+        <div class="col-12 table-responsive">
+            <div class="card mb-4">
+                <div class="card-body">
                     <h3>Operation Theatre Charges</h3>
-                  <div class="table-responsive">
+
                     <table class="table table-bordered">
-                        <thead>
-                            <tr>
-                                <th>Procedure</th>
+                        <thead class="table-light">
+                            <tr>                             
+                                <th>Service Type</th>
                                 <th>Total Charge</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            {% for ot in invoice.ot_bills.all %}
-                            <tr>
-                                <td>{{ ot.procedure_name }}</td>
+                       <tbody>
+                        {% for ot in invoice.ot_bills.all %}
+                            <!-- OT Room Charge -->
+                            <tr>                                   
+                                <td>
+                                    {% if ot.service_type == "Operation_Theatre" %}
+                                        {{ ot.ot_booking.operation_theatre }}-from:{{ot.ot_booking.booked_start}}--to:{{ot.ot_booking.booked_end}}
+                                    {% else %}
+                                       {{ ot.procedure.procedure }}
+                                    {% endif %}
+                                </td>
                                 <td>{{ ot.total_charge }}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                        <tfoot>
+                            </tr>     
+                        {% endfor %}                       
+                    </tbody>
+
+                      
+                        <tfoot class="table-light">
                             <tr>
-                                <th>Subtotal</th>
-                                <th>{{ ot_subtotal }}</th>
+                                <th colspan="1">Subtotal</th>
+                                <th>                                  
+                                    {{ ot_subtotal|add_commas}}                                 
+                                </th>
                             </tr>
                         </tfoot>
                     </table>
-                   </div>
+
                 </div>
             </div>
         </div>
         {% endif %}
+
 
         {% if invoice.misc_bills.exists %}
         <div class="col-12">
@@ -454,9 +498,9 @@
                     <h3>Miscellaneous Charges</h3>
                        <div class="table-responsive">
                         <table class="table table-bordered">
-                            <thead>
+                            <thead class="table-dark">
                                 <tr>
-                                    <th>Service Name</th>
+                                    <th>Description</th>
                                     <th>Amount</th>
                                 </tr>
                             </thead>
@@ -474,75 +518,79 @@
                                     <th>{{ misc_subtotal }}</th>
                                 </tr>
                             </tfoot>
-                        </table>  
-			</div>                    
+                        </table>                   
+		    </div>   
                 </div>
             </div>
         </div>
-  
+    
     {% endif %}
 <hr>
 
    
 
-<div class="col-12 payment-status">  
-    
-<div>
-    <p><strong>Grand Total:</strong> {{ grand_total_bill }} || <strong>Total paid:</strong> {{ grand_total_paid}} || <strong>Total due:</strong> {{ grand_total_remaining }}</p>
-    <p><strong>Total Due Bill in Words:</strong> {{ grand_total_remaining|number_to_words }}</p>
-</div>              
+<div class="col-12 payment-status">          
+    <div>
 
-    {% if invoice.status == "Paid" %}
-      <div class="text-success fw-bold" style="font-size: 40px; text-align: center;">
-        PAID
-      </div>
-    {% elif invoice.status == "Partially Paid" %}
-      <div class="text-warning fw-bold" style="font-size: 40px; text-align: center;">
-        PARTIALLY PAID
-      </div>
-    {% else %}
-      <div class="text-danger fw-bold" style="font-size: 40px; text-align: center;">
-        DUE
-      </div>
-    {% endif %}
-</div>
+	  <p><strong>Grand Total:</strong> {{ grand_total_bill }} || <strong>Total paid:</strong> {{ grand_total_paid}} || <strong>Total due:</strong> {{ grand_total_remaining }}<br>
+         {% if emergency_due > 0 %}
+            <strong>Emergency due</strong> {{ emergency_due }}<br>      
+        {% endif %}      
+        <strong>Total Due in Words:</strong> {{ grand_total_remaining_include_emergency|number_to_words }}
+      
+        </p>
+    </div>              
+
+        {% if invoice.status == "Paid" %}
+          <div class="text-success fw-bold" style="font-size: 40px; text-align: center;">
+            PAID
+          </div>
+        {% elif invoice.status == "Partially Paid" %}
+          <div class="text-warning fw-bold" style="font-size: 40px; text-align: center;">
+            PARTIALLY PAID | 
+	   <a href="{% url 'billing:add_payment' invoice.id %}" class="btn btn-sm btn-outline-primary">make payment</a>
+          </div>
+        {% else %}
+          <div class="text-danger fw-bold" style="font-size: 40px; text-align: center;">
+            DUE
+            <a href="{% url 'billing:add_payment' invoice.id %}" class="btn btn-sm btn-outline-primary">make payment</a>
+          </div>    
+                      
+          {% endif %}
+  </div>  
 
 
 
 <!-- Row with QR Code, Signature, and Print Button -->
-    <div class="row">
-        <!-- Custom horizontal scrollable row -->
-        <div class="d-flex flex-nowrap overflow-auto justify-content-between align-items-center px-2">
-          
-          <!-- QR Code -->
-          <div class="flex-shrink-0 text-center me-3">
-            <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" width="100px">
+ <div class="col-12">
+    <div class="container-fluid">   
+        <div class="card">
+            <div class="card-body"> 
+                <div class="row text-center text-md-start align-items-center mt-5 table-responsive">   
+                    <div class="col-4 mb-3 mb-md-0 text-md-start text-center">
+                        <img src="data:image/png;base64,{{ qr_code }}" alt="QR Code" width="100px">
+                    </div>
+
+                    <div class="col-4 mb-3 mb-md-0 text-center">
+                        <div class="signature">
+                            Authorized Signature<br><br>
+                            ................................
+                        </div>
+                    </div>
+
+                    <div class="col-4 text-md-end text-center no-print">
+                        <button onclick="window.print()" class="btn btn-primary" >Print Invoice</button>
+                        <a href="{% url 'billing:download_invoice' invoice.id %}" class="btn btn-primary my-2">download invoice</a>
+                    </div>
+              </div>
           </div>
-
-          <!-- Signature -->
-          <div class="flex-shrink-0 text-center mx-3">
-            <div class="signature">
-              Authorized Signature<br><br>
-              ................................
-            </div>
-          </div>
-
-          <!-- Buttons -->
-          <div class="flex-shrink-0 text-center ms-3">
-            <button onclick="window.print()" class="btn btn-primary mb-2">Print Invoice</button><br>
-            <a href="{% url 'billing:download_invoice' invoice.id %}" class="btn btn-primary">Download Invoice</a>
-          </div>
-
-        </div> <!-- scrollable flex row -->
-      </div>
+        </div>
+    </div>   
+ </div>
 
 
 
-
-
-
-
-  </div>
+</div>
 
 </div>
 
@@ -561,4 +609,3 @@
     
 
 {% endblock %}
-

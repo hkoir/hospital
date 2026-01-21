@@ -1,28 +1,16 @@
 
 html,body {
-    background-color: white;
-    padding-top: 100px; /* This will be overridden dynamically by JS */
+    background-color: white;   
     color: #333333;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }
 
-#socialNav {
-    background-color: #1a1a2e;
-    color: white;
-    top: 0;
-    position: fixed;
-    width: 100%;
-    height: 100px;
-    z-index: 1030;
-    transition: top 0.3s ease-in-out;
-}
+
 
 #mainNav {
     background-color: #16213e;
-    color: white;
-    width: 100%;
-    position: fixed;
-    top: 100px; /* initially pushed below socialNav */
+    color: white;   
+    top: 0px; /* initially pushed below socialNav */
     z-index: 1029;
     transition: top 0.3s ease-in-out;
 }
@@ -36,7 +24,7 @@ html,body {
         }
 
  .main-nav {
-        top: 100px; /* adjust to sit below the taller social nav */
+        top: 0px; /* adjust to sit below the taller social nav */
     }
 }
 

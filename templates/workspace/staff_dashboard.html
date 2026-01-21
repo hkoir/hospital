@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+
+
+<div class="container-fluid">
+
+
+    <div class="dashboard-wrapper">      
+
+        <div class="left-panel mt-0">      
+            {% include 'workspace/staff_quick_access_link.html' %}
+        </div>
+       
+        <div class="right-panel">
+	    {% include 'workspace/staff_quick_access_link_top.html' %}
+            <h3 class="mb-4">🏥 Staff Operations Dashboard</h3>
+            <!-- TOP KPI ROW -->
+            <div class="row g-3 mb-4">
+                <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <p class="text-muted mb-1">Registrations Today</p>
+                        <h2 class="fw-bold text-primary">{{ registrations_today }}</h2>
+                    </div>
+                </div>
+
+               <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <p class="text-muted mb-1">Appointments Created</p>
+                        <h2 class="fw-bold text-info">{{ appointments_today }}</h2>
+                    </div>
+                </div>
+
+               <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <p class="text-muted mb-1">Admissions Today</p>
+                        <h2 class="fw-bold text-success">{{ admissions_today }}</h2>
+                    </div>
+                </div>
+
+                <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <p class="text-muted mb-1">Emergency Cases</p>
+                        <h2 class="fw-bold text-danger">{{ emergency_today }}</h2>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- BED STATUS -->
+            <div class="row g-3 mb-4">
+
+                <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <p class="text-muted mb-1">Beds Available</p>
+                        <h2 class="fw-bold text-success">{{ beds_available }}</h2>
+                    </div>
+                </div>
+
+               <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <p class="text-muted mb-1">Beds Occupied</p>
+                        <h2 class="fw-bold text-warning">{{ beds_occupied }}</h2>
+                    </div>
+                </div>
+
+                   <div class="col-6 col-md-3">
+                    <div class="kpi-card">
+                        <p class="text-muted mb-1">ICU Beds Free</p>
+                        <h2 class="fw-bold text-danger">{{ icu_free }}</h2>
+                    </div>
+                </div>
+
+            </div>
+
+
+            <!-- PENDING TASKS -->
+            <div class="card border-0 shadow-sm rounded-4">
+                <div class="card-header bg-white">
+                    <h5 class="fw-bold m-0">Pending Tasks</h5>
+                </div>
+
+                <div class="card-body">
+
+                    {% if pending_unassigned_beds %}
+                        <p class="section-title">Patients Awaiting Bed Assignment</p>
+                        <ul class="list-group mb-4">
+                            {% for adm in pending_unassigned_beds %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ adm.patient.name }} — Admitted {{ adm.admission_date }}</span>
+                                <a href="{% url 'patients:assign_bed' %}?admission={{ adm.id }}" class="btn btn-sm btn-primary rounded-pill">Assign Bed</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    {% if pending_discharges %}
+                        <p class="section-title">Patients Ready for Discharge</p>
+                        <ul class="list-group mb-4">
+                         {% for adm in pending_discharges %}
+			     {% if request.user.role == "doctor" %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ adm.patient.name }}</span>
+                                <a href="{% url 'patients:create_discharge_report' adm.id %}" class="btn btn-sm btn-success rounded-pill">Discharge Now</a>
+                            </li>
+			     {% else %}
+				<span class="badge bg-warning">Patient:{{adm.patient.name}} | {{adm.patient.patient_id}}-- Doctor to create discharge</span>
+			     {% endif %}
+                         {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    {% if pending_unbilled %}
+                        <p class="section-title">Invoices Pending Billing Completion</p>
+                        <ul class="list-group mb-4">
+                            {% for inv in pending_unbilled %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>Invoice #{{ inv.id }} — {{ inv.patient.name }}</span>
+                                <a href="{% url 'billing:finalize_invoice' inv.id %}" class="btn btn-sm btn-warning rounded-pill">Complete Billing</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    {% if pending_emergency %}
+                        <p class="section-title">Emergency Cases Waiting for Action</p>
+                        <ul class="list-group mb-4">
+                            {% for e in pending_emergency %}
+                            <li class="list-group-item d-flex justify-content-between align-items-center">
+                                <span>{{ e.patient_name }}</span>
+                                <a href="{% url 'billing:finalize_invoice' e.invoice.id %}" class="btn btn-sm btn-danger rounded-pill">Process Emergency</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    {% endif %}
+
+                    {% if not pending_unassigned_beds and not pending_discharges and not pending_unbilled and not pending_emergency %}
+                        <p class="text-center text-muted">No pending tasks 🎉</p>
+                    {% endif %}
+
+                </div>
+
+            </div>
+
+        </div>
+    </div>
+</div>
+
+{% endblock %}

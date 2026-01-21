@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="fw-bold text-primary">Doctor List</h4>
+
+        <!-- Search Bar -->
+        <form method="get" class="d-flex">
+            <input type="text" name="q" value="{{ query }}" 
+                   placeholder="Search doctor, specialization, license..." 
+                   class="form-control form-control-sm me-2" style="width: 250px;">
+            <button class="btn btn-sm btn-primary">Search</button>
+        </form>
+    </div>
+
+    <div class="table-responsive shadow-sm">
+        <table class="table table-bordered table-hover align-middle">
+            <thead class="table-primary">
+                <tr>
+                    <th>#</th>
+                    <th>Name</th>
+                    <th>Specialization</th>
+                    <th>License No.</th>
+                    <th>Experience</th>
+                    <th>Location</th>
+		    <th>Actions<th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for doctor in doctors %}
+                <tr>
+                    <td>{{ forloop.counter }}</td>
+                    <td>{{ doctor.name }}</td>
+                    <td>{{ doctor.specialization }}</td>
+                    <td>{{ doctor.medical_license_number|default:"N/A" }}</td>
+                    <td>{{ doctor.experience_years }} years</td>
+                    <td>{{ doctor.doctor_location|default:"N/A" }}</td>
+		   <td>
+                      <a href="{% url 'core:doctor_details' doctor.id %}"                        
+                        class="btn btn-sm btn-outline-primary"> Details View</a>
+
+                       <a href="{% url 'appointments:create_doctor_timeslots' %}" 
+                        class="btn btn-sm btn-outline-success"> Create Timeslots</a>
+
+                        <a href="{% url 'appointments:general_appointment' %}" 
+                        class="btn btn-sm btn-outline-success"> Book appointment</a>
+                        
+                        <a href="{% url 'billing:add_doctor_payment' doctor.id %}" 
+                        class="btn btn-sm btn-outline-success"> Add doctor Payment</a>
+                        
+                        <a href="{% url 'billing:doctor_payment_summary' doctor.id %}" 
+                        class="btn btn-sm btn-outline-success"> Doctor pay summary</a>
+                    </td>
+
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="text-center text-muted">No doctors found.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</div>
+{% endblock %}

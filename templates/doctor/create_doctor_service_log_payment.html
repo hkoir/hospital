@@ -1,0 +1,127 @@
+{% extends "base.html" %}
+{% block content %}
+
+{% include 'referrals/quick_access_link.html' %}
+
+<div class="container mt-4">
+
+    <h4 class="text-center my-4">Total Due Amount : {{ total_due }}</h4>
+    <h2>Doctor Service Payment</h2>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <div class="row mb-3">
+
+            <div class="col-md-3 col-6">
+                <label for="payment_mode">Payment Mode</label>
+                <select name="payment_mode" class="form-control" required>
+                    <option value="Cash">Cash</option>
+                    <option value="Bank Transfer">Bank Transfer</option>
+                    <option value="bKash">bKash</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+
+            <div class="col-md-3 col-6">
+                <label for="amount_paid">Amount Paid</label>
+                <input type="number" name="amount_paid" class="form-control" step="0.01"
+                       required value="{{ total_due }}">
+            </div>
+
+            <div class="col-md-3 col-6">
+                <label for="notes">Notes</label>
+                <textarea name="notes" class="form-control" rows="2"></textarea>
+            </div>
+
+        </div>
+
+        <h5 class="mt-4">Pending Service Logs</h5>
+
+        <div class="table-responsive mb-3">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th><input type="checkbox" id="select_all"></th>
+                        <th>Service Date</th>
+                         <th>Doctor</th>                        
+                        <th>Patient</th>
+                        <th>Service Type</th>
+                        <th>Due Amount</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for r in pending_service_logs %}
+                    <tr>
+                       <td>
+                        <input type="checkbox" class="service-log-check"
+                            name="service_logs"
+                            value="{{ r.id }}"
+                            data-amount="{{ r.doctor_share }}">
+                        </td>
+
+                        <td>{{ r.created_at|date:"Y-m-d" }}</td>
+                         <td>
+			    <a href="{% url 'core:doctor_details' r.invoice.medical_record.doctor.id %}"
+				style="text-decoration: none;">
+                            {{ r.invoice.medical_record.doctor}} | {{ r.invoice.medical_record.doctor.specialization}}
+                            {% if r.invoice.medical_record.doctor.user.photo_id %}
+                            <img src="{{ r.invoice.medical_record.doctor.user.photo_id.url }}"
+                            style="width:40px;height:40px">
+			  {% else %}
+			  <span class="badge bg-info">No Photo</span>
+                            {% endif %}
+			   </a>
+                         </td>
+                        
+                        <td>{{ r.invoice.patient.name }}</td>
+                        <td>{{ r.service_type }}</td>
+                        <td>{{ r.doctor_share }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="5" class="text-center">No pending doctor service payments.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+
+            </table>
+        </div>
+
+        <button type="submit" class="btn btn-success">Pay Selected Services</button>
+    </form>
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+
+    const selectAllCheckbox = document.getElementById("select_all");
+    const amountPaidInput = document.querySelector("input[name='amount_paid']");
+    const checkboxes = document.querySelectorAll(".service-log-check");
+ 
+    function updateTotal() {
+        let total = 0;
+        checkboxes.forEach(cb => {
+            if (cb.checked) {
+                total += parseFloat(cb.dataset.amount || 0);
+            }
+        });
+        amountPaidInput.value = total.toFixed(2);
+    }
+ 
+    selectAllCheckbox.addEventListener("change", function () {
+        checkboxes.forEach(cb => cb.checked = selectAllCheckbox.checked);
+        updateTotal();
+    });
+
+    checkboxes.forEach(cb => {
+        cb.addEventListener("change", updateTotal);
+    });
+
+});
+</script>
+
+
+{% endblock %}

@@ -1,0 +1,85 @@
+{% extends 'base.html' %}
+{% load static %}
+
+
+{% block content %}
+
+{% include 'accounting/quick_access_link.html' %}
+
+<div class="container mt-4">
+
+    <!-- 🔍 Ledger Search Form -->
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-primary text-white fw-bold">
+            Search Account Ledger
+        </div>
+        <div class="card-body">
+            <form method="GET" class="row g-3">
+                <div class="col-md-8">
+                    <input type="text" name="query" value="{{ query }}"
+                           class="form-control"
+                           placeholder="Enter account name or number (e.g., 1001 or Cash)">
+                </div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary w-100">Search Ledger</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ❌ If user searched but no account found -->
+    {% if query and not account %}
+        <div class="alert alert-danger">
+            No matching account found for: <strong>{{ query }}</strong>
+        </div>
+    {% endif %}
+
+    <!-- 📘 Show Ledger Only If Account Found -->
+    {% if account %}
+
+        <div class="card shadow-sm">
+            <div class="card-header bg-success text-white fw-bold">
+                Ledger for: {{ account.name }} ({{ account.code }})
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-bordered table-striped align-middle">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Date</th>
+                            <th>Description</th>
+                            <th>Account</th>
+                            <th class="text-end">Debit</th>
+                            <th class="text-end">Credit</th>
+                            <th class="text-end">Balance</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for row in ledger_rows %}
+                        <tr>
+                            <td>{{ row.date }}</td>
+                            <td>{{ row.description }}</td>
+                            <td>{{ row.account }}</td>
+                            <td class="text-end">{{ row.debit }}</td>
+                            <td class="text-end">{{ row.credit }}</td>
+                            <td class="text-end fw-bold">{{ row.balance }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted">
+                                No transactions found for this account.
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+
+                </table>
+            </div>
+        </div>
+
+    {% endif %}
+
+</div>
+
+{% endblock %}

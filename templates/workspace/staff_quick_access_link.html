@@ -1,0 +1,182 @@
+
+
+
+<style>
+
+    .quick-tile {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: white;
+    border-radius: 16px;
+    padding: 18px 10px;
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #333;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    transition: all 0.25s ease-in-out;
+    height: 100%;
+}
+
+.quick-tile i {
+    font-size: 1.4rem;
+    margin-bottom: 6px;
+    color: #007bff;
+}
+
+/* Hover animation */
+.quick-tile:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+/* Color themes */
+.tile-warning i { color: #ffc107; }
+.tile-primary i { color: #007bff; }
+.tile-info i    { color: #17a2b8; }
+.tile-success i { color: #28a745; }
+.tile-danger i  { color: #dc3545; }
+.tile-secondary i { color: #6c757d; }
+
+/* Small column padding */
+.quick-col {
+    padding: 6px !important;
+}
+
+</style>
+
+<div class="card shadow-sm border-0 rounded-4" style="background-color:#f5f6fa;">
+    <div class="card-body">
+        <div class="row g-2 text-center">
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'workspace:staff_dashboard' %}" class="quick-tile tile-warning">
+                    <i class="fas fa-home"></i>
+                    Home
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'accounts:direct_patient_registration' %}" class="quick-tile tile-primary">
+                    <i class="fas fa-user-plus"></i>
+                    Register Patient
+                </a>
+            </div>
+           <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'patients:patient_list' %}" class="quick-tile tile-primary">
+                    <i class="fas fa-users"></i>
+                    Patient List
+                </a>
+            </div>
+
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'appointments:general_appointment' %}" class="quick-tile tile-info">
+                    <i class="fas fa-calendar-plus"></i>
+                    Create Appointment
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'workspace:appointment_list' %}" class="quick-tile tile-success">
+                    <i class="fas fa-calendar-check"></i>
+                    Appointment List
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'patients:patient_admission_create' %}" class="quick-tile tile-success">
+                    <i class="fas fa-procedures"></i>
+                    New Admission
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'patients:patient_admission_list' %}" class="quick-tile tile-success">
+                    <i class="fas fa-bed"></i>
+                    All Admissions
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'billing:emergency_visit_create' %}" class="quick-tile tile-danger">
+                    <i class="fas fa-ambulance"></i>
+                    Emergency Intake
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'billing:emergency_visit_list' %}" class="quick-tile tile-danger">
+                    <i class="fas fa-exclamation-circle"></i>
+                    All Emergency
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'billing:payment_landing' %}" class="quick-tile tile-warning">
+                    <i class="fas fa-money-bill-wave"></i>
+                    Collect Payment
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'lab_tests:create_external_lab_visit' %}" class="quick-tile tile-secondary">
+                    <i class="fas fa-microscope"></i>
+                    External Lab test
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'billing:ipd_invoice_list' %}" class="quick-tile tile-secondary">
+                    <i class="fas fa-file-medical"></i>
+                    All invoices
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'facilities:ward_room_bed_status' %}" class="quick-tile tile-secondary">
+                    <i class="fas fa-bed"></i>
+                    Bed Status
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'lab_tests:all_request_order_list' %}" class="quick-tile tile-secondary">
+                    <i class="fas fa-vials"></i>
+                    Lab & Tests
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'inventory:inventory_dashboard' %}" class="quick-tile tile-primary">
+                    <i class="fas fa-pills"></i>
+                    Pharmacy
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'core:doctor_list' %}" class="quick-tile tile-secondary">
+                    <i class="fas fa-user-md"></i>
+                    Doctors
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'core:nurse_list' %}" class="quick-tile tile-warning">
+                    <i class="fas fa-user-nurse"></i>
+                    Nurses
+                </a>
+            </div>
+
+            <div class="col-6 col-md-6 quick-col">
+                <a href="{% url 'billing:doctor_service_log_list' %}" class="quick-tile tile-info">
+                    <i class="fas fa-chart-line"></i>
+                    Finance
+                </a>
+            </div>
+
+        </div>
+    </div>
+</div>

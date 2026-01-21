@@ -1,4 +1,44 @@
 from django.db import models
+from django.conf import settings
+
+
+class BankAccount(models.Model):  
+    ACCOUNT_TYPE_CHOICES = (
+        ('CASH', 'Cash'),
+        ('BANK', 'Bank'),
+        ('MOBILE', 'Mobile Payment'),
+    )
+
+    name = models.CharField(max_length=100, help_text="Bank or account name")
+    account_number = models.CharField(max_length=50, blank=True, null=True, help_text="Bank account number if applicable")
+    account_type = models.CharField(max_length=10, choices=ACCOUNT_TYPE_CHOICES, default='BANK')
+    bank_name = models.CharField(max_length=100, blank=True, null=True, help_text="Bank name for bank accounts")
+    branch_name = models.CharField(max_length=100, blank=True, null=True)
+    currency = models.CharField(max_length=10, default='BDT', help_text="Currency of the account")
+    balance = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    is_active = models.BooleanField(default=True)
+    created_by = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Bank Account"
+        verbose_name_plural = "Bank Accounts"
+        ordering = ['name']
+
+    def __str__(self):
+        return f"{self.name} ({self.get_account_type_display()})"
+
+    def deposit(self, amount):
+        self.balance += amount
+        self.save(update_fields=['balance'])
+
+    def withdraw(self, amount):   
+        if amount > self.balance:
+            raise ValueError("Insufficient funds in account")
+        self.balance -= amount
+        self.save(update_fields=['balance'])
+
 
 
 class FiscalYear(models.Model):
@@ -56,7 +96,7 @@ class JournalEntry(models.Model):
 
 class JournalEntryLine(models.Model):
     entry = models.ForeignKey(JournalEntry, related_name="lines", on_delete=models.CASCADE)
-    account = models.ForeignKey(Account, on_delete=models.PROTECT)
+    account = models.ForeignKey(Account, on_delete=models.PROTECT,related_name="journal_entries")
     description = models.CharField(max_length=255, blank=True, null=True)
     debit = models.DecimalField(max_digits=12, decimal_places=2, default=0)
     credit = models.DecimalField(max_digits=12, decimal_places=2, default=0)

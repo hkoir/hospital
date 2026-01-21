@@ -14,10 +14,10 @@ from django.contrib.auth.models import User, Group
 from django.contrib.auth.forms import (AuthenticationForm, PasswordResetForm,SetPasswordForm)
 from.models import UserProfile,Client
 
-
-
 from django.contrib.auth.forms import AuthenticationForm
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
+from.models import CustomUser
+
 
 
 class PublicUserRegistrationForm(UserCreationForm):
@@ -47,11 +47,8 @@ class UserProfileForm(forms.ModelForm):
         super(UserProfileForm, self).__init__(*args, **kwargs)
 
 
-    
-from django import forms
-from django.contrib.auth.forms import AuthenticationForm
 
-class CustomLoginForm(AuthenticationForm):
+class CustomLoginForm2(AuthenticationForm):
     tenant = forms.CharField(
         max_length=100,
         required=True,
@@ -65,10 +62,33 @@ class CustomLoginForm(AuthenticationForm):
         self.fields['password'].widget.attrs.update({'class': 'form-control', 'placeholder': 'Password'})
 
 
+class CustomLoginForm(AuthenticationForm):
+    tenant = forms.CharField(
+        max_length=100,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Tenant'}),
+        label="Tenant",
+    )
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['username'].label = "Phone, Email, or Username"
+        self.fields['username'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Phone, Email, or Username'
+        })
+
+        self.fields['password'].label = "Password"
+        self.fields['password'].widget.attrs.update({
+            'class': 'form-control',
+            'placeholder': 'Password'
+        })
+
+
 
 from.models import CustomUser
 
-class TenantUserRegistrationForm(UserCreationForm):
+class TenantUserRegistrationForm2(UserCreationForm):
     profile_picture = forms.ImageField(required=False)
     
     class Meta:
@@ -91,6 +111,41 @@ class TenantUserRegistrationForm(UserCreationForm):
             user.save()
 
         return user
+
+
+
+class TenantUserRegistrationForm(UserCreationForm):
+    email = forms.EmailField(required=False)
+    phone_number = forms.CharField(required=False)
+        
+    class Meta:
+        model = CustomUser
+        fields = ['role','username', 'email', 'phone_number','password1', 'password2', 'photo_id']  
+
+    def __init__(self, *args, **kwargs):
+        self.tenant = kwargs.pop('tenant', None)  # Store tenant in the form instance
+        super().__init__(*args, **kwargs)
+
+        # Optional Bootstrap classes
+        for field in self.fields:
+            self.fields[field].widget.attrs.update({'class': 'form-control'})
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        user.set_password(self.cleaned_data['password1'])
+
+        if commit:
+            user.save()
+
+        return user
+    
+    def clean_phone_number(self):
+        phone = self.cleaned_data.get('phone_number')
+        if CustomUser.objects.filter(phone_number=phone).exists():
+            raise forms.ValidationError("Phone number already exists.")
+        return phone
+
+
 
     
 class PartnerJobSeekerRegistrationForm(UserCreationForm):

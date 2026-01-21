@@ -50,11 +50,12 @@ from lab_tests.models import SuggestedLabTestRequest
 from .models import DischargeReport
 from.forms import DischargeReportForm
 from facilities.models import Bed
-
 from patients.utils import calculate_billed_days,update_room_occupancy,update_ward_occupancy
-
-
 from medical_records.models import PrescribedMedicine
+from django.views.generic import UpdateView
+from django.urls import reverse_lazy
+from django.views.generic import ListView, CreateView, UpdateView, DeleteView
+
 
 PrescriptionFormSet = modelformset_factory(
     PrescribedMedicine, 
@@ -63,6 +64,49 @@ PrescriptionFormSet = modelformset_factory(
     can_delete=True 
 )
 
+
+class PatientCreateView(CreateView):
+    model = Patient
+    form_class = PatientForm
+    template_name = 'patients/patient_form.html'
+    
+    def form_valid(self, form):
+        messages.success(self.request, "Patient created successfully.")
+        return super().form_valid(form)
+    
+    def get_success_url(self):
+        return reverse_lazy('patients:patient_list')
+    
+
+class PatientUpdateView(UpdateView):
+    model = Patient
+    form_class = PatientForm
+    template_name = 'patients/patient_form.html'
+    success_url = reverse_lazy("patients:patient_list")  # change to your list view
+
+    def form_valid(self, form):
+        patient = form.save(commit=False)
+        old_patient = Patient.objects.filter(pk=patient.pk).first()
+        if old_patient and old_patient.referral_source != patient.referral_source:
+            PatientReferralHistory.objects.create(
+                patient=patient,
+                referral_source=patient.referral_source,
+                service_type=None, 
+                service_id=None
+            )
+        patient.save()
+        messages.success(self.request, f"Patient {patient.name} updated successfully.")
+        return super().form_valid(form)
+    
+
+class PatientDeleteView(DeleteView):
+    model = Patient
+    template_name = 'patients/patient_confirm_delete.html'
+    success_url = reverse_lazy('patients:patient_list')
+
+    def delete(self, request, *args, **kwargs):
+        messages.success(request, "Patient deleted successfully.")
+        return super().delete(request, *args, **kwargs)
 
 
 
@@ -89,11 +133,70 @@ def patient_list(request):
     }
     return render(request, 'patients/all_patient_list.html', context)
 
+@login_required
+def patients_details_with_id(request,pk):
+    patient = get_object_or_404(Patient,pk=pk)   
+    return render(request, "patients/patient_details_with_id.html", {"patient": patient})
+
+
+
+def search_patients(request):
+    q = request.GET.get('q', '')
+    patients = Patient.objects.filter(
+        Q(name__icontains=q) | Q(phone__icontains=q)
+    )[:20]  
+
+    data = {
+        "results": [
+            {"id": p.id, "text": f"{p.name} — {p.phone}"}
+            for p in patients
+        ]
+    }
+    return JsonResponse(data)
+
+
+from core.models import Doctor
+
+def search_doctors(request):
+    q = request.GET.get('q', '')
+    doctors = Doctor.objects.filter(
+        Q(name__icontains=q) | Q(phone__icontains=q) | Q(specialization__name__icontains=q)
+    )[:20]  
+
+    data = {
+        "results": [
+            {"id": p.id, "text": f"{p.name} — {p.phone}"}
+            for p in doctors
+        ]
+    }
+    return JsonResponse(data)
+
+
+
+import base64
+
+def patient_id_card(request, pk):
+    patient = get_object_or_404(Patient, pk=pk)
+    qr_data = f"PATIENT_ID:{patient.patient_id}--{patient.name}"
+    qr = qrcode.QRCode(box_size=5, border=2)
+    qr.add_data(qr_data)
+    qr.make()
+    img = qr.make_image()
+    buffer = BytesIO()
+    img.save(buffer)
+    qr_image = base64.b64encode(buffer.getvalue()).decode()
+
+    return render(request, "patients/id_card.html", {
+        "patient": patient,
+        "qr_image": qr_image,
+    })
+
 
 
 
 @login_required
 def patient_admission_create(request):
+    billing_invoice=None
     if request.method == 'POST':
         form = PatientAdmissionForm(request.POST,request.FILES)
         if form.is_valid():
@@ -133,6 +236,7 @@ def patient_admission_create(request):
 
                 BedAssignmentHistory.objects.create(
                     patient=patient,
+                    patient_admission=admission,
                     ward=bed_instance.ward,
                     room=bed_instance.room,
                     bed=bed_instance,
@@ -158,7 +262,7 @@ def patient_admission_create(request):
                 billing_invoice.medical_record = medical_record
                 billing_invoice.save(update_fields=['medical_record'])
 
-            return redirect('patients:patient_admission_detail', admission_id=admission.id)
+            return redirect('billing:add_payment', invoice_id=billing_invoice.id)
 
     else:
         form = PatientAdmissionForm()
@@ -170,6 +274,111 @@ def patient_admission_create(request):
 
 
 
+@login_required
+def convert_emergency_to_admission(request, emergency_id):
+    emergency = get_object_or_404(EmergencyVisit, id=emergency_id)
+    if emergency.is_converted_to_admission:
+        messages.error(request, "This emergency visit is already converted to an admission.")
+        return redirect('billing:emergency_visit_list')
+
+    with transaction.atomic():
+        emergency.end_time= timezone.now()
+        emergency.is_converted_to_admission = True
+        emergency.discharge_approved = True
+        emergency.save(update_fields=['end_time', 'is_converted_to_admission','discharge_approved'])
+
+        if emergency.assigned_bed:
+            emergency.assigned_bed.is_occupied= False
+            emergency.assigned_bed.save(update_fields=['is_occupied'])
+
+        admission = PatientAdmission.objects.create(
+            patient=emergency.patient,
+            admitting_doctor=None,    
+            reason_for_admission=emergency.chief_complaint,
+            admission_type="Emergency-To-IPD",
+            emergency=emergency,
+            admission_date=timezone.now(),  
+        )
+        return redirect('patients:patient_admission_update', admission_id=admission.id)
+
+
+
+
+
+@login_required
+def patient_admission_update(request, admission_id):
+    admission = get_object_or_404(PatientAdmission, id=admission_id)
+
+    if request.method == "POST":
+        form = PatientAdmissionForm(request.POST, request.FILES, instance=admission)
+
+        if form.is_valid():
+            with transaction.atomic():
+                adm = form.save(commit=False)
+
+                now = timezone.now()
+                adm.admission_date = now
+                adm.bed_assignment_date = now
+                adm.save()
+              
+                bed_instance = form.cleaned_data['assigned_bed']
+                bed_instance.is_occupied = True
+                bed_instance.save(update_fields=['is_occupied'])
+             
+                update_room_occupancy(bed_instance.room)
+                update_ward_occupancy(bed_instance.ward)
+  
+                BedAssignmentHistory.objects.create(
+                    patient=admission.patient,
+                    patient_admission=admission,
+                    emergency_visit = None,
+                    ward=bed_instance.ward,
+                    room=bed_instance.room,
+                    bed=bed_instance,
+                    assigned_at=now,
+                )
+
+                billing_invoice, created = BillingInvoice.objects.get_or_create(
+                    patient=admission.patient,
+                    admission=admission,
+                    invoice_type='IPD',
+                    patient_type='IPD',
+                    defaults={'status': 'Unpaid'}
+                )
+          
+                WardBill.objects.create(
+                    invoice=billing_invoice,
+                    patient_admission=admission,
+                    patient_emergency= None,
+                    bed=bed_instance,
+                    room=bed_instance.room,
+                    ward=bed_instance.ward,
+                    charge_per_day=bed_instance.get_effective_daily_charge(),
+                    assigned_at=now,                  
+                    released_at=None,
+                    days_stayed=None,
+                    total_bill=Decimal("0.00"),
+                )
+           
+                medical_record = MedicalRecord.objects.create(
+                    patient=admission.patient,
+                    doctor=admission.admitting_doctor,
+                    diagnosis='TBD',
+                    treatment_plan='TBD'
+                )
+
+                billing_invoice.medical_record = medical_record
+                billing_invoice.save(update_fields=['medical_record'])
+
+            return redirect('billing:add_payment', invoice_id=billing_invoice.id)
+        else:
+            print("Form errors:", form.errors)
+    else:  
+        form = PatientAdmissionForm(instance=admission)
+    return render(request, "patients/patient_admission_create.html", {
+        "form": form,
+        "admission": admission
+    })
 
 
 
@@ -206,6 +415,11 @@ def patient_admission_list(request):
             if patient_id:
                admissions = admissions.filter(patient__patient_id__icontains=patient_id)
 
+    from core.models import Doctor
+    if request.user.role == "doctor":
+        doctor = Doctor.objects.filter(user = request.user).first()
+        if doctor:
+            admissions = admissions.filter(admitting_doctor = doctor)
     datas = admissions
     paginator = Paginator(datas, 5)
     page_number = request.GET.get('page')
@@ -216,8 +430,13 @@ def patient_admission_list(request):
 
 
 @login_required
-def patient_admission_detail(request, admission_id): 
-    admission = get_object_or_404(PatientAdmission, id=admission_id)
+def patient_admission_detail(request,admission_id=None,emergency_id=None):
+    admission=None
+    if admission_id:
+        admission = get_object_or_404(PatientAdmission, id=admission_id)
+    else:
+        admission = get_object_or_404(EmergencyVisit, id=emergency_id) 
+
     assigned_bed = None
     assigned_ward = None
     assigned_room = None
@@ -263,6 +482,25 @@ def patients_details(request):
 
 
 
+
+from product.models import Product
+from django.db.models import Sum
+
+def medicine_search(request):
+    q = request.GET.get("q", "")
+    medicines = (
+        Product.objects.filter(name__icontains=q, product_inventories__quantity__gt=0)
+        .distinct() 
+        .annotate(total_qty=Sum('product_inventories__quantity'))
+        .order_by('name')[:25]
+    )
+
+    results = [
+        {"id": med.id, "text": f"{med.name} (Available: {med.total_qty})"}
+        for med in medicines
+    ]
+
+    return JsonResponse({"results": results})
 
 
 
@@ -337,7 +575,7 @@ def doctor_consultation(request, appointment_id):
             appointment.save(update_fields=['status'])
 
             messages.success(request, 'Prescription has been successfully created and is downloadable on the appointment list page')
-            return redirect('appointments:appointment_list')
+            return redirect('workspace:doctor_dashboard')
         else:
             for form in prescription_formset:
                 print("Form errors:", form.errors)
@@ -371,120 +609,165 @@ def doctor_consultation(request, appointment_id):
 from lab_tests.models import LabTestRequestItem
 from billing.models import LabTestBill,MedicineBill,ConsultationBill,DoctorServiceRate,DoctorServiceLog
 
-@login_required
-def ipd_doctor_consultation(request, medical_record_id):
-    medical_record = get_object_or_404(MedicalRecord, id=medical_record_id)  
-    doctor = medical_record.doctor
-    doctor_service_fee =0    
-    doctor_service_rate = DoctorServiceRate.objects.filter(doctor=doctor,service_type="Consultation").first()
-    if doctor_service_rate:
-        doctor_service_fee = doctor_service_rate.rate
 
-  
-    if request.user != medical_record.doctor.user:
-        messages.warning(request,'You are not assigned for this patient to consult')
+
+DOSAGE_MAP = {
+    "1+0+1": 2,
+    "1+1+0": 2,
+    "1+1+1": 3,
+    "0+1+1": 2,
+    "0+1+0": 1,
+    "0+0+1": 1,
+    "1+0+0": 1,
+    "Every-4-Hours": 6,   # 24/4
+    "Every-6-Hours": 4,   # 24/6
+    "Every-8-Hours": 3,   # 24/8
+    "Every-12-Hours": 2,  # 24/12
+    "Every-24-Hours": 1,
+    "As Needed": 1,       # default 1
+}
+
+
+
+
+
+from medical_records.forms import MedicalRecordProgressForm
+@login_required
+def ipd_doctor_consultation(request, appointment_id):
+    appointment = get_object_or_404(Appointment, id=appointment_id)
+    medical_record = appointment.medical_record
+    doctor = appointment.doctor
+    doctor_service_fee = 0
+    rate = DoctorServiceRate.objects.filter(
+        doctor=doctor,
+        service_type="Consultation"
+    ).first()
+    if rate:
+        doctor_service_fee = rate.rate
+
+    if request.user != doctor.user:
+        messages.warning(request, "You are not assigned to consult this patient.")
 
     if request.method == 'POST':
-        print('post/get=', request.method)       
         prescription_formset = PrescriptionFormSet(request.POST, queryset=PrescribedMedicine.objects.none())
         lab_test_form = LabTestForm(request.POST)
+        progress_form = MedicalRecordProgressForm(request.POST)
 
-        if prescription_formset.is_valid() and lab_test_form.is_valid():   
-            with transaction.atomic():   
+        if prescription_formset.is_valid() and lab_test_form.is_valid() and progress_form.is_valid():
+
+            with transaction.atomic():
+
+                progress = progress_form.save(commit=False)
+                progress.medical_record = medical_record
+                progress.updated_by = request.user
+                progress.doctor = appointment.doctor
+                progress.save()
 
                 prescription = Prescription.objects.create(
-                medical_record=medical_record,  # Use updated_record here!
-                created_by=request.user,
-                notes=request.POST.get("notes", ""),
-                patient_type="IPD",
+                    medical_record=medical_record,
+                    progress=progress,
+                    created_by=request.user,
+                    notes=request.POST.get("notes", ""),
+                    patient_type="IPD",
                 )
-                consultation_bill = ConsultationBill.objects.create(
-                    user=request.user,
-                    invoice=medical_record.billing_medical_record,
-                    doctor=medical_record.doctor,
-                    #appointment=medical_record.appointment if hasattr(medical_record, 'appointment') else None,
-                    consultation_fee=doctor_service_fee,  # Assuming doctor has a fee field
-                    patient_type='IPD',
-                    consultation_type='Follow-Up',
-                    status='Unpaid'
-                )
-                DoctorServiceLog.objects.create(
-                    invoice=medical_record.billing_medical_record,
-                    medical_record = medical_record,
+
+                DoctorServiceLog.objects.get_or_create(
+                    invoice=medical_record.billing_invoice_records,
+                    medical_record=medical_record,
                     doctor=doctor,
                     service_type='Consultation',
                     patient=medical_record.patient,
-                    service_date=prescription.created_at,
-                    service_fee = doctor_service_fee
+                    service_date=appointment.date,
+                    defaults={'service_fee': doctor_service_fee}
                 )
 
                 for form in prescription_formset:
                     if form.cleaned_data and not form.cleaned_data.get('DELETE', False):
-                        prescribed_medicine = form.save(commit=False)
-                        prescribed_medicine.prescription = prescription
-                        prescribed_medicine.save()
 
-                        MedicineBill.objects.create(                            
-                            invoice=medical_record.billing_medical_record,
-                            medicine=prescribed_medicine.medication_name,                                                       
-                            quantity=prescribed_medicine.quantity,
-                            price_per_unit= prescribed_medicine.medication_name.base_unit_price or 0,                           
+                        med = form.save(commit=False)
+                        med.prescription = prescription                     
+                        schedule = med.dosage_schedule
+                        duration = med.medication_duration or 1
+
+                        if schedule in DOSAGE_MAP:
+                            daily_doses = DOSAGE_MAP[schedule]
+                        elif "+" in (schedule or ""):
+                            daily_doses = sum(int(x) for x in schedule.split("+"))
+                        else:
+                            daily_doses = 1
+
+                        med.quantity = daily_doses * duration
+                        med.save()
+                    
+                        MedicineBill.objects.create(
+                            invoice=medical_record.billing_invoice_records,
+                            medicine=med.medication_name,
+                            quantity=med.quantity,
+                            price_per_unit=med.medication_name.unit_price or 0,
                             patient_type="IPD",
-                            status="Unpaid"
+                            status="Unpaid",
                         )
-                    else:
-                        print(form.errors)
 
+                selected_lab_tests = request.POST.getlist("lab_tests")
 
-                selected_lab_tests = request.POST.getlist('lab_tests')
                 if selected_lab_tests:
-                    requested_labtest = LabTestRequest.objects.create(
-                        patient_type=medical_record.billing_medical_record.patient_type,
+                    lab_request = LabTestRequest.objects.create(
+                        patient_type=medical_record.billing_invoice_records.patient_type,
                         medical_record=medical_record,
-                        requested_by=medical_record.doctor,
-                        status='Pending'
+                        requested_by=appointment.doctor,  
+                        appointment=appointment,
+                        progress=progress,
+                        status="Pending",
                     )
 
                     for test_id in selected_lab_tests:
-                        try:
-                            lab_test_catalog = LabTestCatalog.objects.get(id=test_id)
-                            LabTestRequestItem.objects.create(
-                                labtest_request=requested_labtest,
-                                lab_test=lab_test_catalog,                           
-                                notes='IPD prescription',
-                                status='Pending'
-                            )
-                            LabTestBill.objects.create(                             
-                                invoice=medical_record.billing_medical_record,
-                                lab_test_catelogue=lab_test_catalog,
-                                test_fee=lab_test_catalog.price,
-                                patient_type="IPD",
-                                status="Unpaid"
-                            )
-                        except LabTestCatalog.DoesNotExist:
-                            print(f"LabTestCatalog with ID {test_id} does not exist.")         
+                        lab_test_obj = LabTestCatalog.objects.filter(id=test_id).first()
+                        if not lab_test_obj:
+                            continue
 
-                messages.success(request, 'Prescription has been successfully created and is downloadable')
-                return redirect('appointments:appointment_list')
+                        LabTestRequestItem.objects.create(
+                            labtest_request=lab_request,
+                            lab_test=lab_test_obj,
+                            prescription=prescription,
+                            notes="IPD prescription",
+                            status="Pending"
+                        )
+
+                        LabTestBill.objects.create(
+                            invoice=medical_record.billing_invoice_records,
+                            lab_test_catelogue=lab_test_obj,
+                            test_fee=lab_test_obj.price,
+                            patient_type="IPD",
+                            status="Unpaid",
+                        )
+          
+                appointment.status = 'Prescription-Given'
+                appointment.save(update_fields=['status'])
+
+                messages.success(request, "Prescription created successfully.")
+                return redirect("workspace:doctor_dashboard")
+
         else:
-            for form in prescription_formset:
-                print("Form errors:", form.errors)
-
-            return render(request, 'patients/doctor_consultation.html', {              
-                'prescription_formset': prescription_formset,
-                'lab_test_form': lab_test_form,
-                'medical_record': medical_record,
+            return render(request, "patients/doctor_consultation.html", {
+                "prescription_formset": prescription_formset,
+                "lab_test_form": lab_test_form,
+                "medical_record": medical_record,
+                "medical_form": progress_form,
             })
-
-    else:      
+ 
+    else:
         prescription_formset = PrescriptionFormSet(queryset=PrescribedMedicine.objects.none())
         lab_test_form = LabTestForm()
+        progress_form = MedicalRecordProgressForm()
 
-    return render(request, 'patients/doctor_consultation.html', {         
-        'prescription_formset': prescription_formset,
-        'lab_test_form': lab_test_form,
-        'medical_record': medical_record,
+    return render(request, "patients/doctor_consultation.html", {
+        "prescription_formset": prescription_formset,
+        "lab_test_form": lab_test_form,
+        "medical_record": medical_record,
+        "medical_form": progress_form,
     })
+
+
 
 
 
@@ -569,7 +852,6 @@ from medical_records.models import PrescribedMedicine
 
 def generate_prescription_pdf(request, medical_record_id):
     medical_record = MedicalRecord.objects.get(id=medical_record_id)
-    prescriptions = PrescribedMedicine.objects.filter(prescription__medical_record=medical_record)
     prescriptions = PrescribedMedicine.objects.filter(prescription__medical_record=medical_record).order_by('-date_issued')
 
     appointment = medical_record.medical_record_appointments.first()
@@ -719,7 +1001,7 @@ def generate_prescription_pdf(request, medical_record_id):
                 pdf.line(40, y_position - 5, 550, y_position - 5)
                 y_position -= 15  # Move below header
 
-            pdf.drawString(40, y_position, lab_test.lab_test.test_type)
+            pdf.drawString(40, y_position, lab_test.lab_test.category.service_type)
             pdf.drawString(200, y_position, lab_test.lab_test.test_name)
             pdf.drawString(400, y_position, lab_test.status)
             y_position -= 20  # Move to next line
@@ -751,6 +1033,8 @@ def generate_prescription_pdf(request, medical_record_id):
     pdf.save()
     return response
 
+
+
 @login_required
 def download_prescription(request, medical_record_id):
     return generate_prescription_pdf(request, medical_record_id)
@@ -763,17 +1047,72 @@ def generate_qr_code_prescription(data, filename):
 
 
 
-def download_prescription(request, medical_record_id):
-    return generate_prescription_pdf(request, medical_record_id)
+
+import base64
+from io import BytesIO
+import qrcode
+
+def generate_qr_base64(url):
+    qr = qrcode.make(url)
+    buffer = BytesIO()
+    qr.save(buffer, format="PNG")
+    qr_data = base64.b64encode(buffer.getvalue()).decode()
+    return qr_data
 
 
-def generate_qr_code_prescription(data, filename):
-    qr = qrcode.make(data)
-    qr.save(filename)
 
 
 
 
+def print_prescription(request, prescription_id):
+    prescription = get_object_or_404(Prescription, id=prescription_id)
+    medical_record = prescription.medical_record
+
+    medical_record_progress= prescription.progress
+
+    prescriptions = PrescribedMedicine.objects.filter(
+        prescription=prescription
+    ).order_by('-date_issued')
+
+    appointment = medical_record.medical_record_appointments.first()
+
+    lab_tests = []
+
+    suggested = None
+    if appointment and hasattr(appointment, "appointment_labtest"):
+        suggested = appointment.appointment_labtest
+
+    if suggested:
+        lab_tests = list(suggested.suggested_items.all())
+    else:      
+        requested_items = LabTestRequestItem.objects.filter(
+            labtest_request__medical_record=medical_record,
+             prescription=prescription
+            
+        ).select_related("lab_test")
+        lab_tests = list(requested_items)
+
+    qr_base64 = generate_qr_base64("https://xyzhospital.com/verify-prescription")
+
+    return render(request, 'patients/prescription_print.html', {
+        'medical_record': medical_record_progress,
+        'prescription': prescription,
+        'prescriptions': prescriptions,
+        'lab_tests': lab_tests,
+        'qr_code_image': qr_base64
+    })
+
+
+
+@login_required
+def patient_medical_records(request, patient_id):
+    patient = get_object_or_404(Patient, id=patient_id)   
+    medical_records = MedicalRecord.objects.filter(patient=patient).order_by('-date')
+    
+    return render(request, 'patients/patient_medical_records.html', {
+        'patient': patient,
+        'medical_records': medical_records,
+    })
 
 
 
@@ -1095,27 +1434,160 @@ def download_ipd_prescription(request,prescription_id):
 
 
 
+from django.utils.timezone import now as tz_now
+from facilities.models import Bed, Room, Ward
+from patients.models import PatientAdmission
+from billing.models import EmergencyVisit,BillingInvoice, WardBill
+
+
+
 
 @login_required
-def change_bed(request, admission_id):
-    admission = get_object_or_404(PatientAdmission, id=admission_id)
-    invoice = admission.billing_admission
+def assign_bed(request, invoice_id=None, visit_id=None):
+    patient = None
+    admission = None
+    visit = None
+    wards=Ward.objects.all()
+  
+    if invoice_id:
+        invoice = get_object_or_404(BillingInvoice, id=invoice_id)
+        patient = invoice.patient
+        admission = invoice.admission
 
-    if request.method == 'POST':
+        if not admission:
+            messages.warning(request, "Patient is not admitted.")
+            return redirect("billing:ipd_invoice_list")
+
+    elif visit_id:
+        visit = get_object_or_404(EmergencyVisit, id=visit_id)
+        invoice = visit.invoice
+        patient = visit.patient
+    else:
+        messages.error(request, "No invoice or visit specified.")
+        return redirect("billing:ipd_invoice_list")
+ 
+    available_beds = Bed.objects.filter(is_occupied=False).select_related('room', 'ward')
+
+    if request.method == "POST":
+        bed_id = request.POST.get("bed")
+        bed = get_object_or_404(Bed, id=bed_id)
+
+        if bed.is_occupied:
+            messages.error(request, f"Bed {bed} is already occupied.")
+            return redirect(request.path)
+
+        assigned_at = tz_now()
+
+        with transaction.atomic():           
+            BedAssignmentHistory.objects.create(
+                patient=patient,
+                bed=bed,
+                room=bed.room,
+                ward=bed.ward,
+                assigned_at=assigned_at,
+                emergency_visit=visit if visit else None,
+                patient_admission=admission if admission else None,
+            )
+       
+            WardBill.objects.create(
+                invoice=invoice,
+                patient_admission=admission,
+                patient_emergency=visit if visit else None,
+                bed=bed,
+                room=bed.room,
+                ward=bed.ward,
+                charge_per_day=bed.get_effective_daily_charge(),
+                assigned_at=assigned_at,
+                released_at=None,
+                days_stayed=None,
+                total_bill=Decimal("0.00"),
+            )
+
+            if visit:
+                visit.assigned_bed = bed
+                visit.assigned_room = bed.room
+                visit.assigned_ward = bed.ward
+                visit.bed_assignment_date = timezone.now()
+                visit.save(update_fields=["assigned_bed", "assigned_room", "assigned_ward","bed_assignment_date"])
+       
+            bed.is_occupied = True
+            bed.save(update_fields=["is_occupied"])
+     
+            room = bed.room
+            if room:
+                all_beds_full = room.room_beds.filter(is_occupied=False).count() == 0
+                room.is_occupied = all_beds_full
+                room.save(update_fields=["is_occupied"])       
+            ward = bed.ward
+            if ward:
+                all_rooms_full = ward.ward_rooms.filter(is_occupied=False).count() == 0
+                ward.is_occupied = all_rooms_full
+                ward.save(update_fields=["is_occupied"])
+
+        messages.success(
+            request,
+            f"Bed {bed} (Room {bed.room}, Ward {bed.ward}) assigned successfully to {patient.name}."
+        )
+        return redirect("billing:finalize_invoice", invoice_id=invoice.id)
+    
+    context = {
+        "available_beds": available_beds,
+        'wards':wards,
+        "patient": patient,
+        "invoice": invoice,
+        "visit": visit if visit_id else None,
+    }
+    return render(request, "patients/assign_bed.html", context)
+
+
+
+
+
+@login_required
+def change_bed(request, admission_id=None, emergency_id=None):
+    admission = PatientAdmission.objects.filter(id=admission_id).first()
+    emergency = EmergencyVisit.objects.filter(id=emergency_id).first()
+    wards = Ward.objects.all()
+    invoice = None
+    # Determine patient & invoice source
+    if admission:
+        patient = admission.patient
+        invoice = BillingInvoice.objects.filter(admission=admission).first()
+        context_type = "admission"
+    elif emergency:
+        patient = emergency.patient
+        invoice = emergency.invoice
+        context_type = "emergency"
+    else:
+        messages.error(request, "Invalid patient type.")
+        return redirect("billing:ipd_invoice_list")
+
+    if request.method == "POST":
         form = BedAssignmentForm(request.POST)
         if form.is_valid():
-            new_bed = form.cleaned_data['bed']
-            new_room = form.cleaned_data['room']
+            new_bed = form.cleaned_data["bed"]
+            new_room = new_bed.room
             now = tz_now()
 
             with transaction.atomic():
-                last_assignment = BedAssignmentHistory.objects.filter(
-                    patient=admission.patient,
-                    patient_admission=admission,
-                    released_at__isnull=True
-                ).latest('assigned_at')
+                if context_type == "admission":
+                    last_assignment = BedAssignmentHistory.objects.filter(
+                        patient=patient,
+                        patient_admission=admission,
+                        released_at__isnull=True
+                    ).order_by("-assigned_at").first()
+                else:
+                    last_assignment = BedAssignmentHistory.objects.filter(
+                        patient=patient,
+                        emergency_visit=emergency,
+                        released_at__isnull=True
+                    ).order_by("-assigned_at").first()
 
-                # Mark last assignment as released
+                if not last_assignment:
+                    messages.error(request, "No previous bed assignment found.")
+                    return redirect(request.path)
+
+                # Close old assignment
                 last_assignment.released_at = now
                 last_assignment.save()
 
@@ -1123,94 +1595,104 @@ def change_bed(request, admission_id):
                 old_room = old_bed.room
                 old_ward = old_bed.ward
 
-                # Free old bed
                 old_bed.is_occupied = False
-                old_bed.save(update_fields=['is_occupied'])
+                old_bed.save(update_fields=["is_occupied"])
+                update_room_occupancy(old_room)
+                update_ward_occupancy(old_ward)
 
-                # Free room if all beds are free
-                if not old_room.room_beds.filter(is_occupied=True).exists():
-                    old_room.is_occupied = False
-                    old_room.save(update_fields=['is_occupied'])
-
-                # Free ward if all rooms are free
-                if not old_ward.ward_rooms.filter(room_beds__is_occupied=True).exists():
-                    old_ward.is_occupied = False
-                    old_ward.save(update_fields=['is_occupied'])
-
-                # Update old WardBill if exists
+                # Close old ward bill
                 old_bill = WardBill.objects.filter(
-                    patient_admission=admission,
+                    invoice=invoice,
                     bed=old_bed,
                     released_at__isnull=True
                 ).first()
 
                 if old_bill:
                     assigned_dt = last_assignment.assigned_at
-                    released_dt = last_assignment.released_at
-
                     if is_naive(assigned_dt):
                         assigned_dt = make_aware(assigned_dt)
-                    if is_naive(released_dt):
-                        released_dt = make_aware(released_dt)
+                    released_dt = now if not is_naive(now) else make_aware(now)
 
-                    num_days = calculate_billed_days(assigned_dt, released_dt)
-                    daily_rate = old_bed.daily_charge
-                    total_bill = num_days * daily_rate                  
+                    if context_type == "emergency" and old_bed.hourly_charge:
+                        hrs = (released_dt - assigned_dt).total_seconds() / 3600
+                        total_bill = (Decimal(hrs) * old_bed.get_effective_hourly_charge()).quantize(Decimal("0.01"))
+                        old_bill.days_stayed = None
+                    else:
+                        days = max(1, (released_dt.date() - assigned_dt.date()).days)
+                        total_bill = (Decimal(days) * old_bed.get_effective_daily_charge()).quantize(Decimal("0.01"))
+                        old_bill.days_stayed = days
+
                     old_bill.total_bill = total_bill
-                    old_bill.assigned_at = assigned_dt
-                    old_bill.released_at = released_dt    
-                    old_bill.days_stayed = num_days          
+                    old_bill.released_at = released_dt
                     old_bill.save()
 
-                # ALWAYS handle new bed assignment
+                # Assign new bed
                 new_bed.is_occupied = True
-                new_bed.save(update_fields=['is_occupied'])
-
-                update_room_occupancy(new_bed.room)
+                new_bed.save(update_fields=["is_occupied"])
+                update_room_occupancy(new_room)
                 update_ward_occupancy(new_bed.ward)
 
-                # Create new BedAssignmentHistory
+                # New assignment record
                 BedAssignmentHistory.objects.create(
                     ward=new_bed.ward,
-                    room=new_bed.room,
+                    room=new_room,
                     bed=new_bed,
-                    patient=admission.patient,
-                    assigned_at=now,
-                    patient_admission=admission,
+                    patient=patient,
+                    patient_admission=admission if context_type == "admission" else None,
+                    emergency_visit=emergency if context_type == "emergency" else None,
+                    assigned_at=now
                 )
 
-                # Create new WardBill
+                # Create new ward bill
                 WardBill.objects.create(
                     invoice=invoice,
-                    patient_admission=admission,
-                    bed=new_bed,
-                    room=new_bed.room,
+                    patient_admission=admission if context_type == "admission" else None,
+                    patient_emergency=emergency if context_type == "emergency" else None,
                     ward=new_bed.ward,
-                    charge_per_day=new_bed.daily_charge,
+                    room=new_room,
+                    bed=new_bed,
+                    charge_per_day=new_bed.get_effective_daily_charge(),
+                    charge_per_hour=new_bed.get_effective_hourly_charge(),
                     assigned_at=now,
-                    total_bill=0.0,
+                    total_bill=Decimal("0.00")
                 )
-                print(f"Creating WardBill: bed={new_bed}, room={new_bed.room}, ward={new_bed.ward}")
 
-            # Update admission info
-            admission.bed_assignment_date = now
-            admission.assigned_bed = new_bed
-            admission.assigned_room = new_room
-            admission.assigned_ward = new_bed.ward
-            admission.save(update_fields=['bed_assignment_date', 'assigned_bed', 'assigned_room', 'assigned_ward'])
+                # Update admission/emergency record
+                if context_type == "admission":
+                    admission.assigned_bed = new_bed
+                    admission.assigned_room = new_room
+                    admission.assigned_ward = new_bed.ward
+                    admission.bed_assignment_date = now
+                    admission.save(update_fields=["assigned_bed", "assigned_room", "assigned_ward", "bed_assignment_date"])
+                    invoice.update_total_wardbill()
 
-            # Recalculate invoice
-            invoice.update_totals()
-            invoice.save()
+                else:
+                    emergency.assigned_bed = new_bed
+                    emergency.assigned_room = new_room
+                    emergency.assigned_ward = new_bed.ward
+                    emergency.bed_assignment_date = now
+                    emergency.save(update_fields=["assigned_bed", "assigned_room", "assigned_ward", "bed_assignment_date"])
 
-            return redirect('patients:patient_admission_detail', admission_id=admission.id)
+                invoice.update_totals()
+                invoice.save()
+
+            messages.success(request, f"Bed changed successfully to {new_bed}.")
+            if admission:
+                 return redirect("patients:patient_admission_detail", admission.id)            
+            else:
+                return redirect("patients:patient_emergency_detail", emergency.id)
 
     else:
         form = BedAssignmentForm()
 
-    return render(request, 'patients/assign_bed_to_patient.html', {
-        'form': form,
-        'admission': admission
+    return render(request, "patients/assign_bed.html", {
+        "form": form,
+        "admission": admission,
+        "emergency": emergency,
+        'wards':wards,
+         "patient": patient,
+        "invoice": invoice,
+        "visit": emergency if emergency else None,
     })
 
 
@@ -1304,43 +1786,116 @@ def discharge_patient(request, admission_id):
 
 
 
+
+
+@login_required
+def approve_discharge(request, admission_id=None, emergency_id=None):
+    if request.method == "POST" and request.headers.get("X-Requested-With") == "XMLHttpRequest":
+ 
+        obj = None
+        if admission_id:
+            obj = PatientAdmission.objects.filter(id=admission_id).first()
+        elif emergency_id:
+            obj = EmergencyVisit.objects.filter(id=emergency_id).first()
+
+        if not obj:
+            return JsonResponse({"status": "error", "message": "Object not found"}, status=404)
+    
+        obj.discharge_approved = True
+        obj.save(update_fields=["discharge_approved"])
+
+        return JsonResponse({"status": "success", "message": "Discharge approved"})
+    return JsonResponse({"status": "error", "message": "Invalid request"}, status=400)
+
+
+from django.utils.timezone import now as tz_now  
+
 @login_required
 def create_discharge_report(request, admission_id):
     admission = get_object_or_404(PatientAdmission, id=admission_id)
+    invoice = admission.billing_admission 
+    if invoice.status != "Paid":
+        messages.warning(request, "Bill payment is due. Please collect before discharge.")
+        return redirect("billing:finalize_invoice", invoice_id=invoice.id)
 
-    # Check if discharge report already exists
-    discharge_report, created = DischargeReport.objects.get_or_create(
-        patient_admission=admission,
-        defaults={
-            'doctor': admission.admitting_doctor,
-            'summary': '',  # or some default text
-        }
+    if invoice.invoice_type == "Emergency":
+        messages.error(request, "Emergency patients cannot be discharged from IPD discharge.")
+        return redirect("billing:finalize_invoice", invoice_id=invoice.id)
+
+    form = DischargeReportForm(request.POST or None)
+
+    if request.method == "POST":
+        form = DischargeReportForm(request.POST or None)
+        if form.is_valid():
+
+            with transaction.atomic():
+                discharge_report = form.save(commit=False)
+                discharge_report.doctor = admission.admitting_doctor
+                discharge_report.invoice =invoice
+                discharge_report.patient_admission = admission
+                discharge_report.save()
+
+                admission.discharge_date = timezone.now()
+                admission.status = "Discharged"
+                admission.save(update_fields=["discharge_date", "status"])
+                invoice.update_totals()                 
+
+            return redirect("patients:generate_discharge_pdf", discharge_report.id)
+        else:
+            messages.error(request, "There were form errors. Please correct.")
+    return render(
+        request,
+        "patients/create_discharge_report.html",
+        {
+            "form": form,
+            "admission": admission,
+            "invoice": invoice,
+        },
     )
 
-    form = DischargeReportForm(request.POST or None, instance=discharge_report)
 
-    if form.is_valid():
-        discharge_report = form.save(commit=False)
-        discharge_report.doctor = admission.admitting_doctor  # ensure doctor is set/updated
-        discharge_report.save()
+from billing.models import EmergencyVisit
 
-        admission.discharge_date = timezone.now()
-        admission.status = 'Discharged'
-        admission.save()
+@login_required
+def create_emergency_discharge_report(request, visit_id):
+    emergency_visit = get_object_or_404(EmergencyVisit, id=visit_id)
+    invoice = emergency_visit.invoice
 
-        open_hist = BedAssignmentHistory.objects.filter(
-            patient=admission.patient,
-            released_at__isnull=True
-        ).first()
-        if open_hist:
-            open_hist.released_at = timezone.now()
-            open_hist.save()
-            open_hist.bed.is_occupied = False
-            open_hist.bed.save(update_fields=['is_occupied'])
+    if invoice.status != "Paid":
+        messages.warning(request, "Please collect payment before discharge.")
+        return redirect("billing:finalize_invoice", invoice_id=invoice.id)
 
-        return redirect('patients:generate_discharge_pdf', discharge_report.id)
+    form = DischargeReportForm(request.POST or None)
 
-    return render(request, 'patients/create_discharge_report.html', {'form': form, 'admission': admission})
+    if request.method == "POST":
+        if form.is_valid():
+
+            with transaction.atomic():
+                discharge_report = form.save(commit=False)
+                discharge_report.doctor = emergency_visit.treated_by
+                discharge_report.invoice =invoice
+                discharge_report.patient_emergency = emergency_visit
+                discharge_report.save()
+
+                emergency_visit.status = 'Discharged'
+                emergency_visit.discharge_date = timezone.now()
+                emergency_visit.save(update_fields=["status", "discharge_date"])
+                invoice.update_totals()              
+
+            return redirect("patients:generate_discharge_pdf", discharge_report.id)
+        else:
+            form = DischargeReportForm()
+            messages.error(request, "There were form errors. Please correct.")    
+
+    return render(
+        request,
+        "patients/create_discharge_report.html",
+        {
+            "form": form,
+            "emergency_visit": emergency_visit,
+            "invoice": invoice,
+        },
+    )
 
 
 
@@ -1462,12 +2017,23 @@ def generate_discharge_pdf(request, discharge_report_id):
     spaceAfter = 0,
 )
 
-    story.append(Paragraph("Patient Information", h2))
-    story.append(Paragraph(f"<b>Name:</b> {report.patient_admission.patient.name}", compact))
+    patient_name =None
+    admission_date=None
+    discharge_date=None
+    if report.patient_admission:
+        patient_name = report.patient_admission.patient.name
+        admission_date = report.patient_admission.admission_date
+        discharge_date = report.patient_admission.discharge_date
+    else:
+        patient_name =report.patient_emergency.patient.name
+        admission_date = report.patient_emergency.visit_time
+        discharge_date = report.patient_emergency.discharge_date
+
+    story.append(Paragraph(f"<b>Name:</b> {patient_name}", compact))
     story.append(Paragraph(f"<b>Doctor:</b> {report.doctor.name if report.doctor else 'N/A'}", compact))
-    story.append(Paragraph(f"<b>Admission Date:</b> {report.patient_admission.admission_date:%d %b, %Y}", compact))
-    story.append(Paragraph(f"<b>Discharge Date:</b> {report.patient_admission.discharge_date:%d %b, %Y}", compact))
-    
+    story.append(Paragraph(f"<b>Admission Date:</b> {admission_date:%d %b, %Y}", compact))
+    story.append(Paragraph(f"<b>Discharge Date:</b> {discharge_date:%d %b, %Y}", compact))
+
     story.append(Spacer(1, 0.2*inch))
 
     story.append(Paragraph("Medical Information", h2))
@@ -1498,7 +2064,7 @@ def generate_discharge_pdf(request, discharge_report_id):
         story.append(Spacer(1, 0.2*inch))
    
 
-    qr_data = f"Discharge Report for {report.patient_admission.patient.name}"
+    qr_data = f"Discharge Report for {patient_name}"
     qr_buf  = generate_qr_code_discharge_report(qr_data)
     qr_img  = Image(qr_buf, width=inch, height=inch)
 
@@ -1532,3 +2098,43 @@ def generate_discharge_pdf(request, discharge_report_id):
 
 
 
+
+
+
+
+
+
+@login_required
+def patient_history(request, invoice_id):
+    invoice = get_object_or_404(BillingInvoice, id=invoice_id)
+    patient = invoice.patient
+    medical_record = invoice.medical_record
+    prescription_urls = []
+    lab_report_urls = [] 
+
+    if medical_record:
+        prescriptions = medical_record.prescriptions.all().order_by('-id')  
+   
+        for pres in prescriptions:
+            prescription_urls.append({
+                'id': pres.id,
+                'url': reverse('patients:print_prescription', args=[pres.id]),
+                'date': pres.created_at
+            })
+
+        lab_orders = medical_record.test_results.all().order_by('-id')   
+        for order in lab_orders:
+            lab_report_urls.append({
+                'id': order.id,
+                'url': reverse('lab_tests:final_lab_report', args=[order.id]),
+                'date': order.recorded_at
+            })
+
+    context = {
+        'invoice': invoice,
+        'patient': patient,
+        'prescription_urls': prescription_urls,
+        'lab_report_urls': lab_report_urls,
+        'medical_record':medical_record
+    }
+    return render(request, 'patients/patient_history.html', context)

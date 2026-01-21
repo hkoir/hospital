@@ -2,33 +2,15 @@
 {% load custom_filters %}
 {% load static %}
 
+
+
 {% block content %}
+
+
+{% include "inventory/inventory_quick_access_link.html" %}
+
 <div class="container">
     
-     <div class="container-fluid main-content py-4 d-flex justify-content-center gap-2 flex-wrap">
-    <a href=" {% url 'inventory:pending_medicine_deliveries' %} "
-    class="btn btn-sm btn-warning">Pending Medicine delivery</a>
-
-    <a href=" {% url 'inventory:inventory_transaction_view' %} "
-    class="btn btn-sm btn-warning">Add/Purchase medicine</a>
-
-        <a href=" {% url 'inventory:product_list' %} "
-    class="btn btn-sm btn-warning">Product list</a>
-
-            <a href=" {% url 'inventory:product_dashboard' %} "
-    class="btn btn-sm btn-warning">Product Dashboard</a>
-
-      <a href=" {% url 'inventory:inventory_dashboard' %} "
-    class="btn btn-sm btn-warning">Inventory dashboard</a>
-
-       <a href=" {% url 'inventory:create_category' %} "
-    class="btn btn-sm btn-primary">add category</a>
-    <a href=" {% url 'inventory:create_product' %} "
-    class="btn btn-sm btn-primary">manage Items</a>
-       <a href=" {% url 'inventory:create_batch' %} "
-    class="btn btn-sm btn-primary">manage Batch</a>
-
-    </div>
 
     <!-- Error Handling -->
     {% if lab_visit_form.errors %}
@@ -45,13 +27,15 @@
     </div>
     {% endif %}
 
-    <form id="medicine-sale-form" method="post" enctype="multipart/form-data">
+
+
+
+<form id="medicine-sale-form" method="post" enctype="multipart/form-data">
         {% csrf_token %}
         {{ formset.management_form }}
         <div class="row">
-            
             <!-- Medicine Sale Details -->
-            <div class="col-12">
+            <div class="col-12 col-md-5">
                 <div class="card shadow-lg border-0 mb-4">
                     <div class="card-header bg-primary text-white text-center">
                         <h4>Medicine Sale Only</h4>
@@ -59,15 +43,41 @@
                     <div class="card-body">
                         <div class="row">
                             {% for field in lab_visit_form %}
-                            <div class="col-12 col-md-4 mb-3">
-                                <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
-                                {{ field }}
-                                {% if field.errors %}
-                                <div class="text-danger small mt-1">
-                                    {{ field.errors|striptags }}
+                                <div class="col-12 col-md-6 mb-3">
+                                    <label for="{{ field.id_for_label }}" class="form-label">{{ field.label }}</label>
+                                    {% if field.name == 'prescription_file' %}
+                                    <div class="col-12 col-md-6 mb-3">
+
+                                        <!-- File input fallback -->
+                                        <input type="file" id="prescription_file_input" name="prescription_file" accept="image/*" capture="environment" class="form-control mb-2">
+
+                                        <!-- Open Camera Button -->
+                                        <button type="button" id="open_camera_btn" class="btn btn-primary mb-2">Open Camera</button>
+
+                                        <!-- Live preview -->
+                                        <video id="camera_preview" autoplay playsinline style="display:none; width:100%; max-height:300px; border:1px solid #ccc;"></video>
+                                        <canvas id="capture_canvas" style="display:none;"></canvas>
+
+                                        <!-- Capture button -->
+                                        <button type="button" id="capture_button" class="btn btn-success mt-2" style="display:none;">Capture Photo</button>
+
+                                        <!-- Preview image -->
+                                        <img id="preview_image" style="display:none; width:100%; max-height:300px; margin-top:10px; border:1px solid #ccc;">
+                                        <input type="hidden" name="prescription_image_base64" id="prescription_image_base64">
+
+                                    </div>
+
+
+                                    {% else %}
+                                   
+                                    {{ field|add_class:"form-control" }}
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="text-danger small mt-1">
+                                            {{ field.errors|striptags }}
+                                        </div>
+                                    {% endif %}
                                 </div>
-                                {% endif %}
-                            </div>
                             {% endfor %}
                         </div>
                     </div>
@@ -75,57 +85,55 @@
             </div>
 
             <!-- Medicine Selection -->
-            <div class="col-12">
+            <div class="col-12 col-md-7">
                 <div class="card shadow-lg border-0 mb-4">
                     <div class="card-header bg-primary text-white text-center">
                         <h4>Medicines</h4>
                     </div>
                     <div class="card-body">
-                        <div class="table-responsive">
-                            <table class="table table-bordered align-middle" id="formset_table">
-                                <thead class="table-light">
-                                    <tr>
-                                        <th>Medicine</th>
-                                        <th>Batch</th>
-                                        <th>Quantity</th>
-                                        <th>Subtotal</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    {% for form in formset %}
+			<div class="table-responsive">
+                        <table class="table" id="formset_table" style="width:900px">
+                            <thead>
+                                <tr>
+                                    <th>Category</th>
+                                    <th>Medicine</th>
+                                     <th style="width:200px">Batch</th>
+                                    <th>Quantity</th>
+                                    <th>Subtotal</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for form in formset %}
                                     <tr class="formset_row">
                                         {{ form.id }}
-                                        {{ form.DELETE }}
-                                        <td>{{ form.medicine|add_class:'form-control' }}</td>
-                                        <td>{{ form.batch|add_class:'form-control' }}</td>
+                                        <div style="display: none;">{{ form.DELETE }}</div>
+                                       <td>{{ form.category|add_class:'form-control category-select' }}</td>
+                                        <td>{{ form.medicine|add_class:'form-control medicine-select' }}</td>
+					<td>{{ form.batch|add_class:'form-control batch-select' }}</td>
                                         <td>{{ form.quantity }}</td>
                                         <td class="subtotal">0.00</td>
                                         <td>
-                                            <button type="button" class="remove-form-btn btn btn-danger btn-sm">
-                                                Remove
-                                            </button>
+                                            <button type="button" class="remove-form-btn btn btn-danger btn-sm">Remove</button>
                                         </td>
                                     </tr>
-                                    {% endfor %}
-                                </tbody>
-                            </table>
-
-                        </div>
-
-                        <button type="button" id="add-form-btn" class="btn btn-primary mt-2">
-                            Add Another Medicine
-                        </button>
-                         <button type="submit" class="btn btn-success px-5">Submit</button>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        <button type="button" id="add-form-btn" class="btn btn-primary mt-2">Add Another Medicine</button>
 
                         <div class="mt-3">
                             <p>Total Estimated Cost: <strong id="total_cost">0.00</strong></p>
                         </div>
+			</div>
                     </div>
                 </div>
             </div>
 
-            
+            <!-- Submit Button -->
+            <div class="text-center">
+                <button type="submit" class="btn btn-success px-5">Submit</button>
+            </div>
         </div>
     </form>
 
@@ -134,46 +142,189 @@
         <table>
             <tr class="formset_row">
                 {{ formset.empty_form.id }}
-                {{ formset.empty_form.DELETE }}
-                <td>{{ formset.empty_form.medicine|add_class:'form-control' }}</td>
-                <td>{{ formset.empty_form.batch|add_class:'form-control' }}</td>
+               <div style="display: none;">{{ formset.empty_form.DELETE }}</div>
+                <td>{{ formset.empty_form.category|add_class:'form-control category-select' }}</td>
+                <td>{{ formset.empty_form.medicine|add_class:'form-control medicine-select' }}</td>
+                <td>{{ formset.empty_form.batch|add_class:'form-control batch-select' }}</td>
+
                 <td>{{ formset.empty_form.quantity }}</td>
                 <td class="subtotal">0.00</td>
                 <td>
                     <button type="button" class="remove-form-btn btn btn-danger btn-sm">Remove</button>
                 </td>
             </tr>
-
         </table>
     </div>
 </div>
 
-<script>
-document.addEventListener('DOMContentLoaded', function() {
-    const medicinePrices = JSON.parse('{{ medicine_prices|escapejs }}');
-    const addBtn = document.getElementById('add-form-btn');
-    const formsetTable = document.getElementById('formset_table');
-    const totalForms = document.querySelector('#id_form-TOTAL_FORMS');
 
-    function updateSubtotalsAndTotal() {
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const openCameraBtn = document.getElementById("open_camera_btn");
+    const video = document.getElementById("camera_preview");
+    const canvas = document.getElementById("capture_canvas");
+    const captureBtn = document.getElementById("capture_button");
+    const previewImg = document.getElementById("preview_image");
+    const fileInput = document.getElementById("prescription_file_input");
+    let stream = null;
+
+    openCameraBtn.addEventListener("click", function() {
+        previewImg.style.display = "none";
+        canvas.style.display = "none";
+
+        if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+            alert("Camera not supported on this device.");
+            return;
+        }
+
+        openCameraBtn.style.display = "none";
+        video.style.display = "block";
+        captureBtn.style.display = "inline-block";
+
+        navigator.mediaDevices.getUserMedia({ video: { facingMode: "environment" } })
+            .then(function(s) {
+                stream = s;
+                video.srcObject = stream;
+            })
+            .catch(function(err) {
+                console.log("Webcam error: ", err);
+                alert("Cannot access camera.");
+                openCameraBtn.style.display = "inline-block";
+                video.style.display = "none";
+                captureBtn.style.display = "none";
+            });
+    });
+
+    captureBtn.addEventListener("click", function() {
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        // Stop camera
+        if (stream) {
+            stream.getTracks().forEach(track => track.stop());
+        }
+        video.style.display = "none";
+        captureBtn.style.display = "none";
+
+        const dataUrl = canvas.toDataURL("image/png");
+        document.getElementById("prescription_image_base64").value = dataUrl;
+
+        // Show preview
+        previewImg.src = dataUrl;
+        previewImg.style.display = "block";
+
+        // Assign file to input for form submission
+        fetch(dataUrl)
+            .then(res => res.blob())
+            .then(blob => {
+                const file = new File([blob], "prescription.png", { type: "image/png" });
+                const dt = new DataTransfer();
+                dt.items.add(file);
+                fileInput.files = dt.files;
+            });
+
+        // Show "Retake" button
+        openCameraBtn.textContent = "Retake Photo";
+        openCameraBtn.style.display = "inline-block";
+    });
+});
+</script>
+
+
+
+
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+
+    const formsetTable = document.getElementById('formset_table');
+    const addBtn = document.getElementById('add-form-btn');
+    const totalForms = document.querySelector('#id_form-TOTAL_FORMS');
+    const medicinePrices = JSON.parse('{{ medicine_prices|escapejs }}');
+
+    // Initialize AJAX filtering on a single row
+    function initRow(row) {
+        const category = row.querySelector('.category-select');
+        const medicine = row.querySelector('.medicine-select');
+        const batch = row.querySelector('.batch-select');
+        const quantityInput = row.querySelector('input[name$="-quantity"]');
+        const subtotalCell = row.querySelector('.subtotal');
+
+        if (!category || !medicine || !batch) return;
+
+        // Category → Medicine AJAX
+        category.addEventListener('change', function() {
+            const categoryId = category.value;
+            medicine.innerHTML = '<option value="">---------</option>';
+            batch.innerHTML = '<option value="">---------</option>';
+
+            if (!categoryId) return;
+
+            fetch(`/inventory/ajax/medicines/${categoryId}/`)
+                .then(res => res.json())
+                .then(data => {
+                    data.forEach(med => {
+                        const opt = document.createElement('option');
+                        opt.value = med.id;
+                        opt.text = med.name;
+                        medicine.add(opt);
+                    });
+                });
+            updateSubtotal();
+        });
+
+        // Medicine → Batch AJAX
+        medicine.addEventListener('change', function() {
+            const medicineId = medicine.value;
+            batch.innerHTML = '<option value="">---------</option>';
+
+            if (!medicineId) return;
+
+            fetch(`/inventory/ajax/batches/${medicineId}/`)
+                .then(res => res.json())
+                .then(data => {
+                    data.forEach(b => {
+                        const opt = document.createElement('option');
+                        opt.value = b.id;                     
+                        opt.text = `${b.product_name} - Remaining: ${b.remaining_quantity}`;
+                        batch.add(opt);
+                    });
+                });
+            updateSubtotal();
+        });
+
+        // Quantity input change
+        if (quantityInput) {
+            quantityInput.addEventListener('input', updateSubtotal);
+        }
+
+        function updateSubtotal() {
+            const selectedBatch = batch.value;
+            const quantity = parseFloat(quantityInput.value) || 0;
+            const price = parseFloat(medicinePrices[selectedBatch] || 0);
+            subtotalCell.textContent = (quantity * price).toFixed(2);
+            updateTotalCost();
+        }
+    }
+
+    // Update total cost for all rows
+    function updateTotalCost() {
         let total = 0;
         document.querySelectorAll('.formset_row').forEach(row => {
-            const medicineSelect = row.querySelector('select[name$="-batch"]');
-            const quantityInput = row.querySelector('input[name$="-quantity"]');
-            const subtotalCell = row.querySelector('.subtotal');
-
-            if (medicineSelect && quantityInput && subtotalCell) {
-                const selectedId = medicineSelect.value;
-                const quantity = parseFloat(quantityInput.value) || 0;
-                const pricePerUnit = parseFloat(medicinePrices[selectedId]) || 0;
-                const subtotal = pricePerUnit * quantity;
-                subtotalCell.textContent = subtotal.toFixed(2);
-                total += subtotal;
-            }
+            const subtotal = parseFloat(row.querySelector('.subtotal').textContent) || 0;
+            total += subtotal;
         });
         document.getElementById('total_cost').textContent = total.toFixed(2);
     }
 
+    // Initialize all existing rows
+    document.querySelectorAll('.formset_row').forEach(initRow);
+
+    // Add new row
     addBtn.addEventListener('click', function() {
         const currentFormCount = parseInt(totalForms.value);
         const emptyFormHtml = document.getElementById('empty-form').querySelector('tr').outerHTML;
@@ -181,27 +332,32 @@ document.addEventListener('DOMContentLoaded', function() {
         const tempDiv = document.createElement('tbody');
         tempDiv.innerHTML = newRowHtml;
         const newRow = tempDiv.firstElementChild;
+
         formsetTable.querySelector('tbody').appendChild(newRow);
         totalForms.value = currentFormCount + 1;
-        updateSubtotalsAndTotal();
+
+        initRow(newRow); // **Initialize AJAX & subtotal on new row**
     });
 
-    formsetTable.addEventListener('input', function(e) {
-        if (e.target && (e.target.name.includes('-batch') || e.target.name.includes('-quantity'))) {
-            updateSubtotalsAndTotal();
-        }
-    });
-
+    // Remove row
     formsetTable.addEventListener('click', function(e) {
         if (e.target && e.target.classList.contains('remove-form-btn')) {
             const row = e.target.closest('.formset_row');
-            row.remove();
-            totalForms.value = formsetTable.querySelectorAll('.formset_row').length;
-            updateSubtotalsAndTotal();
+            if (row) row.remove();
+            const updatedCount = formsetTable.querySelectorAll('.formset_row').length;
+            totalForms.value = updatedCount;
+            updateTotalCost();
         }
     });
 
-    updateSubtotalsAndTotal();
+    // Initial total calculation
+    updateTotalCost();
+
 });
 </script>
+
+
+
+
+
 {% endblock %}

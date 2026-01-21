@@ -1,6 +1,10 @@
 
+
+
 {% extends "base.html" %}
 {% load static %}
+
+{% load custom_filters %}
 
 {% block content %}
 
@@ -14,16 +18,35 @@
                         <h3 class="mb-0">{% if instance %} Update Doctor enrollment {% else %} Create new doctor enrollment {% endif %}</h3>
                         
                     </div>
-                    <div class="card-body p-4">
-                        <form method="POST" enctype="multipart/form-data">
-                            {% csrf_token %}
+            <div class="card-body p-4">
+                <form method="POST" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                <!-- User registration section -->
+                <div class="mb-4 p-3 border rounded bg-light">
+                    <h4 class="text-dark">User creation form</h4>
+                    <div class="row">
+                        {% for field in form %}
+                            {% if field.name|in_list:"username,password,phone_number,email" %}
+                                <div class="col-md-3">
+                                    {{ field.label_tag }}
+                                    {{ field }}
+                                    {% if field.errors %}
+                                        <div class="text-danger">{{ field.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endif %}
+                        {% endfor %}
+                    </div>
+                </div>
+
                                     
                     <!-- General Employee Details Section -->
                         <div class="mb-4 p-3 border rounded bg-light">
                             <h4 class="text-dark">General Employee Details</h4>
                             <div class="row">
                                 {% for field in form %}
-                                    {% if field.name not in "consultation_fees,education,experience_years,specialization,medical_license_number,description,start_time,end_time,hospital_affiliations,memberships,awards" %}
+                                    {% if field.name not in "consultation_fees,education,experience_years,specialization,medical_license_number,description,start_time,end_time,hospital_affiliations,memberships,awards,username,password,phone_number,email" %}
                                         <div class="col-md-3">
                                             {% if field.field.widget.input_type == 'checkbox' %}
                                                 <div class="form-check mt-2">

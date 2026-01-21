@@ -1,0 +1,225 @@
+
+{% extends 'base_print.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+
+<style>
+@media print {
+    html, body {
+        margin: 0 !important;
+        padding: 0 !important;
+        width: 100% !important;
+    }
+
+    .invoice-wrapper {
+        width: 100% !important;
+        margin: 0 !important;
+        padding: 0 !important; /* use only minimal padding */
+        box-sizing: border-box;
+    }
+
+    table {
+        width: 100% !important;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        page-break-inside: avoid;
+    }
+
+    .btn, .no-print {
+        display: none !important;
+    }
+
+    @page {
+        size: A4 portrait;  /* or landscape if needed */
+        margin: 0 !important;
+    }
+}
+
+
+.invoice-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.invoice-header .company-logo img,
+.invoice-header .customer-logo img {
+    max-height: 80px;
+}
+
+.invoice-title {
+    text-align: center;
+    font-size: 30px;
+    font-weight: bold;
+    letter-spacing: 2px;
+    color: #333;
+  
+}
+
+.invoice-info {
+    margin-bottom: 10px;
+}
+
+table, th, td {
+    text-align: center;      /* horizontal centering */
+    vertical-align: middle;  /* vertical centering */
+}
+
+.table td.text-start { text-align: left; } /* for description column */
+</style>
+
+
+
+
+
+
+{% include 'purchase/quick_access_link.html' %}
+
+<div class="container">
+
+    <!-- Big Invoice Heading -->
+    <div class="invoice-title">PURCHASE</div>
+
+    <!-- Header with Company & Customer Logos -->
+    <div class="invoice-header">
+        <div class="company-logo">
+            <img src="{{ company.logo.url }}" alt="Company Logo">
+            <p>
+                <strong>{{ company.name }}</strong><br>
+                {{ company.company_locations.first.address }}<br>
+                {{ company.email }} | {{ company.phone }} | {{ company.website }}
+            </p>
+        </div>
+
+        {% if supplier and supplier.logo %}
+
+        <div class="supplier-logo text-end">
+            <img src="{{ supplier.logo.url }}" alt="Customer Logo"
+            style="width:80px;height:80px"><br>
+             <strong>{{ supplier.name }}</strong>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Invoice Info -->
+    <div class="invoice-info row">
+        <div class="col-md-6">
+            <h5><strong>PO T0:</strong> {{ supplier.name }}</h5>
+            {% if supplier %}
+            <p>
+                {{ supplier.contact_person }}<br>
+                {{ supplier.email }}<br>
+                {{ supplier.phone }}<br>
+                {{ supplier.website }}
+            </p>
+            {% endif %}
+            <p>
+                <strong>Invoice Date:</strong> {{ invoice.created_at|date:"d M Y" }}<br>
+                <strong>Due Date:</strong> {{ invoice.due_date|date:"d M Y" }}
+            </p>
+        </div>
+        <div class="col-md-6 text-end">
+            <p>
+                <strong>Invoice Number:</strong> {{ invoice.invoice_number }}<br>
+                <strong>Created by:</strong> {{ invoice.user.get_full_name|default:invoice.user.username }}
+            </p>
+        </div>
+    </div>
+
+    <hr>
+
+    <!-- Invoice Items Table -->
+    <table class="table table-bordered align-middle text-center">
+        <thead class="table-dark">
+            <tr>
+                <th>#</th>
+                <th>Item</th>
+                <th>Description</th>
+                <th>Qty</th>
+                <th>Unit Price</th>
+                <th>Total(Including VAT)</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in items %}
+            <tr>
+                <td>{{ forloop.counter }}</td>
+                <td>{{ item.item }}</td>
+                <td class="text-start">{{ item.description }}</td>
+                <td>{{ item.quantity }}</td>
+                <td class="text-end">{{ item.unit_price|floatformat:2 }}</td>
+                <td class="text-end fw-bold">{{ item.total_amount|floatformat:2 }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Totals -->
+    <div class="row mt-4">
+        <div class="col-md-6">
+            <strong>Total in Words:</strong> {{ total_in_words }}<br><br>
+            <p><strong>Notes:</strong><br>{{ invoice.notes|default:"No additional notes." }}</p>
+        </div>
+        <div class="col-md-6 text-end">
+            <p>
+                <strong>Subtotal:</strong> {{ invoice.total_amount|floatformat:2 }}<br>
+                <strong>Advance amount:</strong> {{ invoice.advance_amount|floatformat:2|add_commas }}<br>
+                <strong>Discount:</strong> {{ invoice.discount_amount|floatformat:2|add_commas }}
+            </p>
+            <h4 class="fw-bold text-success">Final Amount: {{ invoice.final_amount|floatformat:2|add_commas }}</h4>
+        </div>
+    </div>
+
+    <!-- Terms & Conditions -->
+  
+    <div class="row mt-3">
+        <div class="col-md-12">
+            <p><strong>Terms & Conditions:</strong></p>
+
+            {% if invoice.terms_and_conditions %}
+                <p>{{ invoice.terms_and_conditions|linebreaks }}</p>
+            {% else %}
+                <p>No terms & conditions provided.</p>
+            {% endif %}
+        </div>
+    </div>
+
+
+    <!-- Signature & QR -->
+    <div class="row mt-5 align-items-center">
+        <div class="col-md-6 text-start">
+            {% if signature_url %}
+            <p><strong>Authorized Signature:</strong></p>
+            <img src="{{ signature_url }}" alt="Signature" style="max-height: 80px;">
+            {% endif %}
+        </div>
+        <div class="col-md-6 text-end">
+            {% if qr_code_url %}
+            <p><strong>Verify Invoice:</strong></p>
+            <img src="{{ qr_code_url }}" alt="QR Code" style="max-height: 100px;">
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Print & Back -->
+    <div class="d-flex justify-content-between mb-4 mt-4">
+        {% if invoice.status == 'DRAFT' %}
+        <form method="post" action="{% url 'purchase:confirm_direct_purchase_invoice' invoice.id %}">
+            {% csrf_token %}
+            <button class="btn btn-success">✅ Confirm Invoice & Update Stock</button>
+        </form>
+        {% else %}
+        <p>Status: {{ invoice.get_status_display }}</p>
+        {% endif %}
+
+        <a href="{% url 'purchase:direct_purchase_invoice_list' %}" class="btn btn-secondary">← Back to List</a>
+        <button class="btn btn-primary" onclick="window.print()">🖨 Print / Save PDF</button>
+    </div>
+
+</div>
+
+{% endblock %}

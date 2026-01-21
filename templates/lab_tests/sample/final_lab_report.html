@@ -1,0 +1,269 @@
+
+
+{% load static %}
+<!DOCTYPE html>
+<html>
+<head>
+<title>Lab Report - {{ order.lab_test_result_oder_code }}</title>
+
+<style>
+/* Page */
+body {
+    font-family: "Segoe UI", Arial, sans-serif;
+    margin: 28px;
+    color: #222;
+    background: #fff;
+}
+
+/* Header */
+.header-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #065ad8;
+    padding-bottom: 10px;
+    margin-bottom: 14px;
+}
+
+.header-title h2 {
+    font-size: 22px;
+    margin: 0;
+    color: #065ad8;
+}
+.header-title h4 {
+    margin: 4px 0 0 0;
+    color: #444;
+    font-weight: 500;
+}
+
+/* Patient info container: left = compact info, right = QR */
+.patient-qr-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    margin-bottom: 14px;
+}
+
+/* Compact Patient Info (left) */
+.compact-info {
+    flex: 1 1 auto;                 /* occupy remaining width */
+    min-width: 0;                   /* allow shrinking */
+    border: 1px solid #dcdcdc;
+    border-radius: 6px;
+    padding: 10px 12px;
+    background: #f9fbff;
+    font-size: 13.5px;
+    box-shadow: 0 0 0 1px rgba(6,90,216,0.02) inset;
+}
+
+.compact-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 14px;
+    align-items: center;
+}
+
+.compact-label {
+    color: #333;
+    font-weight: 600;
+    font-size: 13px;
+}
+.compact-value {
+    color: #222;
+    font-size: 13px;
+}
+
+/* QR box (right) positioned at right edge of patient info */
+.qr-edge {
+    width: 124px;
+    flex: 0 0 124px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+}
+.qr-box {
+    border: 1px solid #d7dbe0;
+    padding: 6px;
+    border-radius: 6px;
+    background: #fff;
+    text-align: center;
+    width: 110px;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+.qr-box img {
+    width: 100%;
+    height: auto;
+    display:block;
+}
+
+/* Section title */
+.section-title {
+    font-size: 16.5px;
+    font-weight: 700;
+    color: #065ad8;
+    margin: 18px 0 10px 0;
+}
+
+/* Results table - larger, readable */
+.table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 6px;
+    font-size: 14px;
+}
+.table th, .table td {
+    border: 1px solid #d0d6df;
+    padding: 9px 10px;
+    text-align: left;
+    vertical-align: middle;
+}
+.table th {
+    background: #f3f7fb;
+    font-weight: 700;
+}
+
+/* Summary & auth boxes */
+.summary {
+    margin-top: 14px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.auth-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 12px;
+}
+.auth-table td {
+    padding: 8px 6px;
+    font-size: 13.5px;
+}
+
+/* Print button */
+.print-btn { margin-bottom: 12px; }
+
+/* Print adjustments */
+@media print {
+    .print-btn { display: none; }
+    body { margin: 0; }
+    .header-container { border-bottom-color: #000; }
+}
+</style>
+</head>
+
+<body>
+
+<!-- PRINT BUTTON -->
+<div class="print-btn">
+    <button onclick="window.print()"
+        style="padding:8px 16px; background:#065ad8; color:white; border:none; border-radius:6px; font-size:14px;">
+        Print
+    </button>
+</div>
+
+<!-- HEADER -->
+<div class="header-container">
+    <div class="header-title">
+        <h2>LABORATORY TEST REPORT</h2>
+        <h4>Report No: {{ order.lab_test_result_oder_code }}</h4>
+    </div>
+
+    <!-- small right header area for optional logo / tenant name -->
+    <div style="text-align:right;">
+        {% if request.tenant.name %}
+            <div style="font-weight:600;">{{ request.tenant.name }}</div>
+            {% if tenant.address %}<div style="font-size:12px;color:#555;">{{ tenant.address }}</div>{% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Patient info row with QR at right edge -->
+<div class="patient-qr-row">
+
+    <!-- Compact patient info (left) -->
+    <div class="compact-info">
+        <div style="display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:6px;">
+            <div style="font-weight:700; font-size:15px;">{{ order.medical_record.patient.name }}</div>
+            <div style="font-size:12px; color:#2105ef;font-weight: bold;">Report: {{ order.lab_test_result_oder_code }}</div>
+        </div>
+
+        <div class="compact-grid">
+            <div class="compact-label">Patient ID</div>
+            <div class="compact-value">{{ order.medical_record.patient.patient_id }}</div>
+
+            <div class="compact-label">Gender</div>
+            <div class="compact-value">{{ order.medical_record.patient.gender }}</div>
+
+            <div class="compact-label">DOB</div>
+            <div class="compact-value">{{ order.medical_record.patient.date_of_birth }}</div>
+
+            <div class="compact-label">Ref. Doctor</div>
+            <div class="compact-value">{{ order.test_doctor|default:"-" }}</div>
+
+            <div class="compact-label">Report Date</div>
+            <div class="compact-value">{{ order.recorded_at|date:"d M Y, h:i A" }}</div>
+
+            <div class="compact-label">Status</div>
+            <div class="compact-value">{{ order.status }}</div>
+        </div>
+    </div>
+
+    <!-- QR placed at right edge of patient info -->
+    <div class="qr-edge">
+        <div class="qr-box" title="Scan to verify">
+            <div style="font-size:12px; color:#059e08;font-weight:800; margin-bottom:6px;">Scan to Verify</div>
+            {% if order.qr_code %}
+                <img src="{{ order.qr_code.url }}" alt="QR Code">
+            {% else %}
+                <div style="font-size:12px; color:#888;">No QR</div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Results -->
+<div class="section-title">Test Results</div>
+
+<table class="table">
+    <thead>
+        <tr>
+            <th style="width:30%;">Test Name</th>
+            <th style="width:15%;">Result</th>
+            <th style="width:15%;">Standard Value</th>
+            <th style="width:45%;">Findings</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item in results %}
+        <tr>
+            <td>{{ item.test_name }}</td>
+            <td>{{ item.test_value|default:"-" }}</td>
+            <td>{{ item.standard_value|default:"-" }}</td>
+            <td>{{ item.findings|default:"-" }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<!-- Summary -->
+{% if order.summary_report %}
+<div class="section-title">Summary / Conclusion</div>
+<div class="summary">
+    {{ order.summary_report }}
+</div>
+{% endif %}
+
+<!-- Authorization -->
+<div class="section-title">Authorization</div>
+<table class="auth-table">
+    <tr>
+        <td style="font-weight:700; width:160px;">Reviewed By:</td>
+        <td>{{ order.reviewed_by|default:"-" }}</td>
+    </tr>
+    <tr>
+        <td style="font-weight:700;">Approved By:</td>
+        <td>{{ order.approved_by|default:"-" }}</td>
+    </tr>
+</table>
+
+</body>
+</html>

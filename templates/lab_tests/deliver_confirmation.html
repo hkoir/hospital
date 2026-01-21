@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-warning text-dark">
+            <h5 class="mb-0">⚠ Confirm Lab Test Delivery</h5>
+        </div>
+
+        <div class="card-body">
+            <p class="fs-5">
+                Before completing the delivery, please verify the following:
+            </p>
+
+            <form method="POST">
+                {% csrf_token %}
+
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" required>
+                    <label class="form-check-label fw-bold">
+                        All test values are entered and reviewed.
+                    </label>
+                </div>
+
+                <div class="form-check mb-2">
+                    <input class="form-check-input" type="checkbox" required>
+                    <label class="form-check-label fw-bold">
+                        Summary report is verified.
+                    </label>
+                </div>
+
+                <div class="form-check mb-3">
+                    <input class="form-check-input" type="checkbox" required>
+                    <label class="form-check-label fw-bold">
+                        Printed report has been handed to patient/relative.
+                    </label>
+                </div>
+
+                <div class="alert alert-danger">
+                    <strong>Warning:</strong> Once delivered, you cannot edit the results.
+                </div>
+
+                <button type="submit" class="btn btn-success">
+                    ✔ Confirm Delivery
+                </button>
+                <a href="{% url 'lab_tests:lab_test_status_list' %}" class="btn btn-secondary">
+                    Cancel
+                </a>
+
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

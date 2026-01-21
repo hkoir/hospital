@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+	 {% if patient.get_current_bed %}
+            <h5 class="mb-0">Change Bed</h5>   
+            {% else %}       
+            <h5 class="mb-0">Assign Bed</h5>  
+            {% endif %}   
+        </div>
+        <div class="card-body">
+
+	   <p><strong>Patient:</strong> {{ patient.name }} |  {{ patient.patient_id }}<br>
+                <strong>Doctor:</strong> {{ invoice.medical_record.doctor.name }} |  {{ invoice.medical_record.doctor.specialization }}<br>
+          
+                 {% if invoice %}
+                 <strong>Invoice #:</strong> {{ invoice.invoice_id }} | Type: {{ invoice.invoice_type }}<br>
+                    {% endif %}
+                    {% if visit %}
+                <strong>Emergency Visit:</strong> {{ visit.id }} | Time: {{ visit.visit_time }}<br>
+                 {% endif %}
+                <Strong>Date:</Strong>{{ invoice.created_at }}
+		 <strong>Current Bed:</strong>  {{ patient.get_current_bed.bed }} | {{ patient.get_current_bed.bed.room }}| {{ patient.get_current_bed.bed.ward }}
+            </p>
+                
+	
+            <a href="{% url 'facilities:ward_room_bed_status' %}" class="btn btn-sm btn-outline-success my-4">Check beds status</a>
+
+            <form method="post" class="my-4">
+                {% csrf_token %}
+
+		<div class="row">
+                 <!-- Ward -->
+                <div class="col-6 col-md-4 mb-3">
+                    <label class="form-label">Select Ward</label>
+                    <select id="ward" class="form-select" required>
+                        <option value="">-- Select Ward --</option>
+                        {% for ward in wards %}
+                        <option value="{{ ward.id }}">{{ ward.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Room (dynamic) -->
+                 <div class="col-6 col-md-4 mb-3">
+                    <label class="form-label">Select Room</label>
+                    <select id="room" class="form-select" required>
+                        <option value="">-- Select Ward First --</option>
+                    </select>
+                </div>
+
+                <!-- Bed (dynamic) -->
+                 <div class="col-6 col-md-4 mb-3">
+                    <label class="form-label">Select Bed</label>
+                    <select name="bed" id="bed" class="form-select" required>
+                        <option value="">-- Select Room First --</option>
+                    </select>
+                </div>
+            </div>
+
+                <button type="submit" class="btn btn-success">Submit</button>
+                <a href="{% if invoice %}{% url 'billing:finalize_invoice' invoice.id %}{% else %}#{% endif %}" class="btn btn-secondary ms-2">Cancel</a>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<script>
+document.getElementById("ward").addEventListener("change", function() {
+    let wardId = this.value;
+    let roomSelect = document.getElementById("room");
+    let bedSelect = document.getElementById("bed");
+
+    roomSelect.innerHTML = '<option value="">Loading...</option>';
+    bedSelect.innerHTML = '<option value="">Select Room First</option>';
+
+    fetch(`/facilities/ajax/get-rooms/?ward_id=${wardId}`)
+        .then(response => response.json())
+        .then(data => {
+            roomSelect.innerHTML = '<option value="">-- Select Room --</option>';
+            data.rooms.forEach(room => {
+                roomSelect.innerHTML += `<option value="${room.id}">Room: ${room.number}</option>`;
+            });
+        });
+});
+
+document.getElementById("room").addEventListener("change", function() {
+    let roomId = this.value;
+    let bedSelect = document.getElementById("bed");
+
+    bedSelect.innerHTML = '<option value="">Loading...</option>';
+
+    fetch(`/facilities/ajax/get-beds/?room_id=${roomId}`)
+        .then(response => response.json())
+        .then(data => {
+            bedSelect.innerHTML = '<option value="">-- Select Bed --</option>';
+            data.beds.forEach(bed => {
+                bedSelect.innerHTML += `
+                    <option value="${bed.id}">
+                        Bed: ${bed.bed_number} (${bed.charge_type}: ${bed.charge})
+                    </option>`;
+            });
+        });
+});
+</script>
+
+
+
+{% endblock %}

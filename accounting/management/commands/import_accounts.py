@@ -18,6 +18,7 @@ class Command(BaseCommand):
         file_path = kwargs["csv_file"]
         tenant_id = kwargs["tenant_id"]
 
+        # Get tenant
         try:
             tenant = Client.objects.get(id=tenant_id)
         except Client.DoesNotExist:
@@ -25,11 +26,22 @@ class Command(BaseCommand):
             return
 
         self.stdout.write(f"Importing accounts for tenant: {tenant.name} ({tenant.schema_name})")
-        
-        # Read CSV into memory
+
+        # Read CSV
         try:
             with open(file_path, newline="", encoding="utf-8") as csvfile:
-                reader = list(csv.DictReader(csvfile))
+                csv_reader = csv.reader(csvfile)
+                reader = []
+                headers = ['code', 'name', 'type', 'parent']
+
+                for row in csv_reader:
+                    # skip empty rows
+                    if not row or all(not cell.strip() for cell in row):
+                        continue
+                    # pad row to 4 columns
+                    while len(row) < 4:
+                        row.append('')
+                    reader.append(dict(zip(headers, row)))
         except FileNotFoundError:
             self.stdout.write(self.style.ERROR(f"CSV file not found: {file_path}"))
             return
@@ -38,6 +50,7 @@ class Command(BaseCommand):
             self.stdout.write(self.style.WARNING("CSV file is empty"))
             return
 
+        # Switch to tenant schema
         with schema_context(tenant.schema_name):
             accounts_map = {}
 
@@ -78,7 +91,7 @@ class Command(BaseCommand):
 
                     if acc and parent and acc.parent != parent:
                         acc.parent = parent
-                        acc.save()
+                        acc.save(update_fields=['parent'])
                         self.stdout.write(self.style.SUCCESS(f"Assigned parent {parent_code} to {code}"))
 
         self.stdout.write(self.style.SUCCESS(f"✅ Chart of Accounts imported successfully for tenant {tenant.name}"))

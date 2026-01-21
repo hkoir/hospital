@@ -51,7 +51,8 @@ from django_tenants.utils import get_public_schema_name
 from.models import AllowedEmailDomain 
 from clients.models import Tenant
 
-
+from django.contrib.auth import get_user_model
+User = get_user_model()
 
 def home(request):
     return render(request,'accounts/home.html')
@@ -72,61 +73,10 @@ def send_tenant_email(email, username, password, subdomain):
 
 
 
-# def register_view(request):   
-#     ALLOWED_EMAIL_DOMAINS = ["mycompany.com", "trustedpartner.com"]
-#     current_tenant = None
-#     if hasattr(connection, 'tenant'):
-#         current_schema = connection.tenant.schema_name   
-#         current_tenant = connection.tenant  # or request.tenant or request.user.tenant form model tenant
-    
-#     if request.method == 'POST':
-#         registerForm= TenantUserRegistrationForm(request.POST, request.FILES, tenant=current_tenant)
-#         if registerForm.is_valid():
-#             with transaction.atomic():  
-#                 user = registerForm.save(commit=False)
-#                 user.email = registerForm.cleaned_data['email']
-#                 email_domain = user.email.split('@')[-1]
-#                 user.set_password(registerForm.cleaned_data['password1'])
-
-#                 if email_domain in ALLOWED_EMAIL_DOMAINS:
-#                     user.is_active = True
-#                     messages.success(request, "Registration successful. You can log in now.")
-#                 else:
-#                     user.is_active = False 
-#                     messages.info(request, "Your account is pending approval.")
-               
-#                 user.tenant = current_tenant
-#                 user.save()
-
-#                 current_site = get_current_site(request)
-#                 if connection.tenant.schema_name == 'public':
-#                     subdomain = ''  # Empty for public domain
-#                     domain = current_site.domain  # e.g., "localhost"
-#                 else:
-#                     subdomain = connection.tenant.schema_name  # e.g., "demo1"
-#                     domain = current_site.domain  # e.g., "localhost"
-#                 subject = 'Activate your Account'
-#                 message = render_to_string('accounts/registration/account_activation_email.html', {
-#                     'user': user,
-#                     'domain': domain,
-#                     'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-#                     'token': account_activation_token.make_token(user),
-#                     'subdomain':subdomain
-#                 })
-#                 user.email_user(subject=subject, message=message)
-#                 UserProfile.objects.create(
-#                         user=user,
-#                         tenant=Client.objects.filter(schema_name=current_tenant).first(),
-#                         profile_picture=registerForm.cleaned_data.get('profile_picture'),
-#                     )
-#             return render(request, 'accounts/registration/register_email_confirm.html', {'form': registerForm})
-#     else:
-#         registerForm = TenantUserRegistrationForm(tenant=current_tenant)
-#     return render(request, 'accounts/registration/register.html', {'form': registerForm})
 
 
 
-def register_view(request):   
+def register_view2(request):   
     current_tenant = None
     current_schema = None
 
@@ -181,7 +131,169 @@ def register_view(request):
 
 
 
-def register_patient(request):   
+
+
+def register_view(request):
+    current_tenant = getattr(connection, 'tenant', None)
+    current_schema = current_tenant.schema_name if current_tenant else None
+
+    if request.method == 'POST':
+        registerForm = TenantUserRegistrationForm(
+            request.POST,
+            request.FILES,
+            tenant=current_tenant
+        )
+
+        if registerForm.is_valid():
+            with transaction.atomic():
+
+                user = registerForm.save(commit=False)
+                email = (registerForm.cleaned_data.get('email') or "").strip()
+                phone = (registerForm.cleaned_data.get('phone_number') or "").strip()
+                role = registerForm.cleaned_data['role']
+                if role in ['employee', 'corporate-user']:
+                    messages.warning(request, 'Please select customer or job seeker role')
+                    return redirect('accounts:register')
+
+                user.email = email
+                user.phone_number = phone
+                user.is_active = False
+                user.role = role
+                user.tenant = current_tenant
+                user.set_password(registerForm.cleaned_data['password1'])
+                user.save()
+
+                if not email and not phone:
+                    messages.error(request, "You must provide either email or phone number.")
+                    user.delete()
+                    return render(request, "accounts/registration/register.html", {"form": registerForm})
+    
+                if phone:
+                    try:
+                        return send_otp(request, phone)  
+                    except Exception as e:
+                        messages.error(request, f"Failed to send OTP: {e}")
+                        user.delete()
+                        return render(request, "accounts/registration/register.html", {"form": registerForm})
+     
+                if email:
+                    try:
+                        current_site = get_current_site(request)
+                        domain = current_site.domain
+
+                        message = render_to_string(
+                            "accounts/registration/account_activation_email.html",
+                            {
+                                "user": user,
+                                "domain": domain,
+                                "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                                "token": account_activation_token.make_token(user),
+                                "subdomain": current_schema if current_schema != "public" else "",
+                            }
+                        )
+
+                        user.email_user("Activate Your Account", message)
+                        messages.info(request, "Please check your email to activate your account.")
+                        return render(request, "accounts/registration/register_email_confirm.html")
+
+                    except Exception as e:
+                        messages.error(request, f"Email sending failed: {e}")
+                        user.delete()
+                        return render(request, "accounts/registration/register.html", {"form": registerForm})
+    else:
+        registerForm = TenantUserRegistrationForm(tenant=current_tenant)
+    return render(request, "accounts/registration/register.html", {"form": registerForm})
+
+from django.core.exceptions import ValidationError
+
+
+
+
+
+
+
+
+def register_patient(request):
+    current_tenant = getattr(connection, 'tenant', None)
+    current_schema = current_tenant.schema_name if current_tenant else None
+
+    if request.method == 'POST':
+        registerForm = TenantUserRegistrationForm(
+            request.POST,
+            request.FILES,
+            tenant=current_tenant
+        )
+
+        if registerForm.is_valid():
+            with transaction.atomic():
+
+                user = registerForm.save(commit=False)
+                email = (registerForm.cleaned_data.get('email') or "").strip()
+                phone = (registerForm.cleaned_data.get('phone_number') or "").strip()
+
+                role = registerForm.cleaned_data['role']
+                if role not in ['general', 'patient']:
+                    messages.warning(request, 'Please select customer or job seeker role')
+                    return redirect('accounts:register_patient')
+
+                user.email = email
+                user.phone_number = phone
+                user.is_active = False
+                user.role = role
+                user.tenant = current_tenant
+                user.set_password(registerForm.cleaned_data['password1'])
+                user.save()
+
+                if not email and not phone:
+                    messages.error(request, "You must provide either email or phone number.")
+                    user.delete()
+                    return render(request, "accounts/registration/register.html", {"form": registerForm})
+    
+                if phone:
+                    try:
+                        return send_otp(request, phone)  
+                    except Exception as e:
+                        messages.error(request, f"Failed to send OTP: {e}")
+                        user.delete()
+                        return render(request, "accounts/registration/register.html", {"form": registerForm})
+     
+                if email:
+                    try:
+                        current_site = get_current_site(request)
+                        domain = current_site.domain
+
+                        message = render_to_string(
+                            "accounts/registration/account_activation_email.html",
+                            {
+                                "user": user,
+                                "domain": domain,
+                                "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                                "token": account_activation_token.make_token(user),
+                                "subdomain": current_schema if current_schema != "public" else "",
+                            }
+                        )
+
+                        user.email_user("Activate Your Account", message)
+                        messages.info(request, "Please check your email to activate your account.")
+                        return render(request, "accounts/registration/register_email_confirm.html")
+
+                    except Exception as e:
+                        messages.error(request, f"Email sending failed: {e}")
+                        user.delete()
+                        return render(request, "accounts/registration/register.html", {"form": registerForm})
+    else:
+        registerForm = TenantUserRegistrationForm(tenant=current_tenant)
+    return render(request, "accounts/registration/register.html", {"form": registerForm})
+
+
+
+
+from django.core.exceptions import ValidationError
+
+
+
+
+def register_patient2(request):   
     current_tenant = None
     current_schema = None
 
@@ -239,106 +351,140 @@ def register_patient(request):
 
 
 from patients.forms import DirectPatientForm
+
+@login_required
 def direct_patient_registration(request):   
     current_tenant = None
-    current_schema = None
 
     if hasattr(connection, 'tenant') and connection.tenant:
         current_tenant = connection.tenant
-        current_schema = connection.tenant.schema_name   
 
     if request.method == 'POST':
         registerForm = TenantUserRegistrationForm(request.POST, request.FILES, tenant=current_tenant)
         patient_form = DirectPatientForm(request.POST)
-    
+
         if registerForm.is_valid() and patient_form.is_valid():
-            with transaction.atomic():  
+            with transaction.atomic():          
                 user = registerForm.save(commit=False)
-                user.email = registerForm.cleaned_data['email']
-                email_domain = user.email.split('@')[-1] if '@' in user.email else ''
-                user.set_password(registerForm.cleaned_data['password1'])
-
-                if CustomUser.objects.filter(email=user.email).exists():
+                email = registerForm.cleaned_data.get('email')
+                password = registerForm.cleaned_data.get('password1')
+ 
+                if CustomUser.objects.filter(email=email).exists():
                     messages.error(request, "This email is already registered.")
-                    return render(request, 'accounts/registration/direct_patient_register.html', {'form': registerForm})
+                    return render(
+                        request,
+                        'accounts/registration/direct_patient_register.html',
+                        {'form': registerForm, 'patient_form': patient_form} )
 
-                user.is_active = True
+                user.email = email
+                user.set_password(password)
                 user.tenant = current_tenant
                 user.role = 'patient'
+                user.is_active = True
+                user.is_phone_verified = True if user.phone_number else False
+                user.is_email_verified = True if user.email else False
                 user.save()
 
                 patient = patient_form.save(commit=False)
                 patient.user = user
                 patient.email = user.email
-                patient.save()
+                patient.save() 
 
-                tenant_instance = Client.objects.filter(schema_name=current_tenant.schema_name).first() if current_tenant else None
+                tenant_instance = Client.objects.filter(id=current_tenant.id).first()                
                 UserProfile.objects.create(
                     user=user,
                     tenant=tenant_instance,
-                    profile_picture=registerForm.cleaned_data.get('profile_picture'),
-                )
+                    profile_picture=registerForm.cleaned_data.get('photo_id'))
 
-                messages.info(request, "User and patient model created successfully.")
-                return redirect('lab_tests:create_external_lab_visit')
+                messages.success(request, "User and patient account created successfully.")
+                return redirect('workspace:staff_dashboard')
     else:
-        registerForm = TenantUserRegistrationForm(tenant=current_tenant)         
-        patient_form = DirectPatientForm()  
-    return render(request, 'accounts/registration/direct_patient_register.html', {'form': registerForm,'patient_form':patient_form})
+        registerForm = TenantUserRegistrationForm(tenant=current_tenant)
+        patient_form = DirectPatientForm()
 
+    return render(
+        request,
+        'accounts/registration/direct_patient_register.html',
+        {'form': registerForm, 'patient_form': patient_form}
+    )
 
 
 
 
 from.forms import PublicRegistrationForm
 
-def register_public(request):   
-    current_tenant = None
-    if hasattr(connection, 'tenant'):      
-        current_schema = connection.tenant.schema_name   
-        current_tenant = connection.tenant         
-    
+
+def register_public(request):
+    current_tenant = getattr(connection, 'tenant', None)
+    current_schema = current_tenant.schema_name if current_tenant else None
+
     if request.method == 'POST':
-        registerForm= PublicRegistrationForm(request.POST, request.FILES, tenant=current_tenant)
+        registerForm = TenantUserRegistrationForm(
+            request.POST,
+            request.FILES,
+            tenant=current_tenant
+        )
+
         if registerForm.is_valid():
             with transaction.atomic():
+
                 user = registerForm.save(commit=False)
-                user.email = registerForm.cleaned_data['email']
-                user.set_password(registerForm.cleaned_data['password1'])
+                email = (registerForm.cleaned_data.get('email') or "").strip()
+                phone = (registerForm.cleaned_data.get('phone_number') or "").strip()
+
+                role = registerForm.cleaned_data['role']
+                if role not in ['general', 'patient']:
+                    messages.warning(request, 'Please select customer or job seeker role')
+                    return redirect('accounts:register_patient')
+
+                user.email = email
+                user.phone_number = phone
                 user.is_active = False
+                user.role = role
                 user.tenant = current_tenant
+                user.set_password(registerForm.cleaned_data['password1'])
                 user.save()
 
-                current_site = get_current_site(request)
-               
-                if connection.tenant.schema_name == 'public':
-                    subdomain = ''  # Empty for public domain
-                    domain = current_site.domain  # e.g., "localhost"
-                else:
-                    subdomain = connection.tenant.schema_name  # e.g., "demo1"
-                    domain = current_site.domain  # e.g., "localhost"
-                subject = 'Activate your Account'
-                message = render_to_string('accounts/registration/account_activation_email.html', {
-                    'user': user,
-                    'domain': domain,
-                    'uid': urlsafe_base64_encode(force_bytes(user.pk)),
-                    'token': account_activation_token.make_token(user),
-                    'subdomain':subdomain
-                })
-                user.email_user(subject=subject, message=message)
-                user_profile = UserProfile.objects.create(
-                    user=user,
-                    tenant=Client.objects.filter(schema_name=current_tenant.schema_name).first(),  # Ensuring correct lookup
-                    profile_picture=registerForm.cleaned_data.get('profile_picture'),
-                )
-                user_profile.save()
+                if not email and not phone:
+                    messages.error(request, "You must provide either email or phone number.")
+                    user.delete()
+                    return render(request, "accounts/registration/register.html", {"form": registerForm})
+    
+                if phone:
+                    try:
+                        return send_otp(request, phone)  
+                    except Exception as e:
+                        messages.error(request, f"Failed to send OTP: {e}")
+                        user.delete()
+                        return render(request, "accounts/registration/register.html", {"form": registerForm})
+     
+                if email:
+                    try:
+                        current_site = get_current_site(request)
+                        domain = current_site.domain
 
-            return render(request, 'accounts/registration/register_email_confirm.html', {'form': registerForm})
+                        message = render_to_string(
+                            "accounts/registration/account_activation_email.html",
+                            {
+                                "user": user,
+                                "domain": domain,
+                                "uid": urlsafe_base64_encode(force_bytes(user.pk)),
+                                "token": account_activation_token.make_token(user),
+                                "subdomain": current_schema if current_schema != "public" else "",
+                            }
+                        )
+
+                        user.email_user("Activate Your Account", message)
+                        messages.info(request, "Please check your email to activate your account.")
+                        return render(request, "accounts/registration/register_email_confirm.html")
+
+                    except Exception as e:
+                        messages.error(request, f"Email sending failed: {e}")
+                        user.delete()
+                        return render(request, "accounts/registration/register.html", {"form": registerForm})
     else:
-        registerForm = PublicRegistrationForm(tenant=current_tenant)
-    return render(request, 'accounts/registration/register.html', {'form': registerForm})
-
-
+        registerForm = TenantUserRegistrationForm(tenant=current_tenant)
+    return render(request, "accounts/registration/register.html", {"form": registerForm})
 
 
 
@@ -355,13 +501,16 @@ def account_activate(request, uidb64, token):
         if user.tenant.schema_name == "public":
             user.is_active = True
             user.is_staff = False    
+            user.is_email_verified = True
        
-        elif user.groups.filter(name__in=['patient', 'job_seeker', 'public', 'customer']).exists():
+        elif user.role in ['general','patient']:
             user.is_active = True 
             user.is_staff = False
+            user.is_email_verified = True
         else:
             user.is_active = True 
             user.is_staff = True  
+            user.is_email_verified = True
 
         user.save()
         messages.success(request, "Your account has been activated! You can work now.")
@@ -418,6 +567,202 @@ def login_view(request):
     
     form = CustomLoginForm(initial={'tenant':  current_schema })    
     return render(request, 'accounts/registration/login.html', {'form': form})
+
+
+
+
+from django.utils.crypto import constant_time_compare
+from accounts.utils import send_sms   
+from .models import PhoneOTP
+
+
+def send_otp(request, phone_number):
+    if not phone_number:
+        return render(request, "accounts/registration/register.html", {"error": "Phone number required."})
+
+    otp_obj, _ = PhoneOTP.objects.get_or_create(phone_number=phone_number)
+    otp_obj.generate_otp()
+
+    message = f"Your verification code is: {otp_obj.otp}"
+    try:
+        send_sms(tenant=getattr(request, "tenant", None), phone_number=phone_number, message=message)
+        print(f'your otp code is {otp_obj.otp}')
+    except Exception as e:
+        return render(request, "accounts/registration/register.html", {"error": f"SMS failed: {e}"})
+
+    return render(request, "accounts/otp_registration/verify_otp.html", {
+        "phone": phone_number,
+        "valid_until": otp_obj.valid_until,
+    })
+
+
+
+
+def verify_otp(request):
+    phone = request.POST.get("phone")
+    otp_input = request.POST.get("otp")
+    current_tenant = None    
+    if hasattr(connection, 'tenant'):       
+        current_tenant_schema = connection.tenant.schema_name   
+        current_tenant = request.tenant  #current_tenant = request.user.tenant # from model     
+
+
+    if not phone or not otp_input:
+        return render(request, "accounts/otp_registration/verify_otp.html", {
+            "error": "Phone number and OTP are required.",
+            "phone": phone
+        })
+
+    otp_entry = PhoneOTP.objects.filter(phone_number=phone).first()
+    if not otp_entry:
+        return render(request, "accounts/otp_registration/verify_otp.html", {
+            "error": "OTP not found.",
+            "phone": phone
+        })
+
+    if constant_time_compare(otp_entry.otp, otp_input) and timezone.now() <= otp_entry.valid_until:
+        otp_entry.is_verified = True
+        otp_entry.save()
+
+        user = CustomUser.objects.filter(phone_number=phone).first()
+        if user:
+            if user.tenant.schema_name == "public":
+                user.is_staff = False               
+                user.tenant = current_tenant
+            else:
+                if user.role in ['patient','general'] :               
+                    user.is_staff =False
+                else:
+                    user.is_staff = True
+
+            user.is_phone_verified = True
+            user.is_active = True               
+            user.tenant = current_tenant
+            user.save()
+            login(request, user, backend='accounts.backends.TenantAuthenticationBackend')           
+            messages.success(request, "Phone number verified successfully. You can now log in.")
+            return redirect("clients:tenant_expire_check")
+        else:
+            return render(request, "accounts/otp_registration/verify_otp.html", {
+                "error": "No user found for this phone number.",
+                "phone": phone
+            })
+    else:
+        return render(request, "accounts/otp_registration/verify_otp.html", {
+            "error": "Invalid or expired OTP.",
+            "phone": phone
+        })
+
+
+
+
+def send_password_reset_otp(request):
+    if request.method == "POST":
+        phone_number = request.POST.get("phone")
+        if not phone_number:
+            return render(request, "accounts/otp_registration/forgot_password.html", {"error": "Phone number required."})
+        otp_obj, _ = PhoneOTP.objects.get_or_create(phone_number=phone_number, purpose='forgot_password')
+        otp_obj.generate_otp()
+        message = f"Your password reset OTP is: {otp_obj.otp}"
+        try:
+            send_sms(tenant=getattr(request, "tenant", None), phone_number=phone_number, message=message)
+            print(f"OTP for forgot password: {otp_obj.otp}")
+        except Exception as e:
+            return render(request, "accounts/otp_registration/forgot_password.html", {"error": f"SMS failed: {e}"})
+        # Store phone in session to identify user in verification step
+        request.session['reset_phone_number'] = phone_number
+        return render(request, "accounts/otp_registration/verify_reset_otp.html", {
+            "phone": phone_number,
+            "valid_until": otp_obj.valid_until
+        })
+    return render(request, "accounts/otp_registration/forgot_password.html")
+
+
+
+def verify_password_reset_otp(request):
+    if request.method == "POST":
+        phone = request.session.get("reset_phone_number")
+        otp_input = request.POST.get("otp")
+        new_password = request.POST.get("new_password")
+        confirm_password = request.POST.get("confirm_password")
+        if not phone or not otp_input or not new_password or not confirm_password:
+            return render(request, "accounts/otp_registration/verify_reset_otp.html", {
+                "error": "All fields are required.",
+                "phone": phone
+            })
+        otp_entry = PhoneOTP.objects.filter(phone_number=phone, purpose='forgot_password').first()
+        if not otp_entry:
+            return render(request, "accounts/otp_registration/verify_reset_otp.html", {
+                "error": "OTP not found.",
+                "phone": phone
+            })
+        if constant_time_compare(otp_entry.otp, otp_input) and timezone.now() <= otp_entry.valid_until:
+            if new_password != confirm_password:
+                return render(request, "accounts/otp_registration/verify_reset_otp.html", {
+                    "error": "Passwords do not match.",
+                    "phone": phone
+                })
+            user = User.objects.filter(phone_number=phone).first()
+            if user:
+                user.set_password(new_password)
+                user.save()
+                otp_entry.is_verified = True
+                otp_entry.save()
+                messages.success(request, "Password reset successful. You can now log in.")
+                # Clean session
+                if 'reset_phone_number' in request.session:
+                    del request.session['reset_phone_number']
+                return redirect("accounts:login")
+            else:
+                return render(request, "accounts/otp_registration/verify_reset_otp.html", {
+                    "error": "No user found for this phone number.",
+                    "phone": phone
+                })
+        else:
+            return render(request, "accounts/otp_registration/verify_reset_otp.html", {
+                "error": "Invalid or expired OTP.",
+                "phone": phone
+            })
+    return render(request, "accounts/otp_registration/verify_reset_otp.html")
+
+
+
+@login_required
+def send_change_password_otp(request):
+    phone_number = request.user.phone_number
+    otp_obj, _ = PhoneOTP.objects.get_or_create(phone_number=phone_number, purpose='change_password')
+    otp_obj.generate_otp()
+    message = f"Your OTP to change password is: {otp_obj.otp}"
+    send_sms(tenant=getattr(request, "tenant", None), phone_number=phone_number, message=message)
+    messages.success(request, "OTP sent to your phone. Please enter it to change password.")
+    return redirect("accounts:verify_change_password_otp")
+
+
+
+
+@login_required
+def verify_change_password_otp(request):
+    if request.method == "POST":
+        phone = request.user.phone_number
+        otp_input = request.POST.get("otp")
+        new_password = request.POST.get("new_password")
+        confirm_password = request.POST.get("confirm_password")
+        otp_entry = PhoneOTP.objects.filter(phone_number=phone, purpose='change_password', is_verified=False).last()
+        if otp_entry and constant_time_compare(otp_entry.otp, otp_input) and timezone.now() <= otp_entry.valid_until:
+            if new_password != confirm_password:
+                messages.error(request, "Passwords do not match.")
+                return redirect("accounts:verify_change_password_otp")
+            request.user.set_password(new_password)
+            request.user.save()
+            otp_entry.is_verified = True
+            otp_entry.save()
+            messages.success(request, "Password changed successfully!")
+            login(request, user, backend='accounts.backends.TenantAuthenticationBackend')
+            return redirect("core:dashboard")
+        else:
+            messages.error(request, "Invalid or expired OTP.")
+            return redirect("verify_change_password_otp")
+    return render(request, "accounts/otp_registration/verify_change_password_otp.html")
 
 
 
@@ -661,15 +1006,93 @@ def get_permissions_for_model(request):
 
 
 from core.models import Employee
-  #medication_type/ medication_category/medication_name
-# from inventory.models import Product,ProductCategory,ProductType 
 from product.models import Product,Category,ProductType
 from medical_records.models import Prescription
+
+
+from purchase.models import PurchaseOrder,PurchaseRequestOrder
+from logistics.models import PurchaseShipment
+from finance.models import PurchaseInvoice,PurchasePayment
+
+
 
 def common_search(request):
     query = request.GET.get('q', '').strip()
     results = []
-    if query:     
+    if query:
+
+
+        products = Product.objects.filter(
+            Q(name__icontains=query) | 
+            Q(product_code__icontains=query) |
+            Q(sku__icontains=query)
+        ).values('id', 'name', 'product_code', 'sku')
+
+        results.extend([
+            {
+                'id': prod['id'], 
+                'text': f"{prod['name']} ({prod['product_code'] or prod['sku']})"
+            }
+            for prod in products
+        ])
+
+        # 🔹 Category search (by name or category_id)
+        categories = Category.objects.filter(
+            Q(name__icontains=query) | 
+            Q(category_id__icontains=query)
+        ).values('id', 'name', 'category_id')
+
+        results.extend([
+            {
+                'id': cat['id'], 
+                'text': f"{cat['name']} ({cat['category_id']})"
+            }
+            for cat in categories
+        ])
+
+
+        employees = Employee.objects.filter(
+            Q(name__icontains=query) | Q(employee_code__icontains=query)
+        ).values('id', 'name', 'employee_code')
+        results.extend([
+            {'id': emp['id'], 'text': f"{emp['name']} ({emp['employee_code']})"}
+            for emp in employees
+        ])   
+
+        purchase_orders = PurchaseOrder.objects.filter(
+            Q(order_id__icontains=query)
+        ).values('id', 'order_id')
+        results.extend([
+            {'id': data['id'], 'text': f"{data['order_id']}"}
+            for data in purchase_orders
+        ])   
+
+        purchase_request_orders = PurchaseRequestOrder.objects.filter(
+            Q(order_id__icontains=query)
+        ).values('id', 'order_id')
+        results.extend([
+            {'id': data['id'], 'text': f"{data['order_id']}"}
+            for data in purchase_request_orders
+        ])   
+
+        
+        purchase_shipment_orders = PurchaseShipment.objects.filter(
+            Q(shipment_id__icontains=query)
+        ).values('id', 'shipment_id')
+        results.extend([
+            {'id': data['id'], 'text': f"{data['shipment_id']}"}
+            for data in purchase_shipment_orders
+        ])       
+
+
+        purchase_invoice_numbers = PurchaseInvoice.objects.filter(
+            Q(invoice_number__icontains=query)
+        ).values('id', 'invoice_number')
+        results.extend([
+            {'id': data['id'], 'text': f"{data['invoice_number']}"}
+            for data in purchase_invoice_numbers
+        ])  
+
         employees = Employee.objects.filter(
             Q(name__icontains=query) | Q(employee_code__icontains=query)
         ).values('id', 'name', 'employee_code')
@@ -679,14 +1102,14 @@ def common_search(request):
         ]) 
 
         medications = Product.objects.filter(
-            Q(name__icontains=query) | Q(product_id__icontains=query)
-        ).values('id', 'name', 'product_id')
+            Q(name__icontains=query) | Q(product_code__icontains=query)
+        ).values('id', 'name', 'product_code')
         results.extend([
-            {'id': prod['id'], 'text': f"{prod['name']} ({prod['product_id']})"}
+            {'id': prod['id'], 'text': f"{prod['name']} ({prod['product_code']})"}
             for prod in medications
         ])
 
-        medication_categories = tCategory.objects.filter(
+        medication_categories = Category.objects.filter(
             Q(name__icontains=query)
         ).values('id', 'name')
         results.extend([

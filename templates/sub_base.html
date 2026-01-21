@@ -84,6 +84,31 @@
 
 
 
+ .floating-home-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 55px;
+    height: 55px;
+    background: #007bff;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    text-decoration: none;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+    z-index: 1005;
+    transition: 0.25s ease-in-out;
+}
+
+.floating-home-btn:hover {
+    background: #0056b3;
+    transform: scale(1.08);
+}
+
+
 </style>
 
 
@@ -93,30 +118,9 @@
 <body>
 
 
-<!-- Social Links Navbar -->
-<nav class="navbar navbar-dark social-nav" id="socialNav">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
-        <span class="navbar-text">Social Links | Contact Us | Follow Us</span>
-        <div class="social-icons">
-            <a href="https://www.facebook.com" target="_blank" class="text-light me-3">
-                <i class="fab fa-facebook-f"></i>
-            </a>
-            <a href="https://www.twitter.com" target="_blank" class="text-light me-3">
-                <i class="fab fa-twitter"></i>
-            </a>
-            <a href="https://www.linkedin.com" target="_blank" class="text-light">
-                <i class="fab fa-linkedin-in"></i>
-            </a>
-            <a href="mailto:contact@yourcompany.com" class="text-light ms-3">
-                <i class="fas fa-envelope"></i> Email Us
-            </a>
-        </div>
-    </div>
-</nav>
-
 
 <!-- Main Navbar -->
-<nav class="navbar navbar-expand-lg main-nav" id="mainNav">
+<nav class="navbar navbar-expand-lg fixed-top main-nav" id="mainNav">
     <div class="container-fluid">
         <a class="navbar-brand" href="">HOPS USER</a>
         <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
@@ -224,7 +228,7 @@
      
    
 
-    <div class="container-fluid">    
+    <div class="container-fluid" style="margin-top:80px">    
         {% block content %}
         {% endblock %}
     </div>
@@ -255,28 +259,6 @@
         </div>
     </div>
 </div>
-
-<!-- <div class="common_loader-box">
-    <div id="common_loader"></div>
-    <div class="common_loading_text">Loading...</div>
-  </div> -->
-
-
-<script>
-    const socialNav = document.getElementById('socialNav');
-    const mainNav = document.getElementById('mainNav');
-    const socialNavHeight = socialNav.offsetHeight;
-
-    window.addEventListener('scroll', function () {
-        if (window.scrollY > socialNavHeight) {
-            socialNav.style.top = `-${socialNavHeight}px`;
-            mainNav.style.top = '0px'; // Move main-nav to the top
-        } else {
-            socialNav.style.top = '0';
-            mainNav.style.top = `${socialNavHeight}px`; // Push it below social-nav
-        }
-    });
-</script>
 
 
 
@@ -370,7 +352,11 @@
     
     
 </script>
-
+{% if request.user.role == 'staff' %}
+<a href="{% url 'workspace:staff_dashboard' %}" class="floating-home-btn">
+    <i class="fa fa-home"></i>
+</a>
+{% endif %}
 
 </body>
 </html>

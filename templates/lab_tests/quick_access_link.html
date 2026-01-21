@@ -1,0 +1,39 @@
+
+<div class="container my-3">
+
+    <h5 class="text-center mb-3 fw-bold">Quick Navigation</h5>
+
+    <!-- Finance Section -->
+    <div class="d-flex justify-content-center flex-wrap gap-2 mb-2">
+        <span class="fw-semibold text-secondary small me-2">Lab & Test</span>
+       
+        <a href="{% url 'lab_tests:labtest_category_add' %}" class="btn btn-sm btn-outline-primary">+ New Categorye</a>
+        <a href="{% url 'lab_tests:labtest_catelogue_add' %}" class="btn btn-sm btn-outline-primary">+ New Test</a>
+       
+        <a href="{% url 'lab_tests:lab_test_order_list' %}" class="btn btn-sm btn-outline-primary">All result Orders</a>
+
+
+        <a href="{% url 'lab_tests:create_external_lab_visit' %}" class="btn btn-sm btn-outline-primary">+ External Lab test</a>
+        <a href="{% url 'lab_tests:external_lab_visit_list' %}" class="btn btn-sm btn-outline-primary">External Lab Test List</a>
+        <a href="{% url 'lab_tests:lab_test_status_list' %}" class="btn btn-sm btn-outline-primary">+ Lab Test Status</a>
+        <a href="{% url 'lab_tests:pending_lab_test_deliveries' %}" class="btn btn-sm btn-outline-primary">Pending Lab Test delivery</a>
+         
+  
+    </div>
+
+
+      <!-- Finance Section -->
+    <div class="d-flex justify-content-center flex-wrap gap-2 mb-2">
+        <span class="fw-semibold text-secondary small me-2">Sample Collection</span>     
+        <a href="{% url 'lab_tests:all_request_order_list' %}" class="btn btn-sm btn-outline-primary">+ All request Orders</a>
+        <a href="{% url 'lab_tests:sample_list' %}" class="btn btn-sm btn-outline-primary">+ Sample Collection status</a>
+           
+    </div>
+
+   
+
+   
+
+ 
+<hr>
+</div>

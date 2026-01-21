@@ -1,35 +1,94 @@
 
+
+
 {% extends "base.html" %}
 {% load static %}
 {% load custom_filters %}
 
 {% block extra_head %}
 
+<style>
 
+#todayCheck.form-check-input {
+    background-color: #e0e0e0; 
+    border-color: #ccc;        
+}
+
+#todayCheck.form-check-input:checked {
+    background-color: #0d6efd; 
+    border-color: #0d6efd;
+}
+
+#todayCheck.form-check-input:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25); 
+}
+</style>
 {% endblock %}
 
 {% block content %}
 
-    <style>
-        .chart-container {
-            text-align: center;
-            margin-bottom: 50px;
-        }
-    </style>
 
-    
+{% include 'finance/quick_access_link.html' %}
+
+<div class="container">
+   <div class="row">
+       <h1 class="text-center mt-5">Expenses</h1>
+    <!-- Header Section -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h2 class="fw-bold text-dark mb-0">
+                📊 Executive Summary
+            </h2>
+            <small class="text-muted">Reporting Period: {{ start_date }} → {{ end_date }}</small>
+        </div>
+
+        <!-- Filter Toolbar -->
+        <form method="get" id="filterForm">
+            <div class=" row filter-toolbar mb-4 text-center">
+
+            <!-- Today Toggle -->
+            <div class="col-6 col-md-3 mb-2">
+                <div class="toggle-box border border-success bg-light rounded-3 px-3 py-2 d-flex align-items-center justify-content-center">
+                    <input type="checkbox" class="form-check-input me-2" id="todayCheck" name="today" value="1" {% if today %}checked{% endif %}>
+                    <label class="form-check-label fw-semibold mb-0" for="todayCheck">Today</label>
+                </div>
+            </div>
+
+            <!-- This Month Toggle -->
+            <div class="col-6 col-md-3 mb-2">
+                <div class="toggle-box border border-warning bg-light rounded-3 px-3 py-2 d-flex align-items-center justify-content-center">
+                    <input type="checkbox" class="form-check-input me-2" id="monthCheck" name="this_month" value="1" {% if this_month %}checked{% endif %}>
+                    <label class="form-check-label fw-semibold mb-0" for="monthCheck">This Month</label>
+                </div>
+            </div>
+
+            <!-- Start Date -->
+            <div class="col-6 col-md-3 mb-2">
+                <label for="start_date" class="form-label fw-semibold d-block mb-1">Start Date</label>
+                <input type="date" id="start_date" name="start_date" value="{{ start_date }}"
+                    class="form-control form-control-sm text-center w-100">
+            </div>
+
+            <!-- End Date -->
+          <div class="col-6 col-md-3 mb-2">
+                <label for="end_date" class="form-label fw-semibold d-block mb-1">End Date</label>
+                <input type="date" id="end_date" name="end_date" value="{{ end_date }}"
+                    class="form-control form-control-sm text-center w-100">
+            </div>
+
+            <!-- Filter Button -->
+            <div class="col-6 col-md-3 mb-2">
+                <button type="submit" class="btn btn-primary btn-sm fw-semibold w-100">Filter</button>
+            </div>
+            </div>
+        </form>
+    </div>
+</div>
 
 
-<div class="contaainer-fluid">
-  <h1 class="text-center my-5">Top 10 Expense Heads and Their Amounts</h1>
-  <p>
-    <a href="{% url 'finance:revenue_report' %}" class="btn btn-sm btn-success">Revenue</a>
-    <a href="{% url 'finance:shareholder_dashboard' %}" class="btn btn-sm btn-primary">Dashboard</a>
-     
- </p>
+<div class="container">  
     <div class="row">
-        <div class="col-12 col-md-4 table-responsive">          
-           
+        <div class="col-12 col-md-3 table-responsive">          
+           <h4> Top expenses</h4>
         <table class="table" border="1" cellpadding="10">
             <thead class="table-info">
                 <tr>
@@ -47,14 +106,89 @@
             </tbody>
         </table>
             <h4>Total expenses = {{ total_amount|add_commas }}</h4>
+        </div>
 
+
+       
+
+    <!-- Charts Section -->
+
+    <div class="col-12 col-md-9">
+
+    
+   <div class="row g-4 mb-5">
+  <div class="col-md-8">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-light fw-semibold">Top expenses</div>
+      <div class="card-body">
+        <!-- Scrollable wrapper -->
+        <div class="chart-scroll-wrapper" style="overflow-x: auto;">
+          <div style="min-width: 600px;"> <!-- Force larger width for scroll -->
+            <canvas id="barChart" style="width: 100%; height: 300px;"></canvas>
+          </div>
         </div>
-        <div class="col-12 col-md-5">           
-             <canvas id="barChart"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card border-0 shadow-sm rounded-4">
+      <div class="card-header bg-light fw-semibold">Top Expenses</div>
+      <div class="card-body">
+        <canvas id="pieChart" style="width: 100%; height: 300px;"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+
+   
+    <div class="col-12 table-responsive">        
+            <h4>All expenses</h4>          
+        <table class="table" border="1" cellpadding="10">
+            <thead class="table-info">
+                <tr>
+                    <th>Date</th>
+                    <th>Expense Head</th>
+                    <th>Expense type</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in page_obj %}
+                    <tr>
+                        <td>{{ expense.created_at }}</td>
+                        <td>{{ expense.expense_head }}</td>
+                         <td>{{ expense.expense_type }}</td>
+                        <td>{{ expense.amount }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+           <!-- Pagination Controls -->
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
         </div>
-        <div class="col-12 col-md-3">       
-        <canvas id="pieChart"></canvas>
-        </div>
+    </div>   
+        
+        
+
+
     </div>
 </div>
 
@@ -62,6 +196,23 @@
 
 
 
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('filterForm');
+    const todayCheck = document.getElementById('todayCheck');
+    const monthCheck = document.getElementById('monthCheck');
+
+    todayCheck.addEventListener('change', function() {
+        if (this.checked) monthCheck.checked = false; // optional: uncheck other
+        form.submit();
+    });
+
+    monthCheck.addEventListener('change', function() {
+        if (this.checked) todayCheck.checked = false; // optional: uncheck other
+        form.submit();
+    });
+});
+</script>
 
 
     <script>
@@ -105,20 +256,45 @@
             }]
         };
 
-        // Create Bar Chart
-        const ctxBar = document.getElementById('barChart').getContext('2d');
-        new Chart(ctxBar, {
-            type: 'bar',
-            data: barChartData,
-            options: {
-                responsive: true,
-                scales: {
-                    x: {
-                        beginAtZero: true
-                    }
+// Create Bar Chart
+const ctxBar = document.getElementById('barChart').getContext('2d');      
+
+  new Chart(ctxBar,  {
+    type: 'bar',
+     data: barChartData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false, // helps with responsiveness
+        scales: {
+            x: {
+                ticks: {
+                    autoSkip: false, // ✅ don't skip labels
+                    maxRotation: 45, // ✅ angle labels slightly
+                    minRotation: 0
                 }
+            },
+            y: {
+                beginAtZero: true
             }
-        });
+        },
+        plugins: {
+            legend: {
+                display: true,
+                position: 'top'
+            },
+            tooltip: {
+                enabled: true
+            }
+        }
+    }
+});
+
+
+
+
+
+
+
 
         // Create Pie Chart
         const ctxPie = document.getElementById('pieChart').getContext('2d');

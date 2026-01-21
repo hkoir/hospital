@@ -2,6 +2,9 @@
 {% extends "base.html" %}
 {% load custom_filters %}
 {% block content %}
+
+{% include 'finance/quick_access_link.html' %}
+
 <div class="container mt-5">
   <div class="card shadow rounded">
     <div class="card-header bg-success text-white">
@@ -9,38 +12,38 @@
     </div>
     <div class="card-body">
       <div class="row text-center mb-4">
-        <div class="col-md-2">
+        <div class="col-6 col-md-2">
           <div class="border p-3 bg-light">
-	 <a href="{% url 'finance:revenue_report' %}" style="text-decoration: none;">
+             <a href="{% url 'finance:revenue_report' %}" style="text-decoration: none;">
             <h6>Total Income</h6>
             <strong>৳ {{ total_income|add_commas }}</strong>
             </a>
           </div> 
         </div>
-        <div class="col-md-2">
-           <a href="{% url 'appointments:doctor_list'%}" style="text-decoration: none">
-	  <div class="border p-3 bg-light">
+        <div class="col-6 col-md-2">
+          <a href="{% url 'appointments:doctor_list'%}" style="text-decoration: none">
+          <div class="border p-3 bg-light">
             <h6>Doctor Payouts</h6>
             <strong>৳ {{ total_doctor_payment|add_commas }}</strong>
           </div>
-	  </a>
+          </a>
         </div>
-        <div class="col-md-2">
+        <div class="col-6 col-md-2">
           <div class="border p-3 bg-light">
             <h6>Employee Salary </h6>
             <strong>৳ {{ estimated_salary_paid |add_commas }}</strong>
           </div>
         </div>
-        <div class="col-md-2">
+        <div class="col-6 col-md-2">
           <div class="border p-3 bg-light">
-	    <a href="{% url 'finance:top_expenses_head' %}" style="text-decoration: none;">
+            <a href="{% url 'finance:top_expenses_head' %}" style="text-decoration: none;">
             <h6>Other Expenses</h6>
             <strong>৳ {{ total_other_expenses|add_commas }}</strong>
             </a>
-	
           </div>
+
         </div>
-        <div class="col-md-2">
+        <div class="col-6 col-md-2">
           <div class="border p-3 bg-light">
             <h6>Net Profit/Loss</h6>
             {% if net_profit < 0 %}
@@ -52,7 +55,7 @@
             {% endif %}
           </div>
         </div>
-        <div class="col-md-2">
+        <div class=" col-6 col-md-2">
           <div class="border p-3 bg-light">
             <h6>Asset Current Value</h6>
             <strong>৳ {{ asset_current_value|add_commas }}</strong>

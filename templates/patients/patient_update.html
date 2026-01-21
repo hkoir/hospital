@@ -1,0 +1,56 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container mt-4">
+    <h2 class="mb-4">Update Patient: {{ object.name }}</h2>
+
+    <form method="post" enctype="multipart/form-data">
+        {% csrf_token %}
+        <div class="row g-3">
+
+            <div class=" col-6 col-md-3">
+                {{ form.referral_source.label_tag }} {{ form.referral_source }}
+            </div>
+           <div class=" col-6 col-md-3">
+                {{ form.name.label_tag }} {{ form.name }}
+            </div>
+           <div class=" col-6 col-md-3">
+                {{ form.email.label_tag }} {{ form.email }}
+            </div>
+           <div class=" col-6 col-md-3">
+                {{ form.phone.label_tag }} {{ form.phone }}
+            </div>
+            <div class=" col-6 col-md-3">
+                {{ form.date_of_birth.label_tag }} {{ form.date_of_birth }}
+            </div>
+            <div class=" col-6 col-md-3">
+                {{ form.gender.label_tag }} {{ form.gender }}
+            </div>
+          
+             <div class=" col-6 col-md-3">
+                {{ form.emergency_contact.label_tag }} {{ form.emergency_contact }}
+            </div>
+            <div class=" col-6 col-md-3">
+                {{ form.patient_photo.label_tag }} {{ form.patient_photo }}
+            </div>
+
+
+            <div class="row mt-4">
+                 <div class="col-md-6">
+                {{ form.address.label_tag }} {{ form.address }}
+            </div>
+            <div class="col-md-6">
+                {{ form.medical_history.label_tag }} {{ form.medical_history }}
+            </div>
+           
+
+            </div>
+             
+        </div>
+
+        <div class="mt-4">
+            <button type="submit" class="btn btn-success">Update Patient</button>
+            <a href="{% url 'patients:patient_list' %}" class="btn btn-secondary">Cancel</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

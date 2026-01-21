@@ -13,7 +13,7 @@ from django.db import models
 from django.contrib import messages
 from django.utils import timezone
 from django.core.files.base import ContentFile
-import qrcode
+import qrcode,base64
 from barcode import Code128
 from barcode.writer import ImageWriter
 from io import BytesIO
@@ -38,7 +38,7 @@ from .models import RFQ
 from django.forms import modelformset_factory
 from.forms import BatchFormShort
 from inventory.models import InventoryTransaction,Inventory
-
+from core.models import Company
 
 
 
@@ -1221,3 +1221,420 @@ def update_purchase_order_status(request, order_id):
         messages.info(request, "Not all items have been delivered yet. Status remains unchanged.")
     
     return redirect('purchase:purchase_order_list')
+
+
+
+
+
+
+######################## Direct Purchase Procurement #################################################
+
+
+
+from .models import DirectPurchaseInvoiceItem, DirectPurchaseInvoice,GoodsReceivedItem,PurchasePayment
+from .forms import DirectPurchaseInvoiceForm, DirectPurchaseInvoiceItemFormSet,GoodsReceivedItemForm,PurchasePaymentForm  
+from django.forms import inlineformset_factory
+
+
+def create_direct_purchase_invoice(request, pk=None):
+    invoice = None
+    if pk:
+        invoice = get_object_or_404(DirectPurchaseInvoice, pk=pk)
+        invoice.status = "UPDATED"
+
+    if request.method == "POST":
+        invoice_form = DirectPurchaseInvoiceForm(request.POST, instance=invoice)
+        formset = DirectPurchaseInvoiceItemFormSet(request.POST, instance=invoice)
+
+        if invoice_form.is_valid() and formset.is_valid():
+            with transaction.atomic():
+                invoice = invoice_form.save(commit=False)
+                invoice.user = request.user
+                invoice.save()
+
+                items = formset.save(commit=False)
+                for item in items:
+                    if not item.quantity or not item.unit_price:
+                        continue
+                    item.invoice = invoice
+                    item.save()
+                for obj in formset.deleted_objects:
+                    obj.delete()
+                total = sum(i.total_amount for i in invoice.direct_purchase_items.all())
+                invoice.total_amount = total
+                invoice.final_amount = total - invoice.discount_amount - invoice.advance_amount
+                invoice.save()
+
+                msg = "updated" if pk else "created"
+                messages.success(request, f"Invoice {invoice.invoice_number} {msg} successfully!")
+                return redirect("purchase:direct_purchase_invoice_list")
+
+        else:
+            messages.error(request, "Please correct the errors in the form.")
+            print("Invoice Form Errors:", invoice_form.errors)
+            print("Formset Errors:", formset.errors)
+
+    else:
+        invoice_form = DirectPurchaseInvoiceForm(
+            instance=invoice,
+            initial={"created_at": timezone.now().date()}
+        )
+        formset = DirectPurchaseInvoiceItemFormSet(instance=invoice)
+
+    return render(request, "purchase/direct_purchase/create_direct_sale_invoice.html", {
+        "form": invoice_form,
+        "formset": formset,
+        "submit_label": "Update" if pk else "Create"
+    })
+
+
+@login_required
+def confirm_or_update_direct_purchase_invoice(request, invoice_id):
+    invoice = get_object_or_404(DirectPurchaseInvoice, id=invoice_id)
+    is_update = invoice.status == 'CONFIRMED'
+    action = 'updated' if is_update else 'confirmed'
+    if request.method == "POST":
+        with transaction.atomic():
+            old_transactions = InventoryTransaction.objects.filter(direct_purchase_invoice=invoice)
+            for t in old_transactions:
+                if t.transaction_type == "DIRECT_PURCHASE_IN":
+                    t.inventory.quantity -= t.quantity
+                    t.inventory.save()
+            old_transactions.delete()
+        
+            for item in invoice.direct_purchase_items.all():
+                if not item.item or item.quantity is None:
+                    continue
+                inventory, _ = Inventory.objects.get_or_create(
+                    warehouse=item.warehouse,
+                    location=item.location,
+                    product=item.item,
+                    batch=item.batch,
+                    defaults={'quantity': 0}
+                )
+                inventory.quantity += item.quantity
+                inventory.save()
+                InventoryTransaction.objects.create(
+                    user=request.user,
+                    warehouse=item.warehouse,
+                    location=item.location,
+                    product=item.item,
+                    product_type=item.product_type,
+                    batch=item.batch,
+                    quantity=item.quantity,
+                    transaction_type="INBOUND",
+                    direct_purchase_invoice=invoice,
+                    inventory=inventory,
+                    transaction_date=timezone.now(),
+                    remarks=f"Invoice #{invoice.invoice_number} {action} | confirmed quantity: {item.quantity}"
+                )
+
+                item.confirmed_quantity = item.quantity
+                item.save(update_fields=['confirmed_quantity'])
+            invoice.status = 'CONFIRMED'
+            invoice.save(update_fields=['status'])
+            messages.success(request, f"Direct Purchase Invoice {invoice.invoice_number} {action} successfully!")
+        return redirect("purchase:direct_purchase_invoice_list")
+    return render(
+        request,
+        "purchase/direct_purchase/confirm_direct_sale_invoice.html",
+        {"invoice": invoice}
+    )
+
+
+
+def direct_purchase_invoice_list(request):
+    invoices = DirectPurchaseInvoice.objects.select_related('user').order_by('-created_at')
+    datas = invoices
+    paginator = Paginator(datas, 5)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'purchase/direct_purchase/direct_invoice_list.html', {'invoices': invoices,'page_obj':page_obj})
+
+
+
+
+
+def generate_direct_purchase_qr(invoice):
+    data = f"Invoice:{invoice.invoice_number}|Customer:{invoice.supplier_name}|Total:{invoice.final_amount}"
+    qr = qrcode.QRCode(box_size=4)
+    qr.add_data(data)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    buffer = BytesIO()
+    img.save(buffer, format="PNG")
+    qr_base64 = base64.b64encode(buffer.getvalue()).decode()
+    return f"data:image/png;base64,{qr_base64}"
+
+
+
+def direct_purchase_invoice_detail(request, pk):
+    invoice = get_object_or_404(DirectPurchaseInvoice, pk=pk)
+    items = invoice.direct_purchase_items.all()  
+    supplier = getattr(invoice, "supplier_name", None) 
+    company = Company.objects.first()    
+    amount = invoice.final_amount
+    taka = int(amount)
+    poisha = int(round((amount - taka) * 100))
+
+    if poisha:
+        total_in_words = f"{num2words(taka, lang='en').title()} Taka and {num2words(poisha, lang='en').title()} Poisha Only"
+    else:
+        total_in_words = f"{num2words(taka, lang='en').title()} Taka Only"
+
+    context = {
+        "invoice": invoice,
+        "items": items,
+        "qr_code_url": generate_direct_purchase_qr(invoice),
+        "signature_url": "/static/images/signature-1.png",         
+        "company_logo_url": "/static/images/company_log.png",  
+        "supplier": supplier,
+        "company":company,
+        "total_in_words": total_in_words,
+    }
+    return render(request, "purchase/direct_purchase/direct_invoice_detail.html", context)
+
+
+@transaction.atomic
+def mark_direct_purchase_invoice_paid(request, pk):
+    invoice = get_object_or_404(DirectPurchaseInvoice, pk=pk)
+    if invoice.status != 'PAID':
+        invoice.status = 'PAID'
+        invoice.save()
+        messages.success(request, f"Invoice {invoice.invoice_number} marked as Paid.")
+    else:
+        messages.info(request, f"Invoice {invoice.invoice_number} is already Paid.")
+    return redirect('purchase:direct_purchase_invoice_list')
+
+
+@login_required
+@transaction.atomic
+def mark_direct_purchase_goods_received(request, pk):
+    invoice = get_object_or_404(DirectPurchaseInvoice, pk=pk)
+    items = invoice.direct_purchase_items.all()
+
+    if invoice.all_items_received:
+        messages.warning(request, f"All items for Invoice {invoice.invoice_number} are already received.")
+        return redirect("purchase:direct_purchase_invoice_list")
+
+    if request.method == "POST":
+        form = GoodsReceivedItemForm(request.POST)
+        if form.is_valid():
+            
+            warehouse = form.cleaned_data['warehouse']
+            location = form.cleaned_data['location']
+            for item in items:
+                if item.is_received:
+                    continue 
+
+                Inventory.objects.create(
+                    product=item.product,
+                    warehouse=warehouse,
+                    location=location,
+                    batch=item.batch,
+                    quantity=item.quantity,
+                )
+
+                InventoryTransaction.objects.create(
+                    transaction_type='RECEIVE',
+                    product=item.product,
+                    batch=item.batch,
+                    warehouse=warehouse,
+                    location=location,
+                    quantity=item.quantity,
+                    remarks=f"Goods received for Invoice {invoice.invoice_number}",
+                    user=request.user
+                )             
+                item.is_received = True
+                item.save()     
+            if invoice.all_items_received:
+                invoice.is_goods_received = True
+                invoice.save()
+
+            messages.success(request, f"Goods received successfully for Invoice {invoice.invoice_number}.")
+            return redirect("purchase:direct_purchase_invoice_details",invoice.id)
+
+    else:
+        form = GoodsReceivedItemForm()
+
+    return render(request, "purchase/goods_received_form.html", {
+        "form": form,
+        "invoice": invoice,
+        "items": items,
+    })
+
+
+
+
+
+PurchaseItemReceiveFormSet = inlineformset_factory(
+    parent_model=DirectPurchaseInvoiceItem,
+    model=GoodsReceivedItem,
+    form=GoodsReceivedItemForm,   
+    extra=1,
+    can_delete=True
+)
+
+
+@login_required
+@transaction.atomic
+def receive_goods(request, invoice_id):
+    invoice = get_object_or_404(DirectPurchaseInvoice, pk=invoice_id)
+    invoice_items = invoice.direct_purchase_items.all()  # All items in this invoice
+
+    # Build formset factory
+    PurchaseFormSet = inlineformset_factory(
+        DirectPurchaseInvoice,
+        GoodsReceivedItem,
+        form=GoodsReceivedItemForm,
+        extra=1,
+        can_delete=True
+    )
+
+    if request.method == "POST":
+        formset = PurchaseFormSet(request.POST, instance=invoice)
+        for form in formset:
+            form.fields['invoice_item'].queryset = invoice_items
+
+        if formset.is_valid():
+            for form in formset:
+                # Skip deleted rows
+                if form.cleaned_data.get('DELETE'):
+                    form.instance.delete()
+                    continue
+
+                invoice_item = form.cleaned_data['invoice_item']  # Properly get the invoice item
+                received_item = form.save(commit=False)
+                received_item.invoice_item = invoice_item
+                received_item.purchase_invoice = invoice
+                received_item.received_by = request.user
+
+                # Check quantity limits
+                previous_received = sum(
+                    ri.quantity_received for ri in invoice_item.received_items.all()
+                )
+                if previous_received + received_item.quantity_received > invoice_item.quantity:
+                    messages.error(
+                        request,
+                        f"Received quantity exceeds ordered amount for item {invoice_item.item.name}. "
+                        f"Ordered: {invoice_item.quantity}, Already Received: {previous_received}, "
+                        f"Attempted: {received_item.quantity_received}"
+                    )
+                    return redirect('purchase:received_goods', invoice.id)
+
+                # Save received item
+                received_item.save()
+
+                # Update inventory
+                inventory, created = Inventory.objects.get_or_create(
+                    product=invoice_item.item,
+                    warehouse=received_item.warehouse,
+                    location=received_item.location,
+                    batch=received_item.batch,
+                    defaults={'quantity': 0}
+                )
+                inventory.quantity += received_item.quantity_received
+                inventory.save()
+
+                # Create inventory transaction
+                InventoryTransaction.objects.create(
+                    transaction_type='INBOUND',
+                    product=invoice_item.item,
+                    batch=received_item.batch,
+                    warehouse=received_item.warehouse,
+                    location=received_item.location,
+                    quantity=received_item.quantity_received,
+                    remarks=f"Goods received for Invoice {invoice.invoice_number}",
+                    user=request.user
+                )
+
+            # Update invoice status if all items fully received
+            all_received = all(
+                sum([ri.quantity_received for ri in item.received_items.all()]) >= item.quantity
+                for item in invoice_items
+            )
+            if all_received:
+                invoice.is_goods_received = True
+                invoice.status = "RECEIVED"
+                invoice.save()
+
+            messages.success(request, "Goods received successfully!")
+            return redirect("purchase:direct_purchase_invoice_list")
+
+    else:
+        formset = PurchaseFormSet(instance=invoice)
+        for form in formset:
+            form.fields['invoice_item'].queryset = invoice_items
+
+    return render(request, "purchase/direct_purchase/received_goods_multiple.html", {
+        "formset": formset,
+        "invoice": invoice
+    })
+
+
+
+
+@login_required
+def make_purchase_payment(request, invoice_id=None):
+    form = PurchasePaymentForm()
+    invoice = None
+    initial_data = {}
+    if invoice_id:
+        invoice = get_object_or_404(DirectPurchaseInvoice, id=invoice_id)
+        initial_data = {
+            'purchase_invoice': invoice,
+            'supplier_name': invoice.supplier_name,
+            'vat_amount': invoice.vat_amount,
+            'ait_amount': invoice.ait_amount,
+            'net_amount': invoice.net_due_amount,
+            'purchase_price':invoice.total_amount
+        }
+
+    if request.method == "POST":
+        form = PurchasePaymentForm(request.POST)
+        if form.is_valid():
+            bank = form.cleaned_data['bank_account']
+            if bank.balance < invoice.net_due_amount:
+                messages.error(request, "Bank balance is not enough to pay this invoice.")
+                return redirect("purchase:make_payment_id", invoice.id)
+
+            payment = form.save(commit=False)
+            if invoice:
+                payment.purchase_invoice = invoice
+                payment.supplier_name = invoice.supplier_name
+            
+            payment.total_amount = invoice.total_amount
+            payment.net_amount = invoice.net_due_amount
+            payment.created_by = request.user
+            payment.save()
+            bank.balance -= payment.net_amount
+            bank.save(update_fields=['balance'])
+
+            from accounting.utils import  create_journal_entry_for_direct_purchase_invoice
+            create_journal_entry_for_direct_purchase_invoice(
+                payment,
+                description =f'Purchase',
+                created_by=request.user,
+                )
+            messages.success(request, "Purchase payment recorded successfully!")
+            return redirect("purchase:direct_purchase_invoice_detail", invoice.id)
+        else:
+            print(form.errors)
+    else:
+        print(form.errors)
+        form = PurchasePaymentForm(initial=initial_data)
+
+        if invoice:
+            form.fields["purchase_invoice"].widget.attrs["readonly"] = True
+            form.fields["purchase_invoice"].widget.attrs["disabled"] = True
+            form.fields["net_amount"].widget.attrs["readonly"] = True
+            form.fields["ait_amount"].widget.attrs["readonly"] = True
+            form.fields["purchase_price"].widget.attrs["readonly"] = True
+
+    context = {
+        "form": form,
+        "invoice": invoice,
+    }
+    return render(request, "purchase/purchase_payment_form.html", context)
+
+

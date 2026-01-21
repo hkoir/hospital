@@ -149,8 +149,15 @@
             <div class="col-md-4 doctor-card" data-category="{{ specialization }}">
                 <div class="mb-3">
                     <div class="text-center p-3">
+			{% if doctor.employee_photo_ID %}
                         <img src="{{ doctor.employee_photo_ID.url }}" class="rounded-circle"
                                 style="width:100px; height:100px;" alt="{{ doctor.name }}">
+			{% elif doctor.user.photo_id %}
+			<img src="{{ doctor.user.photo_id.url }}" class="rounded-circle"
+                                style="width:100px; height:100px;" alt="{{ doctor.name }}">
+			{% else %}
+			<span class="badge bg-info">No Photo</span>
+			{% endif %}
                     </div>
                     <div class="card-body text-center">
                         <h5 class="card-title text-primary fw-bold">{{ doctor.name }}</h5>
@@ -179,7 +186,16 @@
                         </div>
                         <div class="modal-body">
                             <div class="text-center mb-3">
-                                <img src="{{ doctor.employee_photo_ID.url }}" alt="{{ doctor.name }}" class="rounded-circle border shadow" style="width: 120px; height: 120px;">
+
+				 {% if doctor.employee_photo_ID %}
+                        	  	<img src="{{ doctor.employee_photo_ID.url }}" class="rounded-circle"
+                                	style="width:100px; height:100px;" alt="{{ doctor.name }}">
+                        		{% elif doctor.user.photo_id %}
+                       			 <img src="{{ doctor.user.photo_id.url }}" class="rounded-circle"
+                                	style="width:100px; height:100px;" alt="{{ doctor.name }}">
+                     		   {% else %}
+                        		<span class="badge bg-info">No Photo</span>
+                        	  {% endif %}
                             </div>
                             <h4 class="text-center text-primary">{{ doctor.specialization }}</h4>
                             <p class="text-center"><strong>License No:</strong> {{ doctor.medical_license_number }}</p>

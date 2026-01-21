@@ -1,0 +1,23 @@
+<div class="container my-3">
+
+    <h5 class="text-center mb-3 fw-bold">Quick Navigation</h5>
+ 
+    <div class="d-flex justify-content-center flex-wrap gap-2 mb-2">
+        <span class="fw-semibold text-secondary small me-2">Appointments & Schedules</span>
+     
+        <a href="{% url 'appointments:create_doctor_timeslots' %}" class="btn btn-sm btn-outline-primary">
+            + Create Timeslots</a>
+
+        <a href="{% url 'appointments:available_doctors' %}" class="btn btn-sm btn-outline-primary">
+            Available Doctors</a>
+
+        <a href="{% url 'appointments:appointment_list' %}" class="btn btn-sm btn-outline-primary">
+            Appointment List </a>
+
+        <a href="{% url 'appointments:general_appointment' %}" class="btn btn-sm btn-outline-primary">
+            + New Appointment </a>
+     
+    </div>   
+
+    <hr>
+</div>

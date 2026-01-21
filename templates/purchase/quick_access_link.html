@@ -1,0 +1,96 @@
+
+<style>
+
+/* Professional button palette */
+.btn-purchase {
+    background-color: #28a745 !important;
+    color: white !important;
+    border: none;
+}
+.btn-purchase:hover {
+    background-color: #218838 !important;
+}
+
+.btn-request {
+    background-color: #17a2b8 !important;
+    color: white !important;
+    border: none;
+}
+.btn-request:hover {
+    background-color: #138496 !important;
+}
+
+.btn-warning-soft {
+    background-color: #ffe8a1 !important;
+    color: #8a6d3b !important;
+    border: 1px solid #ffdf7e !important;
+}
+.btn-warning-soft:hover {
+    background-color: #ffd86b !important;
+}
+
+.btn-dpp-primary {
+    border: 2px solid #007bff !important;
+    color: #007bff !important;
+    background: white !important;
+}
+.btn-dpp-primary:hover {
+    background: #007bff !important;
+    color: white !important;
+}
+
+.btn-dpp-secondary {
+    border: 2px solid #6c757d !important;
+    color: #6c757d !important;
+    background: white !important;
+}
+.btn-dpp-secondary:hover {
+    background: #6c757d !important;
+    color: white !important;
+}
+
+
+</style>
+
+
+
+
+
+<div class="container my-3">
+    <h5 class="text-center mb-3 fw-bold">Quick Navigation</h5>
+
+    <!-- Standard Purchase -->
+    <div class="d-flex justify-content-center flex-wrap gap-2 mb-2">
+        <span class="fw-semibold text-secondary small me-2">Standard Purchase / Import Goods</span>
+
+        <a href="{% url 'purchase:create_purchase_request' %}" class="btn btn-sm btn-purchase">
+            Request for Purchase </a>
+        <a href="{% url 'purchase:purchase_request_order_list' %}" class="btn btn-sm btn-purchase">
+            Request Order List</a>
+        <a href="{% url 'purchase:rfq_list' %}" class="btn btn-sm btn-request">
+            RFQ List</a>
+        <a href="{% url 'purchase:supplier_quotation_list' %}" class="btn btn-sm btn-request">
+            Supplier Quotation List </a>
+        <a href="{% url 'purchase:purchase_order_list' %}" class="btn btn-sm btn-warning-soft">
+            Purchase Order List </a>
+        <a href="{% url 'purchase:create_batch' %}" class="btn btn-sm btn-warning-soft">
+            Create Batch </a>
+        <a href="{% url 'logistics:purchase_shipment_list' %}" class="btn btn-sm btn-request">
+            Purchase Shipment </a>
+        <a href="{% url 'purchase:batch_list' %}" class="btn btn-sm btn-purchase">
+            Batch List </a>
+    </div>
+
+    <!-- DPP Section -->
+    <div class="d-flex justify-content-center flex-wrap gap-2 mt-1">
+        <span class="fw-semibold text-secondary small me-2">DPP (Direct Purchase Procurement):</span>
+        <a href="{% url 'purchase:create_direct_purchase_invoice' %}" class="btn btn-sm btn-dpp-primary">
+            + Create DPP </a>
+        <a href="{% url 'purchase:direct_purchase_invoice_list' %}" class="btn btn-sm btn-dpp-secondary">
+            + DPP Status </a>
+     <a href="{% url 'inventory:product_dashboard' %}" class="btn btn-sm btn-primary">Inventory</a>
+
+    </div>
+
+    <hr>
+</div>

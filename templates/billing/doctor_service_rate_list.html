@@ -2,6 +2,9 @@
 
 {% extends 'base.html' %}
 {% block content %}
+
+{% include 'referrals/quick_access_link.html' %}
+
   <div class="container mt-4 table-responsive">
     <h4>Doctor Service Rates</h4>
     <a href="{% url 'billing:doctor_service_rate_create' %}" class="btn btn-primary mb-3">Add New Rate</a>

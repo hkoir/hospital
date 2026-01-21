@@ -1,95 +1,117 @@
+
 code,name,type,parent
 1000,Assets,ASSET,
 1100,Current Assets,ASSET,1000
 1110,Cash on Hand,ASSET,1100
-1120,Checking Account,ASSET,1100
-1121,Checking Account - Bank A,ASSET,1120
-1122,Checking Account - Bank B,ASSET,1120
-1130,Savings Account,ASSET,1100
-1131,Savings Account - Bank A,ASSET,1130
-1132,Savings Account - Bank B,ASSET,1130
-1140,Accounts Receivable,ASSET,1100
-1141,Accounts Receivable - Trade,ASSET,1140
-1142,Accounts Receivable - Other,ASSET,1140
-1150,Inventory,ASSET,1100
-1151,Raw Materials,ASSET,1150
-1152,Work in Progress,ASSET,1150
-1153,Finished Goods,ASSET,1150
-1160,Prepaid Expenses,ASSET,1100
-1170,Advances to Employees,ASSET,1100
-1180,Input VAT Recoverable,ASSET,1100
-1190,AIT Receivable,ASSET,1100
-1200,Fixed Assets,ASSET,1000
-1210,Office Equipment,ASSET,1200
-1220,Furniture & Fixtures,ASSET,1200
-1230,Computers & IT Equipment,ASSET,1200
-1240,Building,ASSET,1200
-1250,Land,ASSET,1200
-1260,Accumulated Depreciation,ASSET,1200
-1270,Motor Vehicles,ASSET,1200
-1280,Leasehold Improvements,ASSET,1200
+1120,Petty Cash,ASSET,1100
+
+1130,Bank Accounts,ASSET,1100
+1131,Bank Account - A,ASSET,1130
+1132,Bank Account - B,ASSET,1130
+
+1200,Accounts Receivable,ASSET,1100
+1210,Patient Receivables,ASSET,1200
+1220,Insurance Receivables,ASSET,1200
+
+1300,Inventory,ASSET,1100
+1310,Medicine Inventory,ASSET,1300
+1320,Medical Supplies Inventory,ASSET,1300
+
+1400,Prepaid Expenses,ASSET,1100
+1500,Advance & Deposits,ASSET,1100
+1510,Advance to Staff,ASSET,1500
+
+1600,Tax Assets,ASSET,1100
+1610,Input VAT Recoverable,ASSET,1600
+1620,AIT Receivable,ASSET,1600
+
+1700,Fixed Assets,ASSET,1000
+1710,Medical Equipment,ASSET,1700
+1720,Furniture & Fixtures,ASSET,1700
+1730,Computer & IT Equipment,ASSET,1700
+1740,Office Equipment,ASSET,1700
+1750,Motor Vehicle,ASSET,1700
+1760,Accumulated Depreciation,ASSET,1700
+
+
 
 2000,Liabilities,LIABILITY,
 2100,Current Liabilities,LIABILITY,2000
+
 2110,Accounts Payable,LIABILITY,2100
-2111,Accounts Payable - Trade,LIABILITY,2110
-2112,Accounts Payable - Other,LIABILITY,2110
-2120,Wages Payable,LIABILITY,2100
-2130,Taxes Payable,LIABILITY,2100
-2131,Output VAT Payable,LIABILITY,2130
-2132,AIT Payable,LIABILITY,2130
-2133,Withholding Tax Payable,LIABILITY,2130
-2140,Unearned Revenue,LIABILITY,2100
-2150,Accrued Expenses,LIABILITY,2100
-2200,Non-Current Liabilities,LIABILITY,2000
-2210,Long-term Loan,LIABILITY,2200
-2220,Lease Obligations,LIABILITY,2200
-2230,Provision for Gratuity,LIABILITY,2200
+2120,Medicine Payable,LIABILITY,2110
+2130,Supplier Payable,LIABILITY,2110
+
+2200,Tax Liabilities,LIABILITY,2100
+2210,Output VAT Payable,LIABILITY,2200
+2220,AIT Payable,LIABILITY,2200
+
+2300,Accrued Liabilities,LIABILITY,2100
+2310,Accrued Expenses,LIABILITY,2300
+
+2400,Deferred Income,LIABILITY,2100
+2410,Advance from Patients,LIABILITY,2400
+
+2500,Payroll Related,LIABILITY,2100
+2510,Salary Payable,LIABILITY,2500
+2520,Overtime Payable,LIABILITY,2500
+
+2600,Service Payables,LIABILITY,2100
+2610,Doctor Service Payable,LIABILITY,2600
+2620,Referral Commission Payable,LIABILITY,2600
+2630,External Contractor Payable,LIABILITY,2600
+
+2700,Long-term Liabilities,LIABILITY,2000
+2710,Long-term Loans,LIABILITY,2700
+
 
 3000,Equity,EQUITY,
 3100,Share Capital,EQUITY,3000
-3101,Common Stock,EQUITY,3100
-3102,Preferred Stock,EQUITY,3100
 3200,Retained Earnings,EQUITY,3000
-3300,Dividends,EQUITY,3000
-3400,Reserves,EQUITY,3000
+3300,Owner Withdrawals,EQUITY,3000
 
-4000,Income,INCOME,
-4100,Sales Revenue,INCOME,4000
-4110,Domestic Sales,INCOME,4100
-4120,Export Sales,INCOME,4100
-4200,Service Revenue,INCOME,4000
-4300,Other Income,INCOME,4000
-4310,Interest Income,INCOME,4300
-4320,Gain on Sale of Asset,INCOME,4300
-4330,Rental Income,INCOME,4300
-4340,Commission Income,INCOME,4300
-4350,Foreign Exchange Gain,INCOME,4300
+
+4000,Revenue,INCOME,
+
+4100,Consultation Revenue,INCOME,4000
+4200,Lab Test Revenue,INCOME,4000
+4300,Medicine Sales Revenue,INCOME,4000
+4400,Ward / Bed Revenue,INCOME,4000
+4500,Operation Theatre Revenue,INCOME,4000
+4600,Service Charges Revenue,INCOME,4000
+4700,Miscellaneous Revenue,INCOME,4000
+4800,Discounts Allowed (Contra Revenue),INCOME,4000
+4900,Other Income,INCOME,4000
+4910,Interest Income,INCOME,4900
+
 
 5000,Expenses,EXPENSE,
+
 5100,Cost of Goods Sold,EXPENSE,5000
-5110,Raw Materials,EXPENSE,5100
-5120,Direct Labor,EXPENSE,5100
-5130,Factory Overheads,EXPENSE,5100
-5140,Purchase Freight & Duties,EXPENSE,5100
+5110,Medicine Purchase,EXPENSE,5100
+5120,Medical Consumables Used,EXPENSE,5100
+
 5200,Operating Expenses,EXPENSE,5000
 5210,Salaries & Wages,EXPENSE,5200
-5211,Base Salary,EXPENSE,5210
-5212,Overtime,EXPENSE,5210
-5213,Bonuses & Incentives,EXPENSE,5210
-5220,Rent Expense,EXPENSE,5200
-5230,Utilities,EXPENSE,5200
-5231,Electricity,EXPENSE,5230
-5232,Water,EXPENSE,5230
-5233,Internet & Phone,EXPENSE,5230
-5240,Office Supplies,EXPENSE,5200
-5250,Repairs & Maintenance,EXPENSE,5200
-5260,Insurance Expense,EXPENSE,5200
-5270,Marketing & Advertising,EXPENSE,5200
-5280,Travel & Entertainment,EXPENSE,5200
-5290,Professional Fees,EXPENSE,5200
-5300,Depreciation Expense,EXPENSE,5000
-5310,Interest Expense,EXPENSE,5000
-5320,Income Tax Expense,EXPENSE,5000
-5330,Foreign Exchange Loss,EXPENSE,5000
-5340,Bad Debt Expense,EXPENSE,5000
+5220,Consultant / Doctor Fees,EXPENSE,5200
+5230,Nurse & Staff Overtime,EXPENSE,5200
+5240,Referral Commission Expense,EXPENSE,5200
+5250,Office Rent,EXPENSE,5200
+5260,Utilities,EXPENSE,5200
+5261,Electricity,EXPENSE,5260
+5262,Water,EXPENSE,5260
+5263,Internet,EXPENSE,5260
+
+5300,Admin Expenses,EXPENSE,5000
+5310,Printing & Stationery,EXPENSE,5300
+5320,Travel & Transport,EXPENSE,5300
+5330,Marketing Expense,EXPENSE,5300
+5340,Professional Fees,EXPENSE,5300
+
+5400,Financial Expenses,EXPENSE,5000
+5410,Bank Charges,EXPENSE,5400
+5420,Interest Expense,EXPENSE,5400
+
+5500,Depreciation Expense,EXPENSE,5000
+5600,Bad Debt Expense,EXPENSE,5000
+

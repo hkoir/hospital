@@ -1,0 +1,133 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+
+
+
+{% include 'purchase/quick_access_link.html' %}
+
+<div class="container-fluid mt-4">
+     <div class="table-responsive">        
+            <table class="table table-hover align-middle table-bordered">
+                <h4> Purchased goods</h4>
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>Item</th>
+                        <th>Quantity</th>
+                        <th>Batch</th>
+                        <th>Date</th>
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for item in invoice.direct_purchase_items.all %}
+                    <tr>
+                        <td>{{ item.item }}</td>
+                        <td><strong>{{ item.quantity }}</strong></td>
+                        <td>{{ item.batch }}</td>
+                        <td>{{ item.created_at|date:"d M Y" }}</td>
+                        {% endfor %}
+                       
+                     
+                </tbody>
+            </table>
+    </div>
+
+    <form method="post" id="invoice-form">
+        {% csrf_token %}
+          
+        <!-- Invoice Items -->
+        <fieldset class="border p-3 mb-4">
+            <legend class="w-auto px-2"><strong>Items to be Received</strong></legend><br>
+
+            {{ formset.management_form }}
+
+            <div class="text-end mb-2">
+                <button type="button" id="add-item-btn" class="btn btn-primary btn-sm">➕ Add Row</button>
+            </div>
+
+            <div class="table-responsive">
+                <table id="quotation-table" class="table table-bordered align-middle text-center">
+                    <thead class="table-dark">
+                        <tr>
+                            {% for field in formset.empty_form.visible_fields %}
+                                {% if field.name != 'DELETE' %}
+                                    <th>{{ field.label }}</th>
+                                {% endif %}
+                            {% endfor %}
+                            <th>Delete?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for form in formset %}
+                        <tr>
+                            {% for field in form.visible_fields %}
+                                {% if field.name != 'DELETE' %}
+                                    <td>{{ field|add_class:"form-control" }}</td>
+                                {% endif %}
+                            {% endfor %}
+                            <td>
+                                <button type="button" class="btn btn-danger btn-sm delete-row">Delete</button>
+                                {{ form.DELETE }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Hidden empty row for cloning -->
+            <table style="display:none;">
+                <tbody id="empty-form-row">
+                    <tr>
+                        {% for field in formset.empty_form.visible_fields %}
+                            {% if field.name != 'DELETE' %}
+                                <td>{{ field|add_class:"form-control" }}</td>
+                            {% endif %}
+                        {% endfor %}
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm delete-row">Delete</button>
+                            {{ formset.empty_form.DELETE }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-success btn-lg px-5">Save</button>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+<script>
+    const addItemBtn = document.getElementById('add-item-btn');
+    const totalForms = document.getElementById('id_{{ formset.prefix }}-TOTAL_FORMS');
+    const tableBody = document.querySelector('#quotation-table tbody');
+    const emptyFormRow = document.getElementById('empty-form-row').innerHTML;
+
+    addItemBtn.addEventListener('click', () => {
+        let formCount = parseInt(totalForms.value);
+
+        // Clone empty row
+        let newRow = emptyFormRow.replace(/__prefix__/g, formCount);
+
+        tableBody.insertAdjacentHTML('beforeend', newRow);
+
+        // Update management form count
+        totalForms.value = formCount + 1;
+    });
+
+    // Delete row
+    document.addEventListener('click', function (e) {
+        if (e.target.classList.contains('delete-row')) {
+            const row = e.target.closest('tr');
+            const checkbox = row.querySelector('input[type=checkbox][name$="-DELETE"]');
+            if (checkbox) checkbox.checked = true;
+            row.style.display = 'none';
+        }
+    });
+</script>
+
+{% endblock %}

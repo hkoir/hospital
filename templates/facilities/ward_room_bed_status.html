@@ -1,132 +1,199 @@
+
+
 {% extends 'base.html' %}
 {% block content %}
 
+ 
 
-<div class="container mt-4">
-    <h2 class="text-center mb-4">Ward & Room Bed Status Overview</h2>
+<style>
 
-    <!-- Search Box -->
+.dashboard-wrapper {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 15px;
+}
+
+/* Left Panel Styling */
+.left-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    height: auto;
+    position: static;
+    top: 0px;
+}
+
+/* ===== Responsive Mobile Layout ===== */
+@media (max-width: 992px) {
+
+    .dashboard-wrapper {
+        grid-template-columns: 1fr;  /* stacked vertically */
+    }
+
+    .left-panel {
+        position: relative;          /* disable sticky */
+        top: 0;
+        margin-bottom: 20px;
+    }
+
+    .kpi-card {
+        padding: 18px;
+    }
+}
+
+    .left-panel h5 {
+        font-weight: 700;
+        margin-bottom: 18px;
+        color: #003c82;
+    }
+
+    .quick-link {
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        background: #f7faff;
+        border-radius: 10px;
+        border: 1px solid #e1ecf9;
+        text-decoration: none;
+        display: block;
+        font-weight: 600;
+        color: #003c82;
+        transition: 0.2s;
+    }
+
+    .quick-link:hover {
+        background: #e8f1ff;
+        border-color: #d7e5ff;
+        transform: translateX(5px);
+    }
+
+    .right-panel h3 {
+        font-weight: 700;
+        color: #003c82;
+    }
+
+    .kpi-card {
+        padding: 10px;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        text-align: center;
+        height: 80px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 14px;
+        color: #003c82;
+    }
+
+    .list-group-item {
+        border-radius: 12px !important;
+        margin-bottom: 8px;
+        border: 1px solid #eaeaea;
+    }
+
+
+.table-responsive {
+    width: 100%;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch;
+    display: block !important;
+}
+
+
+
+</style>
+
+
+
+<div class="container-fluid">
+    <div class="dashboard-wrapper">      
+        <div class="left-panel mt-0">      
+            {% include 'workspace/staff_quick_access_link.html' %}
+        </div>
+       
+        <div class="right-panel">
+
+
+    <h2 class="text-center mb-4">Hospital Ward & Bed Overview</h2>
+
+    <!-- Search -->
     <div class="mb-4 text-center">
-        <input type="text" id="searchInput" class="form-control w-50 mx-auto" placeholder="Search Ward or Room...">
+        <input type="text" id="searchInput" class="form-control w-50 mx-auto" placeholder="Search Ward, Room, or Bed...">
     </div>
 
     <div id="wardStatusContainer">
         {% for status in ward_status_list %}
-        <div class="card mb-4 shadow ward-card">
-            <div class="card-header bg-primary text-white">
-                <strong class="ward-name">{{ status.ward.name }}</strong>
-                ({{ status.ward.get_ward_type_display }}) — Location: {{ status.ward.location }}
+        <div class="card mb-3 shadow">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+                <span><strong>{{ status.ward.name }}</strong> ({{ status.ward.get_ward_type_display }})</span>
+                <button class="btn btn-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#ward-{{ status.ward.id }}">Toggle Rooms</button>
             </div>
-            <div class="card-body">
-                <p>
-                <strong>Total Beds:</strong> {{ status.total_beds }}
-                <strong>Occupied Beds:</strong> {{ status.occupied_beds }}
-                <strong>Available Beds:</strong> {{ status.available_beds }}
-                </p>
 
-                <table class="table table-bordered mt-3 room-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Room No</th>
-                            <th>Room Type</th>
-                            <th>Total Beds</th>
-                            <th>Occupied</th>
-                            <th>Available</th>
-                            <th>Daily Charge</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for room in status.rooms %}
-                        <tr class="room-row">
-                            <td class="room-number">{{ room.room.number }}</td>
-                            <td>{{ room.room.room_type }}</td>
-                            <td>{{ room.total_beds }}</td>
-                            <td>{{ room.occupied_beds }}</td>
-                            <td>{{ room.available_beds }}</td>
-                             <td>{{ room.daily_charge }}</td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="5" class="text-center">No rooms in this ward.</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="collapse show" id="ward-{{ status.ward.id }}">
+                <div class="card-body">
+                    <p>
+                        <strong>Total Beds:</strong> {{ status.total_beds }}
+                        <strong>Occupied:</strong> {{ status.occupied_beds }}
+                        <strong>Available:</strong> {{ status.available_beds }}
+                    </p>
+
+                    <!-- Rooms -->
+                    {% for room in status.rooms %}
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between bg-secondary text-white p-2">
+                            <span>Room: {{ room.room.number }} ({{ room.room.room_type }})</span>
+                            <button class="btn btn-light btn-sm" type="button" data-bs-toggle="collapse" data-bs-target="#room-{{ room.room.id }}">Toggle Beds</button>
+                        </div>
+
+                        <div class="collapse show" id="room-{{ room.room.id }}">
+                            <table class="table table-bordered mt-2">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Bed Number</th>
+                                        <th>Charge</th>
+                                        <th>Occupancy</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for bed in room.beds %}
+                                    <tr class="{% if bed.is_occupied %}table-danger{% else %}table-success{% endif %}">
+                                        <td>{{ bed.bed_number }}</td>
+                                        <td>
+                                            {% if bed.hourly_charge %}Hourly: {{ bed.hourly_charge }}
+                                            {% else %}Daily: {{ bed.daily_charge }}
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ bed.is_occupied|yesno:"Occupied,Available" }}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
             </div>
         </div>
-        {% empty %}
-        <p>No wards found.</p>
         {% endfor %}
-
-   
-
-    <div class="card mb-4 shadow ward-card ot-card">
-            <div class="card-header bg-primary text-white">
-                <strong class="ward-name">Operation Theatre Status</strong>               
-            </div>
-            <div class="card-body">
-                <table class="table table-bordered ot-table">
-                    <thead class="table-light">
-                        <tr>
-                            <th>Name</th>
-                            <th>Type</th>
-                            <th>Location</th>
-                            <th>Hourly Rate</th>
-                            <th>Available</th>
-                            <th>Occupied</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for ot in ot_status_list %}
-                        <tr class="ot-row">
-                            <td class="ot-name">{{ ot.name }}</td>
-                            <td class="ot-type">{{ ot.type }}</td>
-                            <td class="ot-location">{{ ot.location }}</td>
-                            <td>{{ ot.hourly_rate }}</td>
-                            <td>{{ ot.is_available|yesno:"Yes,No" }}</td>
-                            <td>{{ ot.is_occupied|yesno:"Yes,No" }}</td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
-        </div>
-
-
     </div>
 </div>
+
+</div>
+</div>
+
 <script>
-    const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('keyup', function () {
-        const filter = this.value.toLowerCase();
+const searchInput = document.getElementById('searchInput');
+searchInput.addEventListener('keyup', function() {
+    const filter = this.value.toLowerCase();
 
-        // Filter ward cards
-        const wardCards = document.querySelectorAll('.ward-card:not(.ot-card)');
-        wardCards.forEach(card => {
-            const wardName = card.querySelector('.ward-name').textContent.toLowerCase();
-            const roomNumbers = Array.from(card.querySelectorAll('.room-number')).map(td => td.textContent.toLowerCase());
-            const matchesWard = wardName.includes(filter);
-            const matchesRoom = roomNumbers.some(room => room.includes(filter));
-            card.style.display = (matchesWard || matchesRoom) ? '' : 'none';
-        });
-
-        // Filter OT rows
-        const otCard = document.querySelector('.ot-card');
-        const otRows = otCard.querySelectorAll('.ot-row');
-        let otHasMatch = false;
-
-        otRows.forEach(row => {
-            const name = row.querySelector('.ot-name').textContent.toLowerCase();
-            const type = row.querySelector('.ot-type').textContent.toLowerCase();
-            const location = row.querySelector('.ot-location').textContent.toLowerCase();
-            const matches = name.includes(filter) || type.includes(filter) || location.includes(filter);
-            row.style.display = matches ? '' : 'none';
-            if (matches) otHasMatch = true;
-        });
-
-        // Hide entire OT card if no rows match
-        otCard.style.display = otHasMatch ? '' : 'none';
+    document.querySelectorAll('#wardStatusContainer .card').forEach(card => {
+        const text = card.textContent.toLowerCase();
+        card.style.display = text.includes(filter) ? '' : 'none';
     });
+});
 </script>
 
 {% endblock %}

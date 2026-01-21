@@ -1,0 +1,262 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+
+<style>
+    .progress-bar {
+        width: var(--width);
+        transition: width 0.5s;
+    }
+</style>
+
+<div class="container-fluid py-4">
+
+    <!-- Title -->
+<div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-2 mb-4">
+
+    <h3 class="fw-bold mb-0 text-center text-md-start">
+        Management Dashboard
+    </h3>
+
+    <div class="d-flex flex-wrap justify-content-center gap-2">
+        <a href="{% url 'finance:revenue_report' %}" 
+           class="btn btn-sm btn-outline-success">
+            More Analytics
+        </a>
+
+        <a href="{% url 'accounting:profit_loss' %}" 
+           class="btn btn-sm btn-outline-primary">
+            Accounting View
+        </a>
+    </div>
+
+    <span class="text-muted text-center text-md-end">
+        Updated: {{ now|date:"d M, Y h:i A" }}
+    </span>
+
+</div>
+
+    <!-- KPI CARDS -->
+    <div class="row g-4 mb-4">
+
+        <div class="col-md-3">
+            <div class="card shadow-lg border-0 rounded-4" style="border-left:5px solid #28a745;">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Today's Revenue</h6>
+                    <h2 class="fw-bold text-success">৳ {{ revenue_today|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-lg border-0 rounded-4" style="border-left:5px solid #0d6efd;">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Monthly Revenue</h6>
+                    <h2 class="fw-bold text-primary">৳ {{ revenue_month|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-lg border-0 rounded-4" style="border-left:5px solid #ffc107;">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Monthly Expenses</h6>
+                    <h2 class="fw-bold text-warning">৳ {{ expenses_month|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-3">
+            <div class="card shadow-lg border-0 rounded-4" style="border-left:5px solid #20c997;">
+                <div class="card-body">
+                    <h6 class="text-muted mb-1">Net Profit (Month)</h6>
+                    <h2 class="fw-bold text-teal">৳ {{ profit_month|floatformat:2 }}</h2>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Revenue Breakdown Chart -->
+
+<div class="card shadow-sm border-0 mb-4">
+    <div class="card-header bg-white">
+        <h5 class="fw-semibold">Revenue Analytics</h5>
+    </div>
+    <div class="card-body">
+        <div class="row">
+            <!-- Bar Chart -->
+            <div class="col-md-8">
+                <canvas id="revenueBarChart"></canvas>
+            </div>
+
+            <!-- Pie Chart -->
+            <div class="col-md-4">
+                <canvas id="revenuePieChart" ></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+    <!-- Bed Analytics -->
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-semibold mb-0">Bed Analytics</h5>
+        </div>
+        <div class="card-body">
+
+            <label class="fw-semibold">Overall Bed Occupancy</label>
+           <div class="progress">
+                 <div class="progress-bar" role="progressbar" style="--width: {{ occupancy|floatformat:0 }}%">
+                    {{ occupancy|floatformat:0 }}%
+                </div>
+            </div>
+
+            <label class="fw-semibold">ICU Occupancy</label>
+
+            <div class="progress" style="height: 20px;">             
+                <div class="progress">
+                 <div class="progress-bar" role="progressbar" style="--width: {{ icu_occupancy|floatformat:0 }}%">
+                    {{ icu_occupancy|floatformat:0 }}%
+                </div>
+            </div>
+            
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Doctor Performance -->
+    <div class="card shadow-sm border-0 rounded-4 mb-5">
+	<form method="get" class="row" id="filterForm">
+            <div class="col-md-3">
+                <input type="text" name="q" class="form-control" placeholder="Search by name or Phone"
+                    value="{{ query }}">
+            </div>      
+            <div class="col-md-3">
+                <button type="submit" class="btn btn-primary">Filter</button>                
+            </div>
+        </form>
+
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-semibold mb-0">Doctor Performance Overview</h5>
+        </div>
+        <div class="card-body">
+	 <div class="table-responsive">
+            <table class="table table-hover align-middle">
+                <thead class="table-light">
+                    <tr>
+                        <th>Doctor</th>
+                        <th class="text-center">Consultations</th>
+                         <th class="text-end">Consultation Revenue (৳)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for doc in page_obj %}
+                    <tr>
+                        <td>
+			            <a href="{% url 'core:doctor_details' doc.doctor.id %}"
+                            style="text-decoration: none;">
+                            <strong>{{ doc.doctor }}</strong>
+                            {% if doc.doctor.user.photo_id %}
+                            <img src="{{ doc.doctor.user.photo_id.url }}" style="width:40px;height:40px">
+                            {% endif %}
+                            <br>
+                            <small class="text-muted">{{ doc.specialization }}</small>
+                            </a>
+                        </td>
+                        <td class="text-center fw-bold">{{ doc.consultations }}</td>
+                         <td class="text-center fw-bold">{{ doc.consultation_revenue }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="3" class="text-center text-muted">No data available</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+	</div>
+
+            <!-- Pagination Controls -->
+        <div class="pagination">
+            <span class="step-links">
+                {% if page_obj.has_previous %}
+                    <a href="?page=1">&laquo; first</a>
+                    <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                {% endif %}
+
+                <span class="current">
+                    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                </span>
+
+                {% if page_obj.has_next %}
+                    <a href="?page={{ page_obj.next_page_number }}">next</a>
+                    <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                {% endif %}
+            </span>
+        </div>
+
+        </div>
+    </div>
+
+</div>
+
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const dataValues = JSON.parse('{{ revenue_breakdown_json|escapejs }}');
+    const labels = ["Consultation", "Lab Test", "Medicine", "Ward", "OT", "Misc"]; 
+    const barCtx = document.getElementById("revenueBarChart");
+    new Chart(barCtx, {
+        type: "bar",
+        data: {
+            labels: labels,
+            datasets: [{
+                label: "Revenue (BDT)",
+                data: dataValues,
+                backgroundColor: "rgba(54, 162, 235, 0.6)",
+                borderColor: "rgba(54, 162, 235, 1)",
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } },           
+            plugins: { legend: { display: false } }
+            
+        }
+    });
+
+    const pieCtx = document.getElementById("revenuePieChart");
+    new Chart(pieCtx, {
+        type: "pie",
+        data: {
+            labels: labels,
+            datasets: [{
+                data: dataValues,
+                backgroundColor: [
+                    "#36A2EB", "#FF6384", "#FFCE56",
+                    "#4BC0C0", "#9966FF", "#FF9F40"
+                ]
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            scales: { y: { beginAtZero: true } },
+            plugins: {
+                legend: { position: 'top' },
+                tooltip: { callbacks: { label: function(context) {
+                    return context.label + ": ৳" + context.raw.toLocaleString();
+                }}}
+            }
+        }
+    });
+
+});
+</script>
+
+
+{% endblock %}

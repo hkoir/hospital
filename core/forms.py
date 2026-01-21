@@ -4,6 +4,57 @@ from.models import Notice
 from.models import CompanyPolicy,SalaryStructure
 
 
+
+
+
+
+
+
+from.models import CompanyPolicy,SalaryStructure,TaxPolicy, ServiceTaxPolicy
+
+
+class TaxPolicyForm(forms.ModelForm):
+    class Meta:
+        model = TaxPolicy
+        fields = [
+            "name", "vat_rate", "vat_type",
+            "ait_rate", "ait_type", "is_active",
+        ]
+        widgets = {
+            "name": forms.TextInput(attrs={"class": "form-control"}),
+            "vat_rate": forms.NumberInput(attrs={"class": "form-control"}),
+            "vat_type": forms.Select(attrs={"class": "form-select"}),
+            "ait_rate": forms.NumberInput(attrs={"class": "form-control"}),
+            "ait_type": forms.Select(attrs={"class": "form-select"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+
+class ServiceTaxPolicyForm(forms.ModelForm):
+    class Meta:
+        model = ServiceTaxPolicy
+        fields = [
+            "name",
+            "vat_rate", "vat_type",
+            "ait_rate", "ait_type",
+            "is_default","is_active"
+        ]
+        widgets = {
+            "name": forms.Select(attrs={"class": "form-select"}),
+            "unit_price": forms.NumberInput(attrs={"class": "form-control"}),
+            "vat_rate": forms.NumberInput(attrs={"class": "form-control"}),
+            "vat_type": forms.Select(attrs={"class": "form-select"}),
+            "ait_rate": forms.NumberInput(attrs={"class": "form-control"}),
+            "ait_type": forms.Select(attrs={"class": "form-select"}),
+            "is_default": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+            "is_active": forms.CheckboxInput(attrs={"class": "form-check-input"}),
+        }
+
+
+
+
+
+
 class ManageDepartmentForm(forms.ModelForm):   
     description = forms.CharField(required=False,
         widget=forms.Textarea(
@@ -203,10 +254,32 @@ class AddEmployeeForm(forms.ModelForm):
 from.models import Doctor,Nurse
 
 class AddDoctorForm(forms.ModelForm):
+    username = forms.CharField(
+        max_length=150,
+        required=True,
+        widget=forms.TextInput(attrs={'class': 'form-control'})
+    )
+    password = forms.CharField(
+        max_length=128,
+        required=True,
+        widget=forms.PasswordInput(attrs={'class': 'form-control'})
+    )
+
+    phone_number = forms.CharField(
+        required=False,
+        max_length=15,  # adjust as needed
+        widget=forms.NumberInput(attrs={'class': 'form-control'})
+    )
+
+    email = forms.EmailField(
+        required=False,
+        widget=forms.EmailInput(attrs={'class': 'form-control', 'placeholder': 'Enter email address'})
+    )
     class Meta:
         model = Doctor
-        exclude = ['employee_code', 'resignation_date', 'lateness_salary_deductions']
-        widgets = {
+        exclude = ['employee_code','user', 'resignation_date', 'lateness_salary_deductions']
+        widgets = {           
+
             'joining_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'resignation_date': forms.DateInput(attrs={'type': 'date', 'class': 'form-control'}),
             'office_start_time': forms.TimeInput(attrs={'type': 'time', 'class': 'form-control'}),
@@ -260,7 +333,8 @@ class AddDoctorForm(forms.ModelForm):
         }),
         'consultation_fees':forms.NumberInput(attrs={
             'class':'form-control'
-        })
+        }),
+        'doctor_location': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter doctor location'}),
 
 
         }

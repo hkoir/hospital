@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block content %}
+{% include 'lab_tests/quick_access_link.html' %}
+
+<div class="container mt-4">
+
+    <h4 class="fw-bold mb-3">Sample Collection – for Request code: {{ lab_request.requested_lab_test_code }}</h4>
+
+    <div class="card shadow-sm">
+        <div class="card-body">
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Test Name</th>
+                        <th>Category</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Sample Status</th>
+			<th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for item in items %}
+                    <tr>
+                        <td>{{ item.lab_test }}</td>
+                        <td>{{ item.lab_test.category }}</td>
+                        <td>{{ item.labtest_request.medical_record.patient.name }}</td>
+                        <td>{{ item.labtest_request.appointment.doctor }} | 
+			   {{ item.labtest_request.appointment.doctor.specialization }}</td>
+
+			<td>
+                        {% with sample=item.sample_items.first %}
+                            {% if sample %}
+                                {% if sample.status|lower == 'pending' %}
+                                    <span class="badge bg-warning">Pending</span>
+                                {% else %}
+                                    <span class="badge bg-success">{{ sample.status|title }}</span>
+                                {% endif %}
+                            {% else %}
+                                <span class="badge bg-warning">Pending</span>
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+
+                       <td>
+                        {% with sample=item.sample_items.first %}
+                            {% if sample %}
+                                {% if sample.status|lower == 'pending' %}
+                                     <a href="{% url 'lab_tests:collect_sample' item.id %}" class="btn btn-sm btn-primary">
+                                       Collect Sample
+                                     </a>
+                                {% else %}
+                                    <span class="badge bg-success">{{ sample.status|title }}</span>
+                                {% endif %}
+                            {% else %}
+                                 <a href="{% url 'lab_tests:collect_sample' item.id %}" class="btn btn-sm btn-primary">
+                                    Collect Sample
+                                </a>
+                            {% endif %}
+                        {% endwith %}
+                    </td>
+
+
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+	</div>
+
+        </div>
+    </div>
+
+</div>
+{% endblock %}

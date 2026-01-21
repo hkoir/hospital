@@ -1,0 +1,226 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+
+
+
+
+
+{% include 'purchase/quick_access_link.html' %}
+
+<div class="container-fluid mt-4">
+    <h2 class="mb-4">Create Direct Purchase</h2>
+
+    <form method="post" id="invoice-form">
+        {% csrf_token %}
+
+        <!-- Invoice Info -->
+        <fieldset class="border p-3 mb-4">
+            <legend class="w-auto px-2"><strong>Purchase Info</strong></legend>
+
+            <div class="row g-3">               
+
+                <div class="col-md-3">
+                    <label for="{{ form.supplier_name.id_for_label }}" class="form-label">Supplier</label>
+                    {{ form.supplier_name|add_class:"form-control" }}
+                </div>
+                  <div class="col-md-3">
+                    <label for="{{ form.supplier_name.id_for_label }}" class="form-label">AIT rate</label>
+                    {{ form.AIT_rate|add_class:"form-control" }}
+                </div>
+                  <div class="col-md-3">
+                    <label for="{{ form.supplier_name.id_for_label }}" class="form-label">AIT Type</label>
+                    {{ form.AIT_type|add_class:"form-control" }}
+                </div>
+
+                <div class="col-md-3">
+                    <label for="{{ form.created_at.id_for_label }}" class="form-label">Date</label>
+                    {{ form.created_at|add_class:"form-control" }}
+                </div>
+
+                <div class="col-md-3">
+                    <label for="{{ form.due_date.id_for_label }}" class="form-label">Due Date</label>
+                    {{ form.due_date|add_class:"form-control" }}
+                </div>
+                 <div class="col-md-6">
+                    <label for="{{ form.terms_and_conditions.id_for_label }}" class="form-label">Terms & Conditions</label>
+                    {{ form.terms_and_conditions|add_class:"form-control" }}
+                </div>
+
+                <div class="col-md-6">
+                    <label for="{{ form.notes.id_for_label }}" class="form-label">Notes</label>
+                    {{ form.notes|add_class:"form-control" }}
+                </div>
+
+            </div>
+        </fieldset>
+
+        <!-- Invoice Items -->
+        <fieldset class="border p-3 mb-4">
+            <legend class="w-auto px-2"><strong>Purchase Items</strong></legend><br>
+            {{ formset.management_form }}
+            <div class="table-responsive">
+            <table id="quotation-table" class="table table-bordered align-middle text-center">
+                <thead class="table-dark">
+                    <tr>
+                        {% for field in formset.empty_form.visible_fields %}
+                            {% if field.name != 'DELETE' %}
+                                <th>{{ field.label }}</th>
+                            {% endif %}
+                        {% endfor %}
+                             {{ form.id }} 
+                        <th>Delete?</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for form in formset %}
+                    <tr>
+                        {% for field in form.visible_fields %}
+                            {% if field.name != 'DELETE' %}
+                                <td>{{ field|add_class:"form-control" }}</td>
+                            {% endif %}
+                        {% endfor %}
+                             {{ form.id }} 
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm delete-row">Delete</button>
+                            {{ form.DELETE }}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+
+            <!-- Hidden empty row for cloning -->
+            <table style="display:none;">
+                <tbody id="empty-form-row">
+                    <tr>
+                        {% for field in formset.empty_form.visible_fields %}
+                            {% if field.name != 'DELETE' %}
+                                <td>{{ field|add_class:"form-control" }}</td>
+                            {% endif %}
+                        {% endfor %}
+                        <td>
+                            <button type="button" class="btn btn-danger btn-sm delete-row">Delete</button>
+                            {{ formset.empty_form.DELETE }}
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+          
+            <!-- Totals Section -->
+              <div class="d-flex justify-content-between align-items-center mb-3 mt-3">
+                  <button type="button" id="add-item" class="btn btn-secondary btn-sm">+ Add Item</button>
+                  <div class="text-end">
+                      <h5>Subtotal: <span id="subtotal">0.00</span></h5>
+                      <h5>Discount: 
+                          <input type="number" name="discount_amount" id="discount" value="0.00" 
+                                class="form-control d-inline-block text-end" style="width: 120px;">
+                      </h5>
+                      <h5>Advance Payment: 
+                          <input type="number" name="advance_amount" id="advance" value="0.00" 
+                                class="form-control d-inline-block text-end" style="width: 120px;">
+                      </h5>
+                      <h4><strong>Total: <span id="grand-total">0.00</span></strong></h4>
+                  </div>
+              </div>
+
+
+            <div class="text-end">
+                <button type="submit" class="btn btn-success btn-lg px-5">Save Invoice</button>
+            </div>
+        </fieldset>
+    </form>
+</div>
+
+<script>
+    const docTypeSelect = document.getElementById("id_document_type");
+    const documentTitle = document.getElementById("document-title");
+
+    if(docTypeSelect){
+        docTypeSelect.addEventListener("change", function(){
+            const value = this.value.charAt(0).toUpperCase() + this.value.slice(1);
+            documentTitle.innerText = value;
+        });
+    }
+</script>
+
+<script>
+    const addItemBtn = document.getElementById('add-item');
+    const totalForms = document.getElementById('id_{{ formset.prefix }}-TOTAL_FORMS');
+    const tableBody = document.querySelector('#quotation-table tbody');
+    const emptyFormRow = document.getElementById('empty-form-row').innerHTML;
+
+    // Add new row
+    addItemBtn.addEventListener('click', () => {
+        let formCount = parseInt(totalForms.value);
+        let newRow = emptyFormRow.replace(/__prefix__/g, formCount);
+        tableBody.insertAdjacentHTML('beforeend', newRow);
+        totalForms.value = formCount + 1;
+        attachRowListeners(); // attach logic to new row
+    });
+
+    // Delete row
+    document.addEventListener('click', function (e) {
+        if (e.target.classList.contains('delete-row')) {
+            const row = e.target.closest('tr');
+            const checkbox = row.querySelector('input[type=checkbox][name$="-DELETE"]');
+            if (checkbox) checkbox.checked = true;
+            row.style.display = 'none';
+            calculateTotals();
+        }
+    });
+
+    // Calculate per row and grand total
+    function calculateRowTotal(row) {
+        const qtyInput = row.querySelector('input[name$="-quantity"]');
+        const priceInput = row.querySelector('input[name$="-unit_price"]');
+        const totalInput = row.querySelector('input[name$="-total_amount"]');
+
+        const quantity = parseFloat(qtyInput?.value) || 0;
+        const price = parseFloat(priceInput?.value) || 0;
+        const total = quantity * price;
+
+        if (totalInput) totalInput.value = total.toFixed(2);
+        calculateTotals();
+    }
+
+      function calculateTotals() {
+          let subtotal = 0;
+          document.querySelectorAll('input[name$="-total_amount"]').forEach(field => {
+              subtotal += parseFloat(field.value) || 0;
+          });
+
+          const discount = parseFloat(document.getElementById('discount').value) || 0;
+          const advance = parseFloat(document.getElementById('advance').value) || 0;
+          const grandTotal = subtotal - discount - advance;
+
+          document.getElementById('subtotal').innerText = subtotal.toFixed(2);
+          document.getElementById('grand-total').innerText = grandTotal.toFixed(2);
+      }
+
+// Trigger on advance input
+document.getElementById('advance').addEventListener('input', calculateTotals);
+
+    // Attach listeners to quantity/unit_price
+    function attachRowListeners() {
+        document.querySelectorAll('#quotation-table tbody tr').forEach(row => {
+            const qtyInput = row.querySelector('input[name$="-quantity"]');
+            const priceInput = row.querySelector('input[name$="-unit_price"]');
+            if (qtyInput && priceInput) {
+                qtyInput.addEventListener('input', () => calculateRowTotal(row));
+                priceInput.addEventListener('input', () => calculateRowTotal(row));
+            }
+        });
+    }
+
+    document.getElementById('discount').addEventListener('input', calculateTotals);
+
+    // Initialize
+    attachRowListeners();
+    calculateTotals();
+</script>
+
+
+{% endblock %}

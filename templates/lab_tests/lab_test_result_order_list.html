@@ -4,28 +4,34 @@
 {% block content %}
 
 
-<div class="containe-fluid">    
-    <div class="row">   
-        <div class="d-flex">
-            <form method="GET" class="p-2 m-3 w-100">
-                {% csrf_token %}
-        
-                {% for field in form %}
-                    <div class="d-flex align-items-center mb-3">
-                        <label for="{{ field.id_for_label }}" class="form-label me-2" style="width: 150px;">
-                            {{ field.label }}
-                        </label>
-                        {{ field }}
-                  
-                {% endfor %}
-        
-                    <button type="submit" name="entity_submit" class="btn btn-success btn-lg">
-                       Filter
-                    </button>
-		</div>
-            </form>
+
+
+
+<div class="container-fluid">
+    <div class="dashboard-wrapper">      
+        <div class="left-panel mt-0">      
+            {% include 'workspace/staff_quick_access_link.html' %}
         </div>
-        
+       
+        <div class="right-panel">  
+            {% include 'lab_tests/quick_access_link.html' %} 
+
+ <div class="row">
+    <form method="get" class="my-4">
+        <div class="input-group">
+            <input type="text" 
+                   id="searchInput" 
+                   name="search" 
+                   placeholder="Search Lab test by patient, MR Code, phone etc"
+                   class="form-control p-2" 
+                   value="{{ request.GET.search }}">
+
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-search"></i> Search
+            </button>
+        </div>
+    </form>
+</div>        
    
     <div class="col-12 table-responsive">
             <h2>Lab Test orders</h2>
@@ -34,8 +40,9 @@
                 <thead class="thead-dark">
                     <tr>
 			<th>Order Test Code </th>
-                        <th>Add result items</th>
+			<th>Created at </th>
                         <th>Download Report</th>
+			<th> Print Report</th>
                         <th>Medical Reord</th>
                         <th>Patient</th>
 			<th>Patient ID </th>
@@ -51,10 +58,18 @@
                     {% for record in  page_obj %}
                     <tr>
 			<td>{{ record.lab_test_result_oder_code }}</td>
+			<td>{{ record.recorded_at }}</td>
                         <td>
-                            <a href="{% url 'lab_tests:add_lab_test_result' record.id %}">Add test result</a>
-                        </td>
-                        <td><a href="{% url 'lab_tests:download_test_report' record.id %}">Download report</a></td>
+			     {% if record.test_doctor %}
+			   <a href="{% url 'lab_tests:download_test_report' record.id %}">Download report</a>
+			     {% else %}
+			    <span class="badge bg-warning">Test not ready</span>
+			   {% endif %}
+			</td>
+		        <td>
+			    <a href="{% url 'lab_tests:print_lab_test_order' record.id %}" 
+				class="btn btn-sm btn-primary">Print report</a>
+			</td>
                         <td>{{ record.medical_record.medical_record_code }}</td>
 			<td> {{ record.medical_record.patient.name }} </td>
 			<td>{{ record.medical_record.patient.patient_id }}</td>
@@ -90,8 +105,8 @@
             {% endif %}
         </span>
     </div>
-
-    
+</div>
+</div>    
 </div>
 </div>
 

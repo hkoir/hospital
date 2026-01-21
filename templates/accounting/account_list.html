@@ -4,29 +4,10 @@
 {% block title %}Accounts{% endblock %}
 
 {% block content %}
+
+
+{% include 'accounting/quick_access_link.html' %}
 <div class="container mt-4">
-      
-      <a href="{% url 'accounting:balance_sheet' %}"
-    class="btn btn-sm btn-primary">Balance sheet</a>
-             <a href="{% url 'accounting:balance_sheet_quarterly' %}"
-    class="btn btn-sm btn-primary">Balance sheet Quarterly</a>
-            <a href="{% url 'accounting:trial_balance' %}"
-    class="btn btn-sm btn-primary">Trial balance</a>
-      <a href="{% url 'accounting:profit_loss' %}"
-    class="btn btn-sm btn-primary">Profit & Loss</a>
-                <a href="{% url 'accounting:profit_loss_quarterly' %}"
-    class="btn btn-sm btn-primary">Profit & Loss Quarterly</a>
-
-       <a href="{% url 'accounting:journalentry_create' %}"
-    class="btn btn-sm btn-primary">Journal entry</a>
-          <a href="{% url 'accounting:journalentry_list' %}"
-    class="btn btn-sm btn-primary">Journal entry List</a>
-     <a href="{% url 'accounting:account_create' %}"
-    class="btn btn-sm btn-primary">Add account</a>
-
-        <a href="{% url 'accounting:account_list' %}"
-    class="btn btn-sm btn-primary">Account List</a>
-
   <!-- Header -->
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h2 class="fw-bold mb-0">Accounts</h2>
@@ -53,7 +34,11 @@
           {% for acc in accounts %}
           <tr>
             <td>{{ forloop.counter }}</td>
-            <td>{{ acc.code }}</td>
+            <td>
+		<a href="{% url 'accounting:ledger' acc.id %}" class=" badge bg-success ">
+	         {{ acc.code }}
+		</a>
+	    </td>
             <td>{{ acc.name }}</td>
             <td>
               <span class="badge bg-info text-dark">{{ acc.type }}</span>

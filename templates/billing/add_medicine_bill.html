@@ -1,7 +1,26 @@
 {% extends 'base.html' %}
+{% load custom_filters %}
 
 {% block content %}
 
+
+<style>
+.line-total {
+    min-width: 100px;      /* enough to show the full number */
+    max-width: 120px;      /* optional */
+    display: inline-block; /* ensures width works inside table cell */
+}
+/* Make all formset inputs have min-width */
+.formset-input {
+    min-width: 100px;       /* adjust as needed */
+    max-width: 120px;       /* optional */
+    display: inline-block;  /* ensures width applies */
+}
+input[type="checkbox"][name$="-DELETE"] {
+    display: none;
+}
+
+</style>
 
 <div class="container">
   <div class="card shadow-lg border-0">
@@ -10,13 +29,16 @@
     </div>
     
     <div class="card-body mx-4">
-        <p><strong>Patient:</strong>{{ invoice.patient }} | {{ invoice.patient.patient_id }}</p>        
-        <p><strong>Invoice:</strong>{{ invoice.invoice_id }}</p>
-
+	 <p>
+          <strong>Invoice:</strong>{{ invoice.invoice_id }}<br>
+          <strong>Patient:</strong>{{ invoice.patient }} | {{ invoice.patient.patient_id }}<br>        
+        <strong>Admitting Physician:</strong>{{ invoice.medical_record.doctor.name }} | {{ invoice.medical_record.doctor.specialization }}
+        </p>
+	
         <form method="post" id="medicine-formset-form">
           {% csrf_token %}
           {{ formset.management_form }}
-        
+        <div class="row">
  	  <div class="table-responsive">
           <table class="table table-bordered" id="formset-table">
             <thead>
@@ -25,6 +47,7 @@
                 <th>Medicine</th>
                 <th>Quantity</th>
                 <th>Rate</th>
+		 <th style="width:100px">Line Total</th>
                 <th>Delete</th>
               </tr>
             </thead>
@@ -33,25 +56,32 @@
                 <tr class="formset-row">
                   {% for field in form.visible_fields %}
                     {% if field.name != "DELETE" %}
-                      <td>{{ field }}</td>
+                      <td>{{ field|add_class:"formset-input" }}</td>
                     {% endif %}
                   {% endfor %}
+		    <td style="width:150px">
+                      <input type="number" class="form-control line-total" readonly>
+                  </td>
                   <td>
-                      <button type="button" class="btn btn-danger delete-row-btn">{{ form.DELETE }}</button>
+                      <button type="button" class="btn btn-danger delete-row-btn">{{ form.DELETE }}x</button>
                   </td>
                 </tr>
               {% endfor %}
             </tbody>
             
           </table>
+	 <div class="text-end mt-3">
+            <h5><strong>Grand Total: </strong> <span id="grand-total">0.00</span></h5>
+          </div>
 	</div>
-
+	</div>
+	<div class="d-flex justify-content-between align-items-center mt-3">
           <button type="button" class="btn btn-outline-success" id="add-form-btn">+ Add Medicine</button>
           <button type="submit" class="btn btn-primary mt-2">Save Medicines</button>
+	   <a class="btn btn-secondary" href="{% url 'billing:invoice_detail' invoice.id %}">Back to Invoice</a>
+	</div>
         </form>
 
-        <br>
-        <a class="btn btn-secondary" href="{% url 'billing:invoice_detail' invoice.id %}">Back to Invoice</a>
       </div>
 
   </div>
@@ -60,121 +90,134 @@
 
 
 <script>
-    document.addEventListener("DOMContentLoaded", function() {
-      const tableBody = document.querySelector("#formset-table tbody");
-      const prefix = document
-        .querySelector('input[name$="-TOTAL_FORMS"]')
-        .name.replace('-TOTAL_FORMS','');
-    
-      // Delegate change events on any medicine select
-      tableBody.addEventListener("change", function(e) {
-        if (!e.target.name.endsWith("-medicine")) return;
-    
-        const medicineSelect = e.target;
-        const rowIndex = medicineSelect.name.match(/-(\d+)-/)[1];
-        const priceInput = document.querySelector(
-          `input[name="${prefix}-${rowIndex}-price_per_unit"]`
-        );
-        const productId = medicineSelect.value;
-    
-        if (!productId) {
-          priceInput.value = "";
-          return;
-        }
-    
-        fetch(`{% url 'billing:ajax_get_batch_price' %}?medicine_id=${productId}`)
-          .then(res => res.json())
-          .then(data => {
-            priceInput.value = data.unit_price;
-          })
-          .catch(console.error);
-      });
-
-      
-    });
-    </script>
-    
-
-
-
-<script>
 document.addEventListener("DOMContentLoaded", function () {
-    const addBtn = document.getElementById("add-form-btn");
+
     const tableBody = document.querySelector("#formset-table tbody");
     const totalForms = document.querySelector("#id_form-TOTAL_FORMS");
 
-    addBtn.addEventListener("click", function () {
-        const formCount = parseInt(totalForms.value);
-        const newForm = document.querySelector(".formset-row").cloneNode(true);
-        const regex = new RegExp(`form-(\\d){1}-`, 'g');
+    // Detect formset prefix ("form" or other)
+    const prefix = document
+        .querySelector('input[name$="-TOTAL_FORMS"]')
+        .name.replace("-TOTAL_FORMS", "");
 
-        newForm.innerHTML = newForm.innerHTML.replace(regex, `form-${formCount}-`);
-        
-        // Clear the values
-        newForm.querySelectorAll('input, select').forEach(input => {
-            if (input.type === 'checkbox') {
+    // -----------------------
+    // 🔹 Function to update Line Total and Grand Total
+    // -----------------------
+    function updateTotals() {
+        let grand = 0;
+
+        document.querySelectorAll(".formset-row").forEach(row => {
+            const qty = parseFloat(row.querySelector('input[name*="-quantity"]')?.value) || 0;
+            const rate = parseFloat(row.querySelector('input[name*="-price_per_unit"]')?.value) || 0;
+
+            const lineTotalField = row.querySelector(".line-total");
+            const lineTotal = qty * rate;
+
+            if (lineTotalField) {
+                lineTotalField.value = lineTotal.toFixed(2);
+            }
+
+            grand += lineTotal;
+        });
+
+        document.getElementById("grand-total").textContent = grand.toFixed(2);
+    }
+
+    // -----------------------
+    // 🔹 Fetch price when medicine is selected
+    // -----------------------
+    tableBody.addEventListener("change", function (e) {
+        if (!e.target.name.endsWith("-medicine")) return;
+
+        const medicineSelect = e.target;
+        const rowIndex = medicineSelect.name.match(/-(\d+)-/)[1];
+        const priceInput = document.querySelector(
+            `input[name="${prefix}-${rowIndex}-price_per_unit"]`
+        );
+
+        const productId = medicineSelect.value;
+
+        if (!productId) {
+            priceInput.value = "";
+            updateTotals();
+            return;
+        }
+
+        fetch(`{% url 'billing:ajax_get_batch_price' %}?medicine_id=${productId}`)
+            .then(res => res.json())
+            .then(data => {
+                priceInput.value = data.unit_price;
+                updateTotals();
+            })
+            .catch(console.error);
+    });
+
+    // -----------------------
+    // 🔹 Update totals when quantity or rate changes
+    // -----------------------
+    tableBody.addEventListener("input", function (e) {
+        if (e.target.name.includes("quantity") || e.target.name.includes("price_per_unit")) {
+            updateTotals();
+        }
+    });
+
+    // -----------------------
+    // 🔹 Add new formset row
+    // -----------------------
+    document.getElementById("add-form-btn").addEventListener("click", function () {
+        const formCount = parseInt(totalForms.value);
+
+        let newRow = document.querySelector(".formset-row").cloneNode(true);
+        let regex = new RegExp(`${prefix}-(\\d+)-`, "g");
+
+        newRow.innerHTML = newRow.innerHTML.replace(regex, `${prefix}-${formCount}-`);
+
+        // Clear values
+        newRow.querySelectorAll("input, select").forEach(input => {
+            if (input.type === "checkbox") {
                 input.checked = false;
             } else {
-                input.value = '';
+                input.value = "";
             }
         });
 
-        tableBody.appendChild(newForm);
+        // Reset line total field
+        if (newRow.querySelector(".line-total")) {
+            newRow.querySelector(".line-total").value = "0.00";
+        }
+
+        tableBody.appendChild(newRow);
         totalForms.value = formCount + 1;
+
+        updateTotals();
     });
 
+    // -----------------------
+    // 🔹 Delete row (works on mobile & desktop)
+    // -----------------------
     tableBody.addEventListener("click", function (e) {
-        if (e.target && e.target.name.includes("DELETE")) {
-            e.target.closest(".formset-row").remove();
+        if (e.target.classList.contains("delete-row-btn")) {
+            const row = e.target.closest(".formset-row");
+
+            // Mark the DELETE checkbox for Django
+            const deleteCheckbox = row.querySelector('input[type="checkbox"][name$="-DELETE"]');
+            if (deleteCheckbox) deleteCheckbox.checked = true;
+
+            // Remove row visually
+            row.remove();
+
+            updateTotals();
         }
     });
+
+    // -----------------------
+    // 🔹 Initialize totals on page load
+    // -----------------------
+    updateTotals();
+
 });
-</script> 
+</script>
 
-<!-- 
 
-<script>
-  $(document).ready(function () {
-      function initSelect2() {
-          $('.medication-name-select').select2({
-              width: '100%',
-              placeholder: 'Search medicine...',
-              allowClear: true,
-              ajax: {
-                  url: "{% url 'accounts:common_search' %}",
-                  dataType: 'json',
-                  delay: 250,
-                  data: function (params) {
-                      return {
-                          q: params.term
-                      };
-                  },
-                  processResults: function (data) {
-                      return {
-                          results: $.map(data.results, function (item) {
-                              return {
-                                  id: item.id,
-                                  text: item.text
-                              };
-                          })
-                      };
-                  },
-                  cache: true
-              },
-              minimumInputLength: 1,
-              language: {
-                  inputTooShort: function () {
-                      return "";
-                  }
-              }
-          });
-      }    
-
-      initSelect2();   
-
-    
-  });
-  </script>
-   -->
 
 {% endblock %}

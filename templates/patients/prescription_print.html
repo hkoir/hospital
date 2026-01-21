@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Prescription - {{ medical_record.patient.name }}</title>
+
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
+    
+  <style>
+        body {
+            font-family: "Helvetica", Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: #f8f8f8;
+        }
+
+        .page {
+            width: 800px;
+            margin: 0 auto;
+            background: #fff;
+            padding: 25px 40px;
+            border: 1px solid #ddd;
+        }
+
+        /* Header Section */
+        .header {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+            margin-bottom: 20px;
+        }
+        .header img {
+            height: 80px;
+        }
+
+        .clinic-info h2 {
+            margin: 0;
+            font-size: 22px;
+            font-weight: bold;
+        }
+
+        .clinic-info p {
+            margin: 3px 0;
+            font-size: 14px;
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-top: 25px;
+            margin-bottom: 5px;
+            font-size: 17px;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 3px;
+        }
+
+        .patient-info, .doctor-info {
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 8px;
+            font-size: 14px;
+        }
+        table th, table td {
+            border: 1px solid #999;
+            padding: 6px;
+        }
+
+        /* Signature & QR */
+        .footer {
+            margin-top: 50px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature {
+            margin-top: 40px;
+            font-size: 14px;
+            text-align: left;
+        }
+/* PRINT FIXES TO STOP CONTENT CUTTING OFF */
+@page {
+    size: A4;
+    margin: 10mm;
+}
+
+@media print {
+
+    body {
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        width: 100%;
+    }
+
+    .patient-block,
+    .doctor-block {
+        max-width: 48%;
+    }
+
+    .doctor-block img {
+        max-width: 70px;
+        height: auto;
+        margin-left: 10px;
+    }
+
+    img {
+        max-width: 100%;
+        height: auto;
+    }
+
+    table {
+        width: 100%;
+        table-layout: fixed;
+        border-collapse: collapse;
+    }
+
+    table th, 
+    table td {
+        padding: 4px;
+        word-wrap: break-word;
+    }
+}
+
+
+
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 40px;
+}
+
+.patient-block,
+.doctor-block {
+    display: flex;
+    align-items: flex-start;
+    gap: 15px;             /* space between image & text */
+}
+
+.profile-img {
+    width: 50px;
+    height: 50px;
+    object-fit: cover;
+    border-radius: 8px;
+    border: 1px solid #bbb;
+}
+
+.doctor-block {
+    text-align: right;      /* aligns doctor text to right */
+}
+
+.doctor-block img {
+    order: 2;               /* ensures doctor image appears on RIGHT */
+}
+
+
+
+
+ .floating-home-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 55px;
+    height: 55px;
+    background: #007bff;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    text-decoration: none;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+    z-index: 1005;
+    transition: 0.25s ease-in-out;
+}
+
+.floating-home-btn:hover {
+    background: #0056b3;
+    transform: scale(1.08);
+}
+
+ </style>
+
+    
+</head>
+
+<body>
+
+<div class="page">
+
+    <button onclick="window.print()" class="no-print" 
+        style="padding: 10px 18px; background:#0080ff;color:white;border:none;border-radius:5px;cursor:pointer;float:right;">
+        Print
+    </button>
+
+    <!-- Header -->
+    <div class="header">
+        {% if medical_record.doctor.company.logo %}
+            <img src="{{ medical_record.doctor.company.logo.url }}" alt="Logo">
+        {% endif %}
+        <div class="clinic-info">
+            <h2>{{ medical_record.doctor.company.name }}</h2>
+            <p>Email: {{ medical_record.doctor.company.email }} | Phone: {{ medical_record.doctor.phone }}</p>
+            <p>Address: {{ medical_record.doctor.location.address }}</p>
+            <p>Website: {{ medical_record.doctor.company.website }}</p>
+        </div>
+    </div>
+<div class="info-row">
+
+    <!-- Patient -->
+    <div class="patient-block">
+
+	  {% if medical_record.medical_record.patient.user.photo_id %}
+        <img src="{{ medical_record.medical_record.patient.user.photo_id.url }}" class="profile-img">
+        {% endif %}
+        
+        <div class="patient-info">
+            <div class="section-title">Patient Information</div>
+            <p>
+            <strong>Name:</strong> {{ medical_record.medical_record.patient.name }}<br>
+            <strong>Phone:</strong> {{ medical_record.medical_record.patient.phone }}<br>
+            <strong>DOB:</strong> {{ medical_record.medical_record.patient.date_of_birth|date:"d-M-Y" }}<br>
+            <strong>Age:</strong> {{ medical_record.medical_record.patient.calculate_age }} <strong>Gender:</strong> {{ medical_record.patient.gender }}<br>
+           
+            <strong>UUID:</strong> {{ medical_record.medical_record.patient.patient_id }}
+            </p>
+        </div>
+    </div>
+
+    <!-- Doctor -->
+    <div class="doctor-block">
+        <div class="doctor-info">
+            <div class="section-title">Doctor Information</div>
+            <p>
+            <strong>Doctor:</strong> Dr. {{ medical_record.doctor.name }}<br>
+            <strong>Specialization:</strong> {{ medical_record.doctor.specialization }}<br>
+            <strong>License No:</strong> {{ medical_record.doctor.medical_license_number }}<br>
+            <strong>Date:</strong> {{ medical_record.date|date:"d-M-Y" }}
+            </p>
+        </div>
+
+        {% if medical_record.doctor.user.photo_id %}
+        <img src="{{ medical_record.doctor.user.photo_id.url }}" class="profile-img">
+        {% endif %}
+    </div>
+
+</div>
+
+
+    <!-- Diagnosis -->
+    <div class="section-title">Diagnosis</div>
+    <p>{{ medical_record.diagnosis|linebreaks }}</p>
+
+    <!-- Treatment -->
+    <div class="section-title">Treatment Plan</div>
+    <p>{{ medical_record.treatment_plan|linebreaks }}</p>
+
+    <!-- Medicines -->
+    <div class="section-title">Prescribed Medicines</div>
+    <table>
+        <thead>
+            <tr>
+                <th>Medicine</th>
+                <th>Dosage</th>
+                <th>Schedule</th>
+                <th>Instructions</th>
+            </tr>
+        </thead>
+        <tbody>
+        {% for item in prescriptions %}
+            <tr>
+                <td>{{ item.medication_name.name }}</td>
+                <td>{{ item.dosage }}</td>
+                <td>{{ item.dosage_schedule }}</td>
+                <td>{{ item.additional_instructions }}</td>
+            </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Lab Tests -->
+    {% if lab_tests %}
+        <div class="section-title">Lab Test Requests</div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Test Type</th>
+                    <th>Test Name</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for test in lab_tests %}
+                <tr>
+                    <td>{{ test.lab_test.category.service_type }}</td>
+                    <td>{{ test.lab_test.test_name }}</td>
+                    <td>{{ test.status }}</td>
+                </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    {% endif %}
+
+    <!-- Footer -->
+    <div class="footer">
+
+        <div class="signature">
+            _______________________________<br>
+            Dr. {{ medical_record.doctor.name }} <br>
+            {{ medical_record.doctor.specialization }} <br>
+            {{ medical_record.doctor.medical_license_number }}
+        </div>
+
+        <div>
+            {% if qr_code_image %}
+               <img src="data:image/png;base64,{{ qr_code_image }}" 
+                alt="QR Code"
+                style="width:90px; height:90px;">
+
+            {% endif %}
+            <p style="font-size:12px; text-align:center;">Scan for Digital Verification</p>
+        </div>
+
+    </div>
+
+</div>
+{% if request.user.role == 'staff' %}
+<a href="{% url 'workspace:staff_dashboard' %}" class="floating-home-btn">
+    <i class="fa fa-home"></i>
+</a>
+{% endif %}
+</body>
+</html>

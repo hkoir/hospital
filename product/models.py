@@ -67,7 +67,6 @@ class Product(models.Model):
     expiry_date = models.DateField(blank=True, null=True)  
     warranty = models.DurationField(blank=True, null=True)  
     description = models.TextField(blank=True, null=True)
-    is_active = models.BooleanField(default=True)
     reorder_level = models.PositiveIntegerField(default=10,null=True,blank=True)
     lead_time = models.PositiveIntegerField(null=True,blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -100,7 +99,7 @@ class Product(models.Model):
         upload_to="product_videos/",
         null=True,
         blank=True,)   
-
+    is_active = models.BooleanField(default=True)
     is_asset = models.BooleanField(default=False) 
     is_popular = models.BooleanField(default=False)
     is_hot_sale = models.BooleanField(default=False)
@@ -196,16 +195,6 @@ def generate_batch_no(sender, instance, **kwargs):
 
 
 
-
-
-
-
-
-
-
-
-
-
 from django.conf import settings
 from django.db import models
 from django.urls import reverse
@@ -218,7 +207,7 @@ from accounts.models import CustomUser
 
 
 class ProductType(models.Model): 
-    name = models.CharField(verbose_name=_("Product Name"), help_text=_("Required"), max_length=255, unique=True)
+    name = models.CharField(verbose_name=_("Product Type"), help_text=_("Required"), max_length=255, unique=True)
     is_active = models.BooleanField(default=True)
 
     class Meta:

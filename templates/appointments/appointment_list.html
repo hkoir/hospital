@@ -33,7 +33,7 @@
 
 {% block content %}
 
-
+{% include 'appointments/quick_access_link.html' %}
    
 
 <div class="container-fluid">
@@ -139,18 +139,26 @@
 		 </p>
 
 
-			 <p class="mb-1">  
+	<p class="mb-1">  
 
                {% if appointment.payment_status == 'Paid' %}
                     {% if appointment.status == 'Prescription-Given' %}
                         <i class="fas fa-check text-success fw-bold">Consultation done, Prescribed</i>
                     {% else %}
-                        {% if request.user.role == "doctor" %}
-                            <a href="{% url 'patients:doctor_consultation' appointment.id %}" 
-                            class="btn btn-sm w-100 btn-success text-center">Start Consulting</a>
-                        {% else %}
-                            <span class="btn btn-sm btn-outline-success w-100">Consultation Due</span>
-                        {% endif %}
+          
+		           {% if request.user.role == "doctor" %}
+
+				  {% if appointment.patient.has_active_admission %}
+                                    <a href="{% url 'patients:ipd_doctor_consultation' appointment.id %}">Start Consulting</a>
+                                     {% else %}
+                                    <a href="{% url 'patients:doctor_consultation' appointment.id %}">Start Consulting</a>
+                                    {% endif %}         
+		
+                          {% else %}
+                               <span class="btn btn-sm btn-outline-success w-100">Consultation Due</span>
+                           {% endif %}
+
+
                     {% endif %}
 
                 {% elif appointment.status == 'Cancelled' %}
@@ -188,16 +196,26 @@
 
 			
 
-
-                {% if appointment.status == 'Prescription-Given' %}
-                    {% if not appointment.has_medicine_or_labtest_bills %}
-                        {% if request.user.role == "staff" %}
-                        <a href="{% url 'appointments:add_medicine_labtest_to_invoice' appointment.id %}" class="btn btn-sm btn-success my-2 w-100 text-center">
-                            Add medicine Lab Test bill
-                        </a>    
-                        {% endif %}                           
-                    {% endif %}
-                {% endif %}
+  
+			{% if appointment.status == 'Prescription-Given' %}
+                                {% with invoice=appointment.medical_record.billing_invoice_records %}
+                                {% if invoice %}
+                                    {% if invoice.lab_test_bills.exists or invoice.medicine_bills.exists %}
+                                        <span>Medicine/Labtest added</span>  
+                                        {% else %}
+					      {% if request.user.role == "staff" %}    
+                                                  <a href="{% url 'appointments:add_medicine_labtest_to_invoice' appointment.id %}" 
+                                                  class="btn btn-sm btn-success my-2 text-center">
+                                                   Add medicine/Lab Test bill
+                                                 </a>
+						{% endif %}                                    
+                                       {% endif %}
+                                   {% endif %}
+                                {% endwith %}
+                        
+                        {% else %}
+                        <span class="badge bg-warning">Prescription Due</span>
+                        {% endif %}
 
 
                 </div>

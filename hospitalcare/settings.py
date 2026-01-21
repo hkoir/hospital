@@ -51,7 +51,8 @@ TENANT_APPS = [
     'logistics',
     'purchase',
     'supplier',
-    'product'
+    'product',
+    'workspace',
  
   
     
@@ -84,14 +85,11 @@ MIDDLEWARE = [
     'django.contrib.sessions.middleware.SessionMiddleware', 
     'django.contrib.auth.middleware.AuthenticationMiddleware', 
     'django_tenants.middleware.TenantMiddleware',  
-     
+
     'django.contrib.messages.middleware.MessageMiddleware',  
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-  
-    'clients.middleware.CustomTenantAuthMiddleware',         
-    'clients.middleware.CustomGeneralPurposeMiddleWare',  
-       
+
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
@@ -159,25 +157,44 @@ DATABASES = {
 
 
 
-import os
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
+import os
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
-
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {message}',
+            'style': '{',
+        },
+        'simple': {
+            'format': '{levelname} {message}',
+            'style': '{',
+        },
+    },
     'handlers': {
         'file': {
-            'level': 'DEBUG',
+            'level': 'ERROR',
             'class': 'logging.FileHandler',
-            'filename': os.path.join(BASE_DIR, 'django_debug.log'),
+            'filename': os.path.join(BASE_DIR, 'error.log'),  # Save error logs to this file
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'simple',
         },
     },
     'loggers': {
         'django': {
-            'handlers': ['file'],
-            'level': 'DEBUG',
+            'handlers': ['file', 'console'],  # Logs errors to file and console
+            'level': 'ERROR',  # Log ERROR level and above
             'propagate': True,
+        },
+        'inventory': {  # Replace 'inventory' with your app's name
+            'handlers': ['file', 'console'],  # Logs DEBUG and above for this app
+            'level': 'DEBUG',
+            'propagate': False,
         },
     },
 }

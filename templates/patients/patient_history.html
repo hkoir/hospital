@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% load custom_filters %}
+
+{% block content %}
+<div class="container my-4">
+    <h2 class="mb-4">Patient History: {{ patient.name }}</h2>
+
+
+    <!-- Main Medical Record Summary -->
+<div class="card shadow mb-4 border-0">
+    <div class="card-header bg-info text-white">
+        <h5 class="mb-0">
+            <i class="bi bi-file-medical me-2"></i>Initial Medical Record
+        </h5>
+    </div>
+    <div class="card-body">
+        {% if medical_record %}
+            <p><strong>Date:</strong> {{ medical_record.date|date:"d M Y" }}</p>
+            <p><strong>Doctor:</strong> 
+                {% if medical_record.doctor %}
+                    {{ medical_record.doctor.name }}
+                {% else %}
+                    <span class="text-muted">No doctor assigned</span>
+                {% endif %}
+            </p>
+            <p><strong>Diagnosis:</strong> {{ medical_record.diagnosis }}</p>
+            <p><strong>Treatment Plan:</strong> {{ medical_record.treatment_plan }}</p>
+        {% else %}
+            <p class="text-muted">No medical record found for this visit.</p>
+        {% endif %}
+    </div>
+</div>
+
+    
+    <div class="row g-4">
+
+        <!-- Prescriptions Card -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0"><i class="bi bi-journal-medical me-2"></i>Prescriptions</h5>
+                </div>
+                <div class="card-body">
+                    {% if prescription_urls %}
+                        <ul class="list-group list-group-flush">
+                            {% for pres in prescription_urls %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>Prescription</span>
+                                    <span>
+                                        <a href="{{ pres.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
+                                            {{ pres.date|date:"d M Y H:i" }}
+                                        </a>
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0">No prescriptions yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Lab Test Reports Card -->
+        <div class="col-md-6">
+            <div class="card shadow-sm">
+                <div class="card-header bg-success text-white">
+                    <h5 class="mb-0"><i class="bi bi-beaker me-2"></i>Lab Test Reports</h5>
+                </div>
+                <div class="card-body">
+                    {% if lab_report_urls %}
+                        <ul class="list-group list-group-flush">
+                            {% for lab in lab_report_urls %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center">
+                                    <span>Lab Report</span>
+                                    <span>
+                                        <a href="{{ lab.url }}" target="_blank" class="btn btn-sm btn-outline-success">
+                                            {{ lab.date|date:"d M Y H:i" }}
+                                        </a>
+                                    </span>
+                                </li>
+                            {% endfor %}
+                        </ul>
+                    {% else %}
+                        <p class="text-muted mb-0">No lab reports yet.</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- Optional: Summary / Navigation Buttons -->
+    <div class="mt-4 d-flex justify-content-end">
+        <a href="{% url 'billing:invoice_detail' invoice.id %}" class="btn btn-secondary me-2">
+            View Invoice
+        </a>
+        <a href="{% url 'patients:patient_list' %}" class="btn btn-outline-secondary">
+            Back to Patients
+        </a>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+{% load static %}
+
+{% block content %}
+
+<div class="container-fluid py-3">
+
+  {% if doctor %}
+    <a href="{% url 'core:doctor_details' doctor.id %}" class="text-decoration-none">
+        <div class="d-flex align-items-center p-3 shadow-sm rounded bg-white hover-shadow" 
+            style="transition:0.2s;">
+            
+            <img src="{{ doctor.user.photo_id.url }}" 
+                class="rounded-circle me-3"
+                style="width:55px; height:55px; object-fit:cover;">
+
+            <h5 class="fw-bold mb-0 text-primary">Doctor Dashboard</h5>
+        </div>
+    </a>
+    {% else %}
+  <h2>Doctor Dashboard</h2>
+   {% endif %}
+
+    <!-- ====== STAT CARDS ====== -->
+    <div class="row mb-4">
+
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body text-center">
+                    <p class="text-muted mb-1">Today's Appointments</p>
+                    <h2 class="fw-bold text-primary">{{ today_appointments }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body text-center">
+                    <p class="text-muted mb-1">Waiting Queue</p>
+                    <h2 class="fw-bold text-warning">{{ pending_queue }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body text-center">
+                    <p class="text-muted mb-1">Consulted Today</p>
+                    <h2 class="fw-bold text-success">{{ consulted_today }}</h2>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-6 col-md-3">
+	<a href="{% url 'patients:patient_admission_list' %}" style="text-decoration:None;">
+            <div class="card shadow-sm border-0 rounded-4">
+                <div class="card-body text-center">
+                    <p class="text-muted mb-1">Admitted Patients</p>
+                    <h2 class="fw-bold text-danger">{{ admitted_patients }}</h2>
+                </div>
+            </div>
+	 </a>
+        </div>
+
+    </div>
+
+
+ <!-- ====== PATIENT QUEUE ====== -->
+    <div class="card shadow-sm border-0 rounded-4 mb-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold m-0">Patient Queue (Pending)</h5>
+        </div>
+
+        <div class="card-body p-0">
+            {% if pending_queue > 0 %}
+	  <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Booking at</th>
+		        <th>Patient</th>
+			 <th>Patinet Img</th>
+                        <th>Age / Gender</th>
+                        <th>Reason</th>
+                        <th>Status</th>
+                        <th width="150"></th>
+                    </tr>
+                   </thead>
+                        <tbody>
+                        {% for appt in page_obj2 %}
+                            {% if appt.status == "Pending" %}
+                            <tr>
+			
+			<td>{{ appt.date|date:"D, d M Y" }}</td>
+                        <td>
+                        <a href="{% url 'patients:patient_details_with_id' appt.patient.id %}">
+                        {{ appt.patient.name }} | {{ appt.patient.patient_id }}
+                        </a>
+                        </td>
+                        <td>
+                            {% if appt.patient.patient_photo %}
+                                <img src="{{ appt.patient.patient_photo.url }}" 
+                                alt="Patient Photo" 
+                                style="width: 20px; height: 20px; object-fit: cover; border-radius: 50%;">
+                            {% else %}
+                                <span class="text-muted">No Photo</span>
+                            {% endif %}
+                            </td>
+                            <td>{{ appt.patient.calculate_age }} / {{ appt.patient.gender }}</td>
+                            <td>{{ appt.patient.medical_history|default:"-" }}</td>
+                            <td>
+                                <span class="badge bg-warning text-dark">{{ appt.status }}</span>
+                            </td>
+                            <td>
+
+				  {% if appt.patient.has_active_admission %}
+                                        {% if appt.status != 'Prescription-Given' %}
+                                        <a href="{% url 'patients:ipd_doctor_consultation' appt.medical_record.id %}"
+                                        class="btn btn-sm btn-primary rounded-pill w-100">
+                                            Start consulting
+                                        </a>
+                                        {% else %}
+                                        <span class="badge bg-success">Prescription done</span>
+                                        {% endif %}
+                                {% else %}
+                                        {% if appt.status != 'Prescription-Given' %}
+                                        <a href="{% url 'patients:doctor_consultation' appt.id %}"
+                                        class="btn btn-sm btn-primary rounded-pill w-100">
+                                            Start Consulting
+                                        </a>
+                                        {% else %}
+                                        <span class="badge bg-success">Prescription done</span>
+                                        {% endif %}
+                                {% endif %}
+
+                            </td>
+                        </tr>
+                        {% endif %}
+                    {% endfor %}
+                        </tbody>
+                    </table>
+		    </div>
+
+            <div class="pagination">
+                <span class="step-links">
+                {% if page_obj2.has_previous %}
+                    <a href="?page2=1{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">&laquo; first</a>
+                    <a href="?page2={{ page_obj2.previous_page_number }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">previous</a>
+                {% endif %}
+        
+                <span class="current">
+                    Page2 {{ page_obj2.number }} of {{ page_obj2.paginator.num_pages }}
+                </span>
+        
+                {% if page_obj2.has_next %}
+                    <a href="?page2={{ page_obj2.next_page_number }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">next</a>
+                    <a href="?page2={{ page_obj2.paginator.num_pages }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">last &raquo;</a>
+                {% endif %}
+            </span>
+            </div>
+            {% else %}
+                <p class="p-4 text-center text-muted">No patients in queue.</p>
+            {% endif %}
+        </div>
+    </div>
+
+
+     <!-- ====== NOTIFICATIONS ====== -->
+    <div class="card shadow-sm border-0 rounded-4">
+        <div class="card-header bg-white py-3">
+            <h5 class="fw-bold m-0">Notifications</h5>
+        </div>
+
+        <div class="card-body">
+            {% if page_obj %}
+            <div class="table-responsive" style="max-height: 350px; overflow-y: auto;">
+                <table class="table table-bordered table-striped table-hover">
+                    <thead class="table-light">
+                    <tr>
+                        <th style="white-space: nowrap;">Message</th>
+                        <th style="white-space: nowrap;">Created At</th>
+                        <th style="white-space: nowrap;">Action</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                        {% for note in page_obj %}
+                        <tr>
+                            <td style="min-width: 250px;">{{ note.message }}</td>
+                            <td style="white-space: nowrap;">{{ note.created_at|date:"M d, Y H:i" }}</td>
+                            <td style="white-space: nowrap;">
+                                {% if not note.is_read %}
+                                <a href="{% url 'messaging:mark_notification_as_read' note.id %}">Mark as read</a>
+                                {% else %}
+                               <span class="badge bg-info">Read</span>
+                               {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">previous</a>
+                    {% endif %}
+            
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}
+                    </span>
+            
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}{% if request.GET.days %}&days={{ request.GET.days }}{% endif %}{% if request.GET.start_date %}&start_date={{ request.GET.start_date }}{% endif %}{% if request.GET.end_date %}&end_date={{ request.GET.end_date }}{% endif %}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+            </div>
+            {% else %}
+                <p class="text-center text-muted">No notifications.</p>
+            {% endif %}
+        </div>
+     </div>
+
+</div>
+
+{% endblock %}

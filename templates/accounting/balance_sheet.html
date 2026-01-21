@@ -3,6 +3,9 @@
 {% block title %}Corporate Balance Sheet{% endblock %}
 
 {% block content %}
+
+{% include 'accounting/quick_access_link.html' %}
+
 <div class="container mt-4">  
     
       <a href="{% url 'accounting:balance_sheet' %}"

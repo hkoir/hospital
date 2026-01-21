@@ -41,8 +41,9 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <link rel="stylesheet" href="{% static 'css/core.css' %}">
+<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">
 <script src="{% static 'js/common.js' %}"></script>
-
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 
 {% block extra_head %}
 
@@ -51,6 +52,13 @@
 
 
 <style>
+
+html, body {
+    background-color: white;
+    color: #333333;  
+    padding-top:50px; 
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
 
 #mainNav, #socialNav{
@@ -368,6 +376,31 @@ li a {
 }
 
 
+.floating-home-btn {
+    position: fixed;
+    bottom: 25px;
+    right: 25px;
+    width: 55px;
+    height: 55px;
+    background: #007bff;
+    color: #fff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    text-decoration: none;
+    box-shadow: 0 6px 15px rgba(0,0,0,0.25);
+    z-index: 999;
+    transition: 0.25s ease-in-out;
+}
+
+.floating-home-btn:hover {
+    background: #0056b3;
+    transform: scale(1.08);
+}
+
+
 </style>
 
 
@@ -377,62 +410,8 @@ li a {
 <body>
 
 
-<nav class="navbar navbar-dark social-nav" id="socialNav">
-    <div class="container-fluid d-flex justify-content-between align-items-center">
-        <!-- Left Section -->
-        <div class="d-flex align-items-center d-none d-md-block">
-            <span class="navbar-text ">
-                Social Links | Contact Us | Follow Us
-            </span>
-        </div>
-
-        <!-- Middle Section (Search Form) -->
-        <div class="flex-grow-1 d-none d-md-flex justify-content-center">
-            <form class="d-flex" method="GET" action="{% url 'accounts:search_all' %}">
-                <select id="id_search" class="form-control select2 me-2" name="q">
-                    <option value="">Search...</option>
-                </select>
-                <button class="btn btn-info" type="submit">Search</button>
-            </form>
-        </div>
-
-        <!-- Right Section (Language + Icons) -->
-        <div class="d-flex align-items-center">
-             <form action="" method="post" id="language-form" class="d-flex align-items-center gap-2">
-            {% csrf_token %}
-            <label for="language-select" class="fw-bold ms-3">🌐&nbsp;Language</label>
-            <select name="language" class="form-control" style="max-width:150px; width:100px" id="language-select">
-              
-                <option value="{{ lang.0 }}"{% if lang.0 == LANGUAGE_CODE %} selected{% endif %}
-                style="width:50px">
-                    {{ lang.1 }}
-                </option>
-              
-            </select>
-        </form>
-
-            <div class="social-icons d-flex ms-3">
-                <a href="https://www.facebook.com" target="_blank" class="text-light me-2">
-                    <i class="fab fa-facebook-f"></i>
-                </a>
-                <a href="https://www.twitter.com" target="_blank" class="text-light me-2">
-                    <i class="fab fa-twitter"></i>
-                </a>
-                <a href="https://www.linkedin.com" target="_blank" class="text-light me-2">
-                    <i class="fab fa-linkedin-in"></i>
-                </a>
-                <a href="mailto:contact@yourcompany.com" class="text-light">
-                    <i class="fas fa-envelope"></i> 
-                </a>
-            </div>
-        </div>
-    </div>
-</nav>
-
-
-
 <!-- Main Navbar -->
-<nav class="navbar navbar-expand-lg main-nav" id="mainNav">
+<nav class="navbar no-print fixed-top navbar-expand-lg main-nav" id="mainNav" style="height:70px">
     <div class="container-fluid">
 
 	 <!-- Custom Hamburger Button for side bar -->
@@ -571,7 +550,7 @@ li a {
                         <li><a class="dropdown-item" href="{% url 'finance:revenue_report' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Revenue report </a></li> 
                         <li><a class="dropdown-item" href="{% url 'appointments:doctor_list' %}" style="text-decoration: none;"><i class="fas fa-users"></i>&nbsp;Doctor list Payment </a></li>
 			<li><a class="dropdown-item" href="{% url 'finance:shareholder_dashboard' %}"><i class="fas fa-user text-info"></i><i class="fas fa-plus-circle text-info"></i>&nbsp;Shareholder Dashboard</a></li>
-                                  
+                        <li><a class="dropdown-item" href="{% url 'accounting:profit_loss' %}" style="text-decoration: none;"><i class="fas fa-chart-line"></i> &nbsp;Accounting</a></li>          
                                               
                     </ul>         
                 </li> 
@@ -871,32 +850,10 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-
-
-
 });
 
-
-
 </script>
 
-
-
-<script>
-    const socialNav = document.getElementById('socialNav');
-    const mainNav = document.getElementById('mainNav');
-    const socialNavHeight = socialNav.offsetHeight;
-
-    window.addEventListener('scroll', function () {
-        if (window.scrollY > socialNavHeight) {
-            socialNav.style.top = `-${socialNavHeight}px`;
-            mainNav.style.top = '0px'; // Move main-nav to the top
-        } else {
-            socialNav.style.top = '0';
-            mainNav.style.top = `${socialNavHeight}px`; // Push it below social-nav
-        }
-    });
-</script>
 
   <script>
   $('#id_search').select2({
@@ -922,7 +879,9 @@ document.addEventListener("DOMContentLoaded", function() {
     minimumInputLength: 1
 });
 
-    </script>
+</script>
+
+
 <script>
     document.addEventListener("DOMContentLoaded", function () {   
         const messageModal = document.getElementById('messageModal');
@@ -981,7 +940,15 @@ document.addEventListener("DOMContentLoaded", function() {
     
 </script>
 
-
+{% if request.user.role == "doctor" %}
+<a href="{% url 'workspace:doctor_dashboard' %}" class="floating-home-btn">
+    <i class="fa fa-home"></i>
+</a>
+{% else %}
+<a href="{% url 'workspace:staff_dashboard' %}" class="floating-home-btn">
+    <i class="fa fa-home"></i>
+</a>
+{% endif %}
 </body>
 </html>
 

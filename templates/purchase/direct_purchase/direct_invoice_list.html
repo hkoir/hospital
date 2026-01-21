@@ -1,0 +1,131 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load custom_filters %}
+{% block content %}
+
+
+
+{% include 'purchase/quick_access_link.html' %}
+
+
+
+<div class="container-fluid py-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="fw-bold text-primary">📑 Direct Purchase</h2>
+        <a href="{% url 'purchase:create_direct_purchase_invoice' %}" class="btn btn-success btn-lg">
+            + New Purchase
+        </a>
+    </div>
+
+    
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">        
+            <table class="table table-hover align-middle table-bordered">
+                <thead class="table-dark text-center">
+                    <tr>
+                        <th>#</th>
+                        <th>Invoice No</th>
+                        <th>Customer</th>
+                        <th>Date</th>
+                        <th>Due Date</th>
+                        <th>Total</th>
+                        <th>AIT amount</th>
+                        <th>VAT amount</th>
+                        <th>AIT type</th>
+                        <th>Discount</th>
+                        <th>Final</th>
+                        <th>Net Payment due</th>
+                        <th>Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for invoice in page_obj %}
+                    <tr>
+                        <td>{{ forloop.counter }}</td>
+                        <td><strong>{{ invoice.invoice_number }}</strong></td>
+                        <td>{{ invoice.supplier_name|default:"N/A" }}</td>
+                        <td>{{ invoice.created_at|date:"d M Y" }}</td>
+                        <td>{{ invoice.due_date|date:"d M Y" }}</td>
+                        <td class="text-end">{{ invoice.total_amount|floatformat:2|add_commas }}</td>
+                        <td>{{invoice.ait_amount}}</td>
+                         <td>{{invoice.vat_amount}}</td>
+                        <td>{{invoice.AIT_type}}</td>
+
+                        <td class="text-end">{{ invoice.discount_amount|floatformat:2|add_commas }}</td>
+                        <td class="text-end fw-bold text-success">{{ invoice.final_amount|floatformat:2|add_commas }}</td>
+                        <td>{{ invoice.net_due_amount }}</td>
+                      <td class="text-center">
+                        <div class="d-flex justify-content-center align-items-center gap-2">
+                            <!-- View Invoice -->
+                             {% if invoice.status != "PAID" and not invoice.is_goods_received %} 
+                               <a href="{% url 'purchase:update_direct_purchase_invoice' invoice.id %}" 
+                            class="btn btn-outline-primary btn-sm">Edit</a>
+                            {% endif %}
+
+                            <a href="{% url 'purchase:direct_purchase_invoice_detail' invoice.id %}" 
+                            class="btn btn-outline-primary btn-sm">View</a>
+
+                            {% if invoice.status|in_list:'DRAFT,UPDATED' %}
+                                <!-- Link to Confirm Warning Page -->
+                                <a href="{% url 'purchase:confirm_direct_purchase_invoice' invoice.id %}" 
+                                class="btn btn-success btn-sm">✅ Confirm & Update Stock</a>
+
+                            {% elif invoice.status != 'PAID'  %}
+                                <!-- Link to Paid Warning Page -->
+                                <a href="{% url 'purchase:make_payment_id' invoice.id %}" 
+                                class="btn btn-primary btn-sm">💰 Make Payment</a>
+
+                            {% else %}
+                                <span class="badge bg-success">Paid</span>
+                            {% endif %}
+                              {% if not invoice.is_goods_received %}
+                            <a href="{% url 'purchase:mark_direct_purchase_goods_received' invoice.id %}"
+                            class="btn btn-sm btn-outline-success">Update Inventory</a>
+                             {% else %}
+                            <span class="badge bg-info">Inventory upated</span>
+                            {% endif %}
+                            {% if not invoice.is_goods_received %}
+                             <a href="{% url 'purchase:received_goods' invoice.id %}"
+                            class="btn btn-sm btn-outline-success">Receive goods</a>
+                            {% else %}
+                            <span class="badge bg-info">All goods received</span>
+                            {% endif %}
+                        </div>
+                    </td>
+
+
+
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="9" class="text-center text-muted py-3">No invoices found.</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            </div>
+
+
+            <div class="pagination">
+                <span class="step-links">
+                    {% if page_obj.has_previous %}
+                        <a href="?page=1">&laquo; first</a>
+                        <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+                    {% endif %}
+
+                    <span class="current">
+                        Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+                    </span>
+
+                    {% if page_obj.has_next %}
+                        <a href="?page={{ page_obj.next_page_number }}">next</a>
+                        <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+                    {% endif %}
+                </span>
+            </div>
+
+
+
+        </div>
+    </div>
+</div>
+{% endblock %}

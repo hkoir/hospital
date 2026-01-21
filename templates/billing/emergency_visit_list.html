@@ -1,0 +1,295 @@
+{% extends "base.html" %}
+{% block content %}
+
+ 
+
+<style>
+
+.dashboard-wrapper {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 15px;
+}
+
+/* Left Panel Styling */
+.left-panel {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    height: auto;
+    position: static;
+    top: 0px;
+}
+
+/* ===== Responsive Mobile Layout ===== */
+@media (max-width: 992px) {
+
+    .dashboard-wrapper {
+        grid-template-columns: 1fr;  /* stacked vertically */
+    }
+
+    .left-panel {
+        position: relative;          /* disable sticky */
+        top: 0;
+        margin-bottom: 20px;
+    }
+
+    .kpi-card {
+        padding: 18px;
+    }
+}
+
+    .left-panel h5 {
+        font-weight: 700;
+        margin-bottom: 18px;
+        color: #003c82;
+    }
+
+    .quick-link {
+        padding: 12px 16px;
+        margin-bottom: 8px;
+        background: #f7faff;
+        border-radius: 10px;
+        border: 1px solid #e1ecf9;
+        text-decoration: none;
+        display: block;
+        font-weight: 600;
+        color: #003c82;
+        transition: 0.2s;
+    }
+
+    .quick-link:hover {
+        background: #e8f1ff;
+        border-color: #d7e5ff;
+        transform: translateX(5px);
+    }
+
+    .right-panel h3 {
+        font-weight: 700;
+        color: #003c82;
+    }
+
+    .kpi-card {
+        padding: 10px;
+        border-radius: 16px;
+        background: #fff;
+        box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+        text-align: center;
+        height: 80px;
+    }
+
+    .section-title {
+        font-size: 20px;
+        font-weight: 700;
+        margin-bottom: 14px;
+        color: #003c82;
+    }
+
+    .list-group-item {
+        border-radius: 12px !important;
+        margin-bottom: 8px;
+        border: 1px solid #eaeaea;
+    }
+</style>
+
+
+
+<div class="container-fluid">
+    <div class="dashboard-wrapper">      
+        <div class="left-panel mt-0">      
+            {% include 'workspace/staff_quick_access_link.html' %}
+        </div>
+       
+        <div class="right-panel">
+
+
+            <h2>Emergency Services</h2>
+
+            <form method="get" class="row g-3 mb-3">
+                <div class="col-md-10">
+                    <input type="text" name="q" class="form-control"
+                        value="{{ query|default:'' }}" placeholder="Search patient, phone or invoice...">
+                </div>
+                <div class="col-md-2">
+                    <button class="btn btn-primary w-100">Search</button>
+                </div>
+            </form>
+            <div class="table-responsive">
+            <table class="table table-bordered table-striped">
+                <thead>
+                    <tr>
+                        <th>#ID</th>
+                        <th>Patient</th>
+                        <th>Doctor</th>
+                        <th>Visit Time</th>
+                        <th>Triage</th>
+			<th>Chief complaint</th>
+                        <th>Ward</th>
+                 	<th>Room</th>
+                	<th>Bed</th>
+                        <th>Status</th>
+                        <th>Add services</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for visit in page_obj %}
+                    <tr>
+                        <td>{{ visit.id }}</td>
+                        <td>
+			    <a href="{% url 'patients:patient_details_with_id'  visit.patient.id %}"
+                               style="text-decoration: None;">
+                             {{ visit.patient.name }}/{{ visit.patient.patient_id }}</a>   
+			</td>
+                        <td>
+			    <a href="{% url 'core:doctor_details'  visit.treated_by.id %}"
+                    		style="text-decoration: None;">
+                     		{{ visit.treated_by.name }}</a>      
+			</td>
+                        <td>{{ visit.visit_time|date:"d-m-Y H:i" }}</td>
+                        <td>{{ visit.triage_level }}</td>
+			<td>{{ visit.chief_complaint }}</td>
+			<td>{{ visit.assigned_bed.ward.name }}</td>
+                	<td>{{ visit.assigned_bed.room.number }}</td>
+                        <td>{{ visit.assigned_bed.bed_number }}</td>
+                        <td>
+			  {% if visit.discharge_approved and visit.status != "Discharged" %}
+                    		<span class="badge bg-primary">Ready for Discharge</span>
+                    	  {% elif visit.is_discharged %}
+                      		<span class="badge bg-primary">Discharged</span>
+                      	  {% elif visit.is_converted_to_admission %}
+			    <span class="badge bg-warning">Shifted to admission</span>
+			   {% else %}
+                    	   <span class="badge bg-warning">{{ visit.status}}</span>
+                    	  {% endif %}
+			</td>
+			  <td>
+                    		<a href="{% url 'billing:invoice_detail' visit.invoice.id %}"
+                    		class="btn btn-sm btn-primary">Add services</a>
+                	</td>
+
+                  <td>
+
+		    	<a href="{% url 'billing:emergency_visit_edit' visit.id %}" class="btn btn-sm btn-primary">Edit</a>
+                    	<a href="{% url 'billing:emergency_visit_create' %}" class="btn btn-sm btn-warning">Create new</a>
+		    	<a href="{% url 'patients:patient_history' visit.invoice.id %}" class="btn btn-sm btn-primary">Patient history</a>		   
+          
+                {% if not visit.is_converted_to_admission  %}
+		    {% if not visit.is_discharged %}
+                            {% if not visit.patient.get_current_bed %}
+                            <a href="{% url 'patients:assign_bed_visit' visit.id %}" class="btn btn-sm btn-info">Assign Bed</a>
+                            {% else %}
+                            <a href="{% url 'patients:change_emergency_bed' visit.id %}" class="btn btn-sm btn-info">Change Bed</a>
+                            {% endif %}
+
+                            {% if not visit.discharge_approved %}                   
+                              <button class="approve-discharge-btn btn btn-sm btn-warning" id="approve-discharge-btn" data-emergency="{{ visit.id }}">
+                               Approve Discharge
+                            </button>
+                            {% else %}
+                             <a href="{% url 'patients:create_emergency_discharge_report' visit.id %}" class="btn btn-sm btn-info">Create Discharge</a>
+                             {% endif %}
+                    {% else %}
+                    <a href="{% url 'patients:generate_discharge_pdf' visit.emergency_discharge_report.id %}" class="btn btn-sm btn-success">Discharge report</a>
+                    {% endif %}
+
+		     {% if not visit.discharge_approved %}                    
+                     <button class="btn btn-sm btn-danger" id="convert-btn" data-url="{% url 'patients:convert_emergency_to_admission' visit.id %}">
+                        Convert to Admission
+                    </button>                  
+                     {% endif %}
+	    {% else %}
+            <span class="badge bg-info">Patient Shifted to admission</span>
+            {% endif %}
+
+                     </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+	 </div>
+
+            <nav>
+                <ul class="pagination">
+                    {% if page_obj.has_previous %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if query %}&q={{ query }}{% endif %}">Previous</a></li>
+                    {% endif %}
+                    {% for num in page_obj.paginator.page_range %}
+                        <li class="page-item {% if page_obj.number == num %}active{% endif %}">
+                            <a class="page-link" href="?page={{ num }}{% if query %}&q={{ query }}{% endif %}">{{ num }}</a>
+                        </li>
+                    {% endfor %}
+                    {% if page_obj.has_next %}
+                        <li class="page-item"><a class="page-link" href="?page={{ page_obj.next_page_number }}{% if query %}&q={{ query }}{% endif %}">Next</a></li>
+                    {% endif %}
+                </ul>
+            </nav>
+
+        </div>
+
+    </div>
+</div>
+
+
+
+
+
+<script>
+document.getElementById("convert-btn").addEventListener("click", function (event) {
+    event.preventDefault();
+
+    let url = this.dataset.url;
+
+    Swal.fire({
+        title: "Convert to Admission?",
+        text: "This will convert the emergency patient to an IPD admission. Continue?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Yes, Convert",
+        cancelButtonText: "Cancel",
+        confirmButtonColor: "#d33",
+        cancelButtonColor: "#3085d6",
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = url;
+        }
+    });
+});
+</script>
+
+
+
+
+<script>
+document.querySelectorAll('.approve-discharge-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+
+        const visitId = this.dataset.emergency;
+
+        // 🔥 Confirmation before processing
+        if (!confirm("Are you sure you want to approve discharge?")) {
+            return; // user clicked Cancel
+        }
+
+        fetch(`/patients/approve_discharge_emergency/${visitId}/`, {
+            method: 'POST',
+            headers: {
+                'X-CSRFToken': '{{ csrf_token }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            alert(data.message);
+
+            if (data.status === 'success') {
+                location.reload();
+            }
+        });
+    });
+});
+</script>
+
+
+{% endblock %}

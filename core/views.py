@@ -82,6 +82,81 @@ def all_qc(request):
 
 
 
+
+from .forms import TaxPolicyForm,ServiceTaxPolicyForm
+from django.contrib import messages
+from .models import ServiceTaxPolicy,TaxPolicy
+
+
+def tax_policy_list(request):
+    policies = TaxPolicy.objects.all().order_by('-id')
+    return render(request, "tax_policy/tax_policy_list.html", {"policies": policies})
+
+
+def tax_policy_create(request):
+    if request.method == "POST":
+        form = TaxPolicyForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Tax Policy created successfully.")
+            return redirect("core:tax_policy_list")
+    else:
+        form = TaxPolicyForm()
+    return render(request, "tax_policy/tax_policy_form.html", {"form": form, "title": "Create Tax Policy"})
+
+
+def tax_policy_edit(request, pk):
+    policy = get_object_or_404(TaxPolicy, pk=pk)
+    if request.method == "POST":
+        form = TaxPolicyForm(request.POST, instance=policy)
+        if form.is_valid():
+            form.save()
+            messages.success(request, "Tax Policy updated successfully.")
+            return redirect("core:tax_policy_list")
+    else:
+        form = TaxPolicyForm(instance=policy)
+    return render(request, "tax_policy/tax_policy_form.html", {"form": form, "title": "Edit Tax Policy"})
+
+
+
+
+def service_tax_policy_list(request):
+    policies = ServiceTaxPolicy.objects.all().order_by('-id')
+    return render(request, "tax_policy/service_tax_policy_list.html", {"policies": policies})
+
+
+def service_tax_policy_create(request):
+    if request.method == "POST":
+        form = ServiceTaxPolicyForm(request.POST)
+        if form.is_valid():
+            if form.cleaned_data.get("is_default"):
+                # Only one default allowed
+                ServiceTaxPolicy.objects.update(is_default=False)
+            form.save()
+            messages.success(request, "Service Tax Policy created successfully.")
+            return redirect("core:service_tax_policy_list")
+    else:
+        form = ServiceTaxPolicyForm()
+    return render(request, "tax_policy/service_tax_policy_form.html", {"form": form, "title": "Create Service Tax Policy"})
+
+
+def service_tax_policy_edit(request, pk):
+    policy = get_object_or_404(ServiceTaxPolicy, pk=pk)
+    if request.method == "POST":
+        form = ServiceTaxPolicyForm(request.POST, instance=policy)
+        if form.is_valid():
+            if form.cleaned_data.get("is_default"):
+                ServiceTaxPolicy.objects.update(is_default=False)
+            form.save()
+            messages.success(request, "Service Tax Policy updated successfully.")
+            return redirect("core:service_tax_policy_list")
+    else:
+        form = ServiceTaxPolicyForm(instance=policy)
+    return render(request, "tax_policy/service_tax_policy_form.html", {"form": form, "title": "Edit Service Tax Policy"})
+
+
+
+
 @login_required
 def manage_department(request):
     departments = Department.objects.all().order_by('-created_at')  
@@ -595,64 +670,94 @@ from django.db import connection
 
 
 
-User = get_user_model()  
+from django.db import IntegrityError
+from django.contrib import messages
+from accounting.models import CustomUser
 
 @login_required
-def manage_doctor(request, id=None):  
-    current_tenant = None
-    current_schema = None
+def manage_doctor(request, id=None):
+    current_tenant = getattr(connection, 'tenant', None)
+    instance = Doctor.objects.filter(id=id).first() if id else None
+    message_text = "updated successfully!" if id else "added successfully!"
 
-    if hasattr(connection, 'tenant') and connection.tenant:
-        current_tenant = connection.tenant
-        current_schema = connection.tenant.schema_name   
-
-    instance = get_object_or_404(Doctor, id=id) if id else None
-    message_text = "updated successfully!" if id else "added successfully!"  
     form = AddDoctorForm(request.POST or None, request.FILES or None, instance=instance)
 
     if request.method == 'POST' and form.is_valid():
         form_instance = form.save(commit=False)
 
-        if not id:    
-            random_password = get_random_string(length=6)    
+        username = form.cleaned_data.get('username')
+        password = form.cleaned_data.get('password')
+        email = form.cleaned_data.get('email') or ""
+        phone_number = form.cleaned_data.get('phone_number') or ""
 
-            user = User.objects.create_user(
-                username=form_instance.name, 
-                email=form_instance.email,
-                password=random_password,
-                tenant=current_tenant,
-                photo_id = form_instance.employee_photo_ID
-            )
-            user.is_active = True
-            user.is_staff = True
-            user.save()
+        try:
+            if not id:
+                # CREATE NEW USER
+                user = CustomUser.objects.create(
+                    username=username,
+                    email=email,
+                    phone_number=phone_number,
+                    tenant=current_tenant,
+                    role='doctor',
+                    is_staff=True,
+                    is_active=True,
+                    is_email_verified=True if email else False,
+                    is_phone_verified=True if phone_number else False,
+                    photo_id=form_instance.employee_photo_ID,
+                )
+                user.set_password(password)
+                user.save()
+                form_instance.user = user
 
-           
+            else:
+                # UPDATE EXISTING DOCTOR
+                if instance.user:
+                    user = instance.user
+                    user.username = username
+                    user.email = email
+                    user.phone_number = phone_number   
+                    user.is_email_verified = True if email else False
+                    user.is_phone_verified = True if phone_number else False
 
-            send_mail(
-                subject="Your New Account Details",
-                message=f"Hello {form_instance.name},\n\nYour account has been created.\n\nUsername: {form_instance.name}\nPassword: {random_password}\n\nPlease login and change your password.",
-                from_email=settings.DEFAULT_FROM_EMAIL,
-                recipient_list=[form_instance.email],
-                fail_silently=False
-            )
+                    if password:
+                        user.set_password(password)
 
-        form_instance.save()        
-        messages.success(request, message_text)
-        return redirect('core:manage_doctor')
+                    user.save()
+                else:
+                    # Doctor has no user yet, create one
+                    user = CustomUser.objects.create(
+                        username=username,
+                        email=email,
+                        phone_number=phone_number,
+                        tenant=current_tenant,
+                        role='doctor',
+                        is_staff=True,
+                        is_active=True,
+                        is_email_verified=True if email else False,
+                        is_phone_verified=True if phone_number else False,
+                        photo_id=form_instance.employee_photo_ID,
+                    )
+                    user.set_password(password)
+                    user.save()
 
-    # Pagination - Fetch doctors instead of employees
-    datas = Doctor.objects.all().order_by('-id')
-    paginator = Paginator(datas, 5)
+                form_instance.user = user
+
+            form_instance.save()
+            messages.success(request, message_text)
+            return redirect('core:manage_doctor')
+
+        except IntegrityError as e:           
+            messages.error(request, f"Cannot save doctor: {str(e).split('DETAIL:')[1].strip()}")           
+            return render(request, 'core/doctor_nurse/manage_doctor.html', {'form': form, 'page_obj': Doctor.objects.all().order_by('-id')})
+   
+    doctors = Doctor.objects.all().order_by('-id')
+    paginator = Paginator(doctors, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
 
-    return render(request, 'core/doctor_nurse/manage_doctor.html', {
-        'form': form,
-        'instance': instance,
-        'datas': datas,
-        'page_obj': page_obj
-    })
+    return render(request, 'core/doctor_nurse/manage_doctor.html', {'form': form, 'page_obj': page_obj})
+
+
 
 
 @login_required
@@ -665,6 +770,45 @@ def delete_doctor(request, id):
 
     messages.warning(request, "Invalid delete request!")
     return redirect('core:manage_doctor')
+
+def doctor_details(request,pk):
+    doctor = get_object_or_404(Doctor,pk=pk)
+    return render (request, 'doctor/doctor_details.html',{'doctor':doctor})
+
+
+from django.db.models import Q
+from .models import Doctor, Nurse
+
+
+def doctor_list(request):
+    query = request.GET.get("q", "")
+    doctors = Doctor.objects.select_related("specialization").filter(
+        Q(name__icontains=query) |
+        Q(specialization__name__icontains=query) |
+        Q(medical_license_number__icontains=query)
+    )
+
+    context = {
+        "doctors": doctors,
+        "query": query,
+    }
+    return render(request, "doctor/doctor_list.html", context)
+
+
+def nurse_list(request):
+    query = request.GET.get("q", "")
+    nurses = Nurse.objects.filter(
+        Q(name__icontains=query) |
+        Q(ward__icontains=query) |
+        Q(nurse_license_number__icontains=query)
+    )
+
+    context = {
+        "nurses": nurses,
+        "query": query,
+    }
+    return render(request, "doctor/nurse_list.html", context)
+
 
 
 

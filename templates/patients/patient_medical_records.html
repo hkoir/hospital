@@ -1,0 +1,121 @@
+
+
+{% extends "base.html" %}
+{% load custom_filters %}
+{% block content %}
+
+<div class="container-fluid">
+    <div class="dashboard-wrapper">      
+        <div class="left-panel mt-0">      
+            {% include 'workspace/staff_quick_access_link.html' %}
+        </div>
+       
+        <div class="right-panel">
+
+
+   
+<h2>Medical Records for {{ patient.name }}</h2>
+<div class="table-responsive">
+    <table class="table">
+      <thead class="table-dark">
+        <tr>
+            <th>Date</th>
+            <th>Invoice</th>    
+             <th>Invoice Type</th>      
+            <th>Patient</th>           
+            <th>Doctor</th>           
+            <th>Action</th>
+        </tr>
+        </thead>
+        <tbody>
+            {% for record in medical_records %}
+            <tr>         
+                <td>{{ record.date|date:"d-M-Y" }}</td>
+                  <td> <strong>{{ record.billing_invoice_records.invoice_id}}</td></strong>
+                    <td>{{ record.billing_invoice_records.invoice_type}}</td>
+                <td>
+                    <a href="{% url 'patients:patient_details_with_id' record.patient.id %}"
+                    style="text-decoration: none;">
+                    {{ record.patient.name }}| UHD:{{ record.patient.patient_id }}| {{ record.patient.calculate_age }} yrs old |
+                    <img src="{{ record.patient.user.photo_id.url }}" style="width:40px;height:40px">
+                    </a>
+                </td>
+              
+                <td>
+                <a href="{% url 'core:doctor_details' record.doctor.id %}" style="text-decoration: none;">
+                    Dr. {{ record.doctor.name }} | {{ record.doctor.specialization }} | 
+                    <img src="{{ record.doctor.user.photo_id.url }}" style="width:40px;height:40px">
+                    </a>
+                </td>            
+                        
+                <td>
+               {% with appointment=record.medical_record_appointments.first %}
+                    {% if appointment %}
+                        {% with invoice=medical_record.billing_invoice_records %}
+                            {% if invoice %}
+                                {% if invoice.lab_test_bills.exists or invoice.medicine_bills.exists %}
+                                    <span>Medicine/Labtest Paid</span>
+                                {% else %}
+                                    <a href="{% url 'appointments:add_medicine_labtest_to_invoice' appointment.id %}"
+                                    class="btn btn-sm btn-success my-2 text-center">
+                                    Add medicine/Lab Test bill
+                                    </a>
+                                {% endif %}
+                            {% else %}
+                                <a href="{% url 'appointments:add_medicine_labtest_to_invoice' appointment.id %}"
+                                class="btn btn-sm btn-success my-2 text-center">
+                                Add medicine/Lab Test bill
+                                </a>
+                            {% endif %}
+                        {% endwith %}
+                    {% else %}
+                        <!-- No appointment found -->
+                        <span class="text-danger">No appointment available</span>
+                    {% endif %}
+                {% endwith %}
+
+
+                <a href="{% url 'patients:print_prescription' record.id %}" target="_blank"
+                    class="btn btn-sm  btn-info mt-2">
+                        Print Prescription
+                    </a>
+                <a href="{% url 'patients:download_prescription' record.id %}"
+                    class="btn btn-sm  btn-warning mt-2">
+                    Download Prescription
+                </a>
+
+                {% if medical_record.billing_invoice_records.patient_type == 'OPD' %}
+                    {% with test_result=medical_record.test_results.first %}
+                        {% if test_result %}
+                        <a href="{% url 'lab_tests:download_test_report' test_result.id %}" 
+                        class="btn btn-sm btn-success mt-2">
+                            Download Test Result </a>
+                        {% endif %}
+                    {% endwith %}
+                    {% endif %}
+
+		 {% if record.billing_invoice_records %}
+                    <a href="{% url 'billing:finalize_invoice' record.billing_invoice_records.id %}"
+                        class="btn btn-sm  btn-warning mt-2">
+                      View bills
+                     </a>
+		 {% else %}
+		     <span class="badge bg-info">No bill</span>
+		 {% endif %}
+                 </td>
+
+
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="4">No medical records found.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+</div>
+</div>
+</div>
+{% endblock %}
