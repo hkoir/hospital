@@ -484,7 +484,7 @@ def calculate_billed_days(assigned_at, released_at):
 
 def calculate_instant_wardbill(admission):    
     current_time = now()
-    latest_bed_history = admission.patient.patient_bed_histories.filter(
+    latest_bed_history = admission.patient.bed_histories.filter(
         released_at__isnull=True
     ).first()
 

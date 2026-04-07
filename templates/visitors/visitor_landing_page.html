@@ -185,9 +185,19 @@
         </section>
     </div>
 </div>
+  
 
+  <h1 class="text-center my-4">Patient Portal</h1>
+  
+     <div class="text-center mb-4 border-bottom pb-2 my-4">
+	<h4 class="text-center">Welcome, {{ request.user.username }}</h4>
+        {% if request.user.photo_id %}
+            <img src="{{ request.user.photo_id.url }}" alt="School Logo" class="mb-2" 
+		style="width:100px; height:100px;border-radius:50%">
+        {% endif %}
+    </div>
 <!-- Hospital Services Section -->
-<div class="container" style="margin-top:150px">
+<div class="container" style="margin-top:20px">
     <h2 class="text-center text-success mb-4">Our Core Services</h2>
     <div class="row">
         <div class="col-md-4">
@@ -219,7 +229,7 @@
 </div>
 
 <!-- Health Programs Section -->
-<div class="container my-5" id="health-programs">
+<div class="container" id="health-programs">
     <h2 class="text-center mb-4">Programs & Opportunities</h2>
     <div class="row">
         <div class="col-md-6">

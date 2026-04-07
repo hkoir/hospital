@@ -394,7 +394,7 @@ from core.utils import EMPLOYEE_LEVEL_CHOICES
 from leavemanagement.models import LatePolicy
 
 class Employee(models.Model):  
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, null=True, blank=True)
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, null=True, blank=True,related_name='user')
     employee_code = models.CharField(max_length=100, null=True, blank=True)  
     name = models.CharField(max_length=100, null=True, blank=True,default="Nome")  
     first_name = models.CharField(max_length=100, null=True, blank=True,default="Nome")
