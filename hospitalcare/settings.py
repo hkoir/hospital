@@ -2,13 +2,17 @@ from pathlib import Path
 import os
 
 
+from dotenv import load_dotenv
+
 BASE_DIR = Path(__file__).resolve().parent.parent
+
+load_dotenv(os.path.join(BASE_DIR, ".env"))
 
 
 
 SECRET_KEY = 'django-insecure-+nymptal3fy%x0)m*0tj^pti9vvx!^js&xzg6v+xy6)2s*tkzm'
 
-DEBUG = True
+DEBUG = os.getenv("DEBUG") == "True"
 
 ALLOWED_HOSTS = ['*','localhost', '127.0.0.1', 'www.care.ecare.support','www.ecare.support']
 
@@ -81,6 +85,7 @@ AUTHENTICATION_BACKENDS = [
 
 
 MIDDLEWARE = [
+     'clients.middleware.BypassTenantMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware', 
     'django.contrib.auth.middleware.AuthenticationMiddleware', 
@@ -95,7 +100,7 @@ MIDDLEWARE = [
 
 
 ROOT_URLCONF = 'hospitalcare.urls'
-
+PUBLIC_SCHEMA_URLCONF = "hospitalcare.public_urls"
 TEMPLATES = [
     {
        'BACKEND': 'django.template.backends.django.DjangoTemplates',
@@ -130,11 +135,11 @@ WSGI_APPLICATION = 'hospitalcare.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django_tenants.postgresql_backend',
-        'NAME': 'healthcare',  # your PostgreSQL database name
-        'USER': 'neha',      # the user you created for PostgreSQL
-        'PASSWORD': 'Arafat_123',  # the password for your PostgreSQL user
-        'HOST': 'localhost',    # default for local database
-        'PORT': '5432',         # default PostgreSQL port
+        'NAME': os.getenv('DB_NAME'),
+        'USER': os.getenv('DB_USER'),
+        'PASSWORD': os.getenv('DB_PASSWORD'),
+        'HOST': os.getenv('DB_HOST'),
+        'PORT': os.getenv('DB_PORT'),
     }
 }
 

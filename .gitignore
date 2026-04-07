@@ -1,10 +1,37 @@
+# Byte-compiled / cache
 __pycache__/
+*.py[cod]
+*$py.class
+
+# Django stuff:
+*.log
+*.pot
 *.pyc
 *.pyo
-*.log
-*.sqlite3
-*.env
-.env
-venv/
+*.pyd
+db.sqlite3
 media/
 staticfiles/
+
+# Environment
+.env
+.env.*
+.venv/
+venv/
+env/
+myenv/
+.python-version  # pyenv
+
+# VS Code
+.vscode/
+.idea/
+
+# Virtualenv
+venv/
+ENV/
+env/
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db

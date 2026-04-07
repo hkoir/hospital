@@ -8,7 +8,7 @@ from django.contrib.contenttypes.models import ContentType
 from django.apps import apps
 from django.conf import settings
 
-import pkg_resources
+
 from django.contrib.auth.models import User, Permission
 from django.contrib.auth.models import User, Group
 from django.contrib.auth.forms import (AuthenticationForm, PasswordResetForm,SetPasswordForm)

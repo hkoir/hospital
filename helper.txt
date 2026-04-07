@@ -1,0 +1,48 @@
+
+
+
+python manage.py makemigrations
+python manage.py migrate_schemas
+python manage.py migrate_schemas --shared
+
+from clients.models import Client
+from clients.models import Domain
+
+tenant = Client(schema_name='public', name='Public')
+tenant.save()
+domain=Domain(domain ='localhost', tenant=tenant,is_primary=True)
+domain.save()
+
+tenant = Client(schema_name='public', name='Public')
+tenant.save()
+domain=Domain(domain ='bnova.pro', tenant=tenant,is_primary=True)
+domain.save()
+
+
+tenant = Client(schema_name='care', name='care')
+tenant.save()
+domain=Domain(domain ='care.localhost', tenant=tenant,is_primary=True)
+domain.save()
+
+tenant = Client(schema_name='education', name='education')
+tenant.save()
+domain=Domain(domain ='education.bnova.pro', tenant=tenant,is_primary=True)
+domain.save()
+
+
+
+
+tenant = Client(schema_name='demo2', name='demo2')
+tenant.save()
+domain=Domain(domain ='demo2.localhost', tenant=tenant,is_primary=True)
+domain.save()
+
+tenant = Client(schema_name='mno', name='mno')
+tenant.save()
+domain=Domain(domain ='mno.localhost', tenant=tenant,is_primary=True)
+domain.save()
+
+
+python manage.py tenant_command createsuperuser --schema=public
+python manage.py tenant_command createsuperuser --schema=care
+python manage.py tenant_command createsuperuser --schema=education

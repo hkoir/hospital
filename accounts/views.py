@@ -54,6 +54,32 @@ from clients.models import Tenant
 from django.contrib.auth import get_user_model
 User = get_user_model()
 
+
+
+
+ROOT_DOMAIN = "ecare.support"
+from clients.models import Domain
+
+def allow_cert(request):
+    domain = request.GET.get("domain")
+
+    if not domain:
+        return HttpResponse("Missing domain", status=400)
+
+    domain = domain.lower().strip()
+
+    with schema_context('public'):
+        if domain == ROOT_DOMAIN or domain == f"www.{ROOT_DOMAIN}":
+            return HttpResponse("OK")
+
+        if domain.endswith("." + ROOT_DOMAIN):
+            return HttpResponse("OK")
+
+        if Domain.objects.filter(domain=domain, is_verified=True).exists():
+            return HttpResponse("OK")
+
+    return HttpResponse("Not allowed", status=403)
+
 def home(request):
     return render(request,'accounts/home.html')
 
@@ -522,50 +548,62 @@ def account_activate(request, uidb64, token):
 
 
 
-def login_view(request):
-    current_tenant = None
-    if hasattr(connection, 'tenant'):
-        current_tenant = connection.tenant         
-        current_schema = current_tenant.schema_name   
 
-        subscriptions = Subscription.objects.all()
+def login_view(request):
+    current_schema = None
+
+    if hasattr(connection, 'tenant'):
+        current_tenant = connection.tenant
+        current_schema = current_tenant.schema_name
+     
         current_date = timezone.now().date()
+        subscriptions = Subscription.objects.all()
+
         for subscription in subscriptions:
             if subscription.expiration_date:
-                if subscription.expiration_date > current_date:
+                if subscription.expiration_date < current_date:
                     subscription.is_expired = True
                     subscription.save()
-    form = CustomLoginForm(initial={'tenant': current_schema })   
+
+  
+    form = CustomLoginForm(initial={'tenant': current_schema})
 
     if request.method == 'POST':
         form = CustomLoginForm(data=request.POST)
+
         if form.is_valid():
             username = form.cleaned_data.get('username')
             password = form.cleaned_data.get('password')
-                    
+
             user = authenticate(request, username=username, password=password)
-            tenant = current_schema 
-            if user:                  
-                login(request, user,backend='accounts.backends.TenantAuthenticationBackend')
-                current_schema_found=request.tenant.schema_name == get_public_schema_name()
-                if not current_schema_found:   
-                    messages.success(request, "Login successful!")                      
-                    tenant_url = f"http://{tenant}.ecare.support/clients/tenant_expire_check/"
-                    return redirect(tenant_url)       
+
+            if user:
+                login(request, user, backend='accounts.backends.TenantAuthenticationBackend')
+
+                protocol = "https" if request.is_secure() else "http"
+                host = request.get_host()
+             
+                is_public = request.tenant.schema_name == get_public_schema_name()
+              
+                if "localhost" in host or "127.0.0.1" in host:
+                    tenant_url = f"{protocol}://{host}/clients/tenant_expire_check/"
+              
                 else:
-                    messages.success(request, "Login successful!")                      
-                    tenant_url = f"http://ecare.support/clients/tenant_expire_check/"
-                    return redirect(tenant_url)     
+                    tenant_domain = request.tenant.domain_url
+                    tenant_url = f"{protocol}://{tenant_domain}/clients/tenant_expire_check/"
+
+                messages.success(request, "Login successful!")
+                return redirect(tenant_url)
 
             else:
                 messages.error(request, "Invalid username or password.")
+
         else:
-            print(form.errors)
-            form = CustomLoginForm(initial={'tenant':  current_schema })  
             messages.error(request, "Please provide correct username and password")
-  
-    
-    form = CustomLoginForm(initial={'tenant':  current_schema })    
+
+    # Reload form safely
+    form = CustomLoginForm(initial={'tenant': current_schema})
+
     return render(request, 'accounts/registration/login.html', {'form': form})
 
 
@@ -757,7 +795,7 @@ def verify_change_password_otp(request):
             otp_entry.is_verified = True
             otp_entry.save()
             messages.success(request, "Password changed successfully!")
-            login(request, user, backend='accounts.backends.TenantAuthenticationBackend')
+            login(request, request.user, backend='accounts.backends.TenantAuthenticationBackend')
             return redirect("core:dashboard")
         else:
             messages.error(request, "Invalid or expired OTP.")
