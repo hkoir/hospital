@@ -43,6 +43,8 @@ class BypassTenantMiddleware:
             return HttpResponse("OK")
 
         return self.get_response(request)
+    
+    
 
 class CustomGeneralPurposeMiddleWare:
     def __init__(self, get_response):
