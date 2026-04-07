@@ -14,15 +14,12 @@ def home(request):
 
 
 urlpatterns = [
-    path("allow-cert", allow_cert),  
-    path("", public_home), 
-
-    path("home/", home),
+    path("allow-cert", allow_cert),   
+    path("", include('accounts.urls', namespace='accounts')),
+    path("home/",home),
     path("public-home/", public_home),
-
-    path("accounts/", include('accounts.urls', namespace='accounts')),
-    path("clients/", include('clients.urls', namespace='clients')),   
-    path("core/", include('core.urls', namespace='core')),  
+    path("clients/", include('clients.urls', namespace='clients')),  
+    path("core/", include('core.urls', namespace='core')),
 ]
 
 

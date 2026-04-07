@@ -15,7 +15,7 @@ domain.save()
 
 tenant = Client(schema_name='public', name='Public')
 tenant.save()
-domain=Domain(domain ='bnova.pro', tenant=tenant,is_primary=True)
+domain=Domain(domain ='ecare.support', tenant=tenant,is_primary=True)
 domain.save()
 
 

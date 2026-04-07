@@ -93,7 +93,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django_tenants.middleware.TenantMiddleware',
-   # 'clients.middleware.CustomTenantAuthMiddleware',    
+   'clients.middleware.CustomTenantAuthMiddleware',    
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
