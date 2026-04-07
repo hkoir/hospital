@@ -6,7 +6,7 @@ from django.urls import path, include
 from django.shortcuts import render, redirect, get_object_or_404
 
 def public_home(request):
-    return HttpResponse("BNOVA Public Page 🚀")
+    return HttpResponse("BNOVA Public Page updated again 🚀")
 
 def home(request):
     return render(request,'test.html')

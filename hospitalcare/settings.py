@@ -100,6 +100,8 @@ MIDDLEWARE = [
 
 ROOT_URLCONF = 'hospitalcare.urls'
 PUBLIC_SCHEMA_URLCONF = "hospitalcare.public_urls"
+
+
 TEMPLATES = [
     {
        'BACKEND': 'django.template.backends.django.DjangoTemplates',
