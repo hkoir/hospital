@@ -13,10 +13,10 @@ def home(request):
 
 
 urlpatterns = [
+    path("", include('accounts.urls', namespace='accounts')),
     path("home/",home),
     path("public-home/", public_home),
-    path("clients/", include('clients.urls', namespace='clients')),
-    path("", include('accounts.urls', namespace='accounts')),
+    path("clients/", include('clients.urls', namespace='clients')),   
     path("core/", include('core.urls', namespace='core')),  
 
    

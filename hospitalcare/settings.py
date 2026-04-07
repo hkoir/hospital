@@ -14,7 +14,7 @@ SECRET_KEY = 'django-insecure-+nymptal3fy%x0)m*0tj^pti9vvx!^js&xzg6v+xy6)2s*tkzm
 
 DEBUG = os.getenv("DEBUG") == "True"
 
-ALLOWED_HOSTS = ['*','localhost', '127.0.0.1', 'www.care.ecare.support','www.ecare.support']
+ALLOWED_HOSTS = ['*','localhost', '127.0.0.1','.ecare.support','ecare.support','*.ecare.support', 'www.care.ecare.support','www.ecare.support']
 
 
 SHARED_APPS = [ 
@@ -85,16 +85,15 @@ AUTHENTICATION_BACKENDS = [
 
 
 MIDDLEWARE = [
-     'clients.middleware.BypassTenantMiddleware',
+    'clients.middleware.BypassTenantMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware', 
     'django.contrib.auth.middleware.AuthenticationMiddleware', 
     'django_tenants.middleware.TenantMiddleware',  
-
+    'clients.middleware.CustomTenantAuthMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',  
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
-
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 

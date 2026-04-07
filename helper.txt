@@ -56,3 +56,59 @@ sudo chmod o+r /usr/share/keyrings/caddy-stable-archive-keyring.gpg
 sudo chmod o+r /etc/apt/sources.list.d/caddy-stable.list
 sudo apt update
 sudo apt install caddy
+
+
+
+
+
+
+caddy validate --config /etc/caddy/Caddyfile
+sudo journalctl -u caddy -f
+sudo journalctl -u gunicorn -f
+
+sudo journalctl -u gunicorn -n 100
+sudo journalctl -u caddy -n 100
+
+
+
+{
+    email hkobir1973@gmail.com
+
+    on_demand_tls {
+       ask http://127.0.0.1/allow-cert
+    }
+}
+
+:80 {
+    # Allow Caddy to reach Django for TLS verification
+    @allow path /allow-cert
+    handle @allow {
+        reverse_proxy unix//run/gunicorn.sock
+    }
+  
+    handle {
+        redir https://{host}{uri}
+    }
+}
+
+:443 {
+    encode gzip
+
+    tls {
+        on_demand
+    }
+  
+    handle_path /static/* {
+        root * /home/humayun/myprojectdir/staticfiles
+        file_server
+    }
+  
+    handle_path /media/* {
+        root * /home/humayun/myprojectdir/media
+        file_server
+    }
+  
+    handle {
+        reverse_proxy unix//run/gunicorn.sock
+    }
+}
