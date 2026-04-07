@@ -14,9 +14,10 @@ from.forms import PwdResetConfirmForm,PwdResetForm
 app_name = 'accounts'
 
 urlpatterns = [
+    path('', tenant_expire_check, name='tenant_expire_check'),
     path("allow-cert", views.allow_cert),
     path("allow-cert/", views.allow_cert),
-    path('', tenant_expire_check, name='tenant_expire_check'),
+   
     path('home/', views.home, name='home'),
     path('login/', views.login_view, name='login'),      
     #path('logout/', auth_views.LogoutView.as_view(next_page='accounts:logged_out'), name='logout'),
