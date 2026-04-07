@@ -83,23 +83,25 @@ AUTHENTICATION_BACKENDS = [
 
 
 
-
 MIDDLEWARE = [
     'clients.middleware.BypassTenantMiddleware',
     'django.middleware.security.SecurityMiddleware',
-    'django.contrib.sessions.middleware.SessionMiddleware',  
-    'django_tenants.middleware.TenantMiddleware',
-    'django.contrib.auth.middleware.AuthenticationMiddleware',
-    'clients.middleware.CustomTenantAuthMiddleware',
-    'django.contrib.messages.middleware.MessageMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django_tenants.middleware.TenantMiddleware',
+    'clients.middleware.CustomTenantAuthMiddleware',    
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
 
 ROOT_URLCONF = 'hospitalcare.urls'
 PUBLIC_SCHEMA_URLCONF = "hospitalcare.public_urls"
+
+
 
 
 TEMPLATES = [
