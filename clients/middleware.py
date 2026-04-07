@@ -45,6 +45,37 @@ class BypassTenantMiddleware:
         return self.get_response(request)
     
 
+class CustomTenantAuthMiddleware(MiddlewareMixin):
+    def process_request(self, request):
+        tenant = getattr(request, 'tenant', None)
+        schema_name = getattr(connection, 'schema_name', None)
+        is_public_tenant = tenant and tenant.schema_name == get_public_schema_name()
+
+        if schema_name:
+            request.session.cookie_name = f'sessionid_{schema_name}'
+
+        user = request.user
+   
+        if is_public_tenant:
+            if user.is_authenticated:
+                logout(request)
+                request.session.flush()
+            return 
+
+        if user.is_authenticated and tenant:
+            user_tenant = getattr(user, 'tenant', None)
+
+            if user.is_superuser:
+                return
+
+            if not user_tenant or user_tenant.schema_name != tenant.schema_name:
+                logout(request)
+                request.session.flush()
+                messages.error(request, "You are not allowed to log in to this tenant.")
+
+                if user_tenant:
+                    return redirect(f'https://www.{user_tenant.schema_name}.ecare.support')
+                return redirect('https://www.ecare.support')
 
 class CustomGeneralPurposeMiddleWare:
     def __init__(self, get_response):
@@ -78,39 +109,8 @@ class CustomGeneralPurposeMiddleWare:
     
 
 
-class CustomTenantAuthMiddleware(MiddlewareMixin):
-    def process_request(self, request):
-        tenant = getattr(request, 'tenant', None)
-        schema_name = getattr(connection, 'schema_name', None)
-        is_public_tenant = tenant and tenant.schema_name == get_public_schema_name()
-
-        if schema_name:
-            request.session.cookie_name = f'sessionid_{schema_name}'
-
-        user = request.user
-   
-        if is_public_tenant:
-            if user.is_authenticated:
-                logout(request)
-                request.session.flush()
-            return 
-
-        if user.is_authenticated and tenant:
-            user_tenant = getattr(user, 'tenant', None)
-
-            if user.is_superuser:
-                return
-
-            if not user_tenant or user_tenant.schema_name != tenant.schema_name:
-                logout(request)
-                request.session.flush()
-                messages.error(request, "You are not allowed to log in to this tenant.")
-
-                if user_tenant:
-                    return redirect(f'https://www.{user_tenant.schema_name}.ecare.support')
-                return redirect('https://www.ecare.support')
             
-            
+
 
 class CustomTenantAuthMiddlewareold(MiddlewareMixin):
     def process_request(self, request):
