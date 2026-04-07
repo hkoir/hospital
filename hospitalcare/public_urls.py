@@ -4,6 +4,7 @@ from accounts.views import home
 from django.urls import path, include
 
 from django.shortcuts import render, redirect, get_object_or_404
+from accounts.views import allow_cert
 
 def public_home(request):
     return HttpResponse("BNOVA Public Page updated again 🚀")
@@ -13,7 +14,8 @@ def home(request):
 
 
 urlpatterns = [
-    path("", public_home),  # 👈 THIS LINE FIXES EVERYTHING
+    path("allow-cert", allow_cert),  
+    path("", public_home), 
 
     path("home/", home),
     path("public-home/", public_home),
