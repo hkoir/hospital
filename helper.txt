@@ -70,6 +70,7 @@ sudo journalctl -u gunicorn -n 100
 sudo journalctl -u caddy -n 100
 curl -v https://care.ecare.support
 curl -v https://ecare.support
+curl -H "Host: ecare.support" http://127.0.0.1/allow-cert
 
 {
     email hkobir1973@gmail.com

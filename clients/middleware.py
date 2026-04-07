@@ -63,7 +63,7 @@ class CustomTenantAuthMiddleware(MiddlewareMixin):
             if user.is_authenticated:
                 logout(request)
                 request.session.flush()
-            return  # allow access to public schema
+            # return  
 
         if user.is_authenticated and tenant:
             user_tenant = getattr(user, 'tenant', None)
