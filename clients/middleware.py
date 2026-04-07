@@ -32,15 +32,20 @@ from datetime import timedelta
 from django.http import HttpResponse
 
 
+class BypassTenantMiddleware2:
+    def __init__(self, get_response):
+        self.get_response = get_response
+    def __call__(self, request):       
+        if request.path.startswith("/allow-cert"):
+            return HttpResponse("OK")
+        return self.get_response(request)
+    
 class BypassTenantMiddleware:
     def __init__(self, get_response):
         self.get_response = get_response
-
     def __call__(self, request):
-
-        # ONLY for TLS
-        if request.path.startswith("/allow-cert"):
-            return HttpResponse("OK")
+        if request.path.startswith("/allow-cert"):           
+            connection.set_schema_to_public()
 
         return self.get_response(request)
     

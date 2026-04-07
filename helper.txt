@@ -68,7 +68,7 @@ sudo journalctl -u gunicorn -f
 
 sudo journalctl -u gunicorn -n 100
 sudo journalctl -u caddy -n 100
-
+curl -v https://care.ecare.support
 
 
 {
